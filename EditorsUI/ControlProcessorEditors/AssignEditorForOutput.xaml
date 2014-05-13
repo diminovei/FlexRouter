@@ -1,0 +1,31 @@
+﻿<UserControl x:Class="FlexRouter.ControlProcessorEditors.AssignEditorForOutput"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:local="clr-namespace:FlexRouter"
+             mc:Ignorable="d" 
+             d:DesignHeight="148" d:DesignWidth="370" Height="Auto" Width="Auto">
+    <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+        <DataGrid x:Name="AssignmentGrid" Margin="10,35,10,102" VerticalAlignment="Top, Bottom" CanUserResizeRows ="False" CanUserAddRows="False" CanUserSortColumns="False" CanUserReorderColumns="False" Height="Auto" Width="Auto" AutoGenerateColumns="True" MouseDoubleClick="OnDoubleClick" RenderTransformOrigin="-2.833,0.538" CanUserDeleteRows="False" GotFocus="StatesGridGotFocus" Loaded="AssignmentGridLoaded">
+            <DataGrid.Resources>
+                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="DarkGray"/>
+                </DataGrid.Resources>
+            </DataGrid>
+        <Label x:Name="_hardwareTypeLabel" Content="Label" Margin="10,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" BorderThickness="1" BorderBrush="Black" Width="Auto"/>
+        <Label x:Name="_motherboardListLabel" Content="Motherboard" HorizontalAlignment="Left" Margin="10,0,0,71" VerticalAlignment="Bottom"/>
+        <Label x:Name="_moduleIdLabel" Content="Module" HorizontalAlignment="Left" Margin="10,0,0,44" VerticalAlignment="Bottom"/>
+        <Label x:Name="_controlIdLabel" Content="Control" HorizontalAlignment="Left" Margin="10,0,0,9" VerticalAlignment="Bottom"/>
+        <TextBox x:Name="_moduleId" HorizontalAlignment="Right" Height="23" Margin="0,0,117,47" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Bottom" Width="120" PreviewTextInput="ModuleIdPreviewTextInput" TextChanged="ModuleIdTextChanged"/>
+        <TextBox x:Name="_controlId" HorizontalAlignment="Right" Height="23" Margin="0,0,117,19" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Bottom" Width="120" PreviewTextInput="ControlIdPreviewTextInput" TextChanged="ControlIdTextChanged"/>
+        <ComboBox x:Name="_motherboardList" HorizontalAlignment="Right" Margin="0,0,117,75" VerticalAlignment="Bottom" Width="120" DropDownOpened="MotherboardListDropDownOpened" SelectionChanged="MotherboardListSelectionChanged" DropDownClosed="MotherboardListDropDownClosed"/>
+        <RepeatButton x:Name="_moduleValueUp" Content="+" HorizontalAlignment="Right" Margin="0,0,50,46" VerticalAlignment="Bottom" Width="29" RenderTransformOrigin="-0.173,1.227" Click="ModuleValueUpClick"/>
+        <RepeatButton x:Name="_controlValueUp" Content="+" HorizontalAlignment="Right" Margin="0,0,49,19" VerticalAlignment="Bottom" Width="29" RenderTransformOrigin="-0.173,1.227" Click="ControlValueUpClick"/>
+        <Button x:Name="_moduleValueZero" Content="0" HorizontalAlignment="Right" Margin="0,0,10,46" VerticalAlignment="Bottom" Width="29" RenderTransformOrigin="-0.173,1.227" Click="ModuleValueZeroClick"/>
+        <Button x:Name="_controlValueZero" Content="0" HorizontalAlignment="Right" Margin="0,0,10,19" VerticalAlignment="Bottom" Width="29" RenderTransformOrigin="-0.173,1.227" Click="ControlValueZeroClick"/>
+        <RepeatButton x:Name="_moduleValueDown" Content="-" HorizontalAlignment="Right" Margin="0,0,84,46" VerticalAlignment="Bottom" Width="29" RenderTransformOrigin="-0.173,1.227" Click="ModuleValueDownClick"/>
+        <RepeatButton x:Name="_controlValueDown" Content="-" HorizontalAlignment="Right" Margin="0,0,83,19" VerticalAlignment="Bottom" Width="29" RenderTransformOrigin="-0.173,1.227" Click="ControlValueDownClick"/>
+    </Grid>
+</UserControl>

@@ -1,0 +1,23 @@
+﻿<UserControl x:Class="FlexRouter.EditorsUI.AccessDescriptorsEditor.DescriptorCommonEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="222" d:DesignWidth="370">
+    <Grid Margin="0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="7*"/>
+        </Grid.ColumnDefinitions>
+        <Label x:Name="_nameLabel" Grid.Column="0" Content="Name" Margin="10,30,0,0" VerticalAlignment="Top" Width="Auto"/>
+        <TextBox Grid.Column="1" x:Name="_accessDescriptorName" Height="23" Margin="0,33,8,0" VerticalAlignment="Top" Width="Auto" PreviewTextInput="_accessDescriptorName_PreviewTextInput"/>
+        <ComboBox Grid.Column="1" x:Name="_assignedPanel" Margin="0,61,8,0" VerticalAlignment="Top" Width="Auto" DropDownOpened="AssignedPanelDropDownOpened"/>
+        <Label x:Name="_panelLabel" Grid.Column="0" Content="Panel" Margin="10,61,0,0" VerticalAlignment="Top" Width="Auto"/>
+        <Label x:Name="_powerFormulaLabel" Grid.Column="0" Content="Power formula" Margin="10,119,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.105,-0.346" Width="Auto"/>
+        <TextBox x:Name="_powerFormula" Height="63" Margin="15,150,8,0" VerticalAlignment="Top" RenderTransformOrigin="0.426,4.13" Grid.ColumnSpan="2" Width="Auto"/>
+        <CheckBox Grid.Column="1" x:Name="_usePanelPowerFormula" Content="" Margin="0,93,8,0" VerticalAlignment="Top" RenderTransformOrigin="7.529,0.375" Click="UsePanelPowerFormulaClick" Width="Auto"/>
+        <Label x:Name="_usePanelPowerFormulaLabel" Grid.Column="0" Content="Use panel power formula" Margin="10,88,0,0" VerticalAlignment="Top" Width="Auto"/>
+        <Label x:Name="_editorTypeLabel" Content="Label" Margin="15,0,10,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" BorderThickness="1" BorderBrush="Black" Grid.ColumnSpan="2" Width="Auto"/>
+    </Grid>
+</UserControl>

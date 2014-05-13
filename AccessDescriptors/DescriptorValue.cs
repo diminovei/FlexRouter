@@ -1,0 +1,98 @@
+﻿using System.Globalization;
+using System.Linq;
+using System.Windows.Navigation;
+using System.Xml;
+using System.Xml.XPath;
+using FlexRouter.AccessDescriptors.Helpers;
+using FlexRouter.AccessDescriptors.Interfaces;
+using FlexRouter.CalculatorRelated;
+using FlexRouter.VariableWorkerLayer;
+
+namespace FlexRouter.AccessDescriptors
+{
+    public class DescriptorValue : DescriptorMultistateBase, IDescriptorMultistate, IDefautValueAbility
+    {
+        public override string GetDescriptorName()
+        {
+            return LanguageManager.GetPhrase(Phrases.EditorTypeMemoryMultistate);
+        }
+
+        private int _defaultStateId = -1;
+        /// <summary>
+        /// Установить состояние по-умолчанию. -1 - нет установленного по-умолчанию состояния
+        /// </summary>
+        /// <param name="id"></param>
+        public void AssignDefaultStateId(int id)
+        {
+            _defaultStateId = id;
+        }
+        /// <summary>
+        /// Отменить установку состояния по-умолчанию
+        /// </summary>
+        public void UnAssignDefaultStateId()
+        {
+            _defaultStateId = -1;
+        }
+        /// <summary>
+        /// Установить значение переменных в соответствие с указанной для этого формулой
+        /// </summary>
+        /// <param name="stateId"></param>
+        public void SetState(int stateId)
+        {
+            if (StateDescriptors.Count(sd => sd.Id == stateId) == 0)
+                return;
+            if (!IsPowerOn() || stateId == -1)
+                return;
+            foreach (var varId in UsedVariables)
+            {
+                var formula = GlobalFormulaKeeper.Instance.GetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, GetId(), varId, stateId);
+                if (string.IsNullOrEmpty(formula))
+                    return;
+                var formulaResult = CalculatorE.CalculateMathFormula(formula);
+                if (formulaResult.Error != ProcessingMathFormulaError.Ok)
+                    return;
+                VariableManager.WriteValue(varId, formulaResult.Value);
+            }
+        }
+        /// <summary>
+        /// Установить значение по-умолчанию
+        /// </summary>
+        public void SetDefaultState()
+        {
+            if (_defaultStateId!=-1)
+                SetState(_defaultStateId);
+        }
+        /// <summary>
+        /// Получить id значения по-умолчанию
+        /// </summary>
+        public int GetDefaultStateId()
+        {
+            return _defaultStateId;
+        }
+        /// <summary>
+        /// Сохранить дополнительные параметры
+        /// </summary>
+        /// <param name="writer">Стрим для записи XML</param>
+        public override void SaveAdditionals(XmlWriter writer)
+        {
+            base.SaveAdditionals(writer);
+            if (_defaultStateId == -1)
+                return;
+            writer.WriteStartElement("DefaultState");
+            writer.WriteAttributeString("Id", _defaultStateId.ToString(CultureInfo.InvariantCulture));
+            writer.WriteEndElement();
+        }
+        /// <summary>
+        /// Загрузить дополнительные параметры
+        /// </summary>
+        /// <param name="reader">Итератор узла XML</param>
+        public override void LoadAdditionals(XPathNavigator reader)
+        {
+            base.LoadAdditionals(reader);
+            var readerAdd = reader.SelectSingleNode("DefaultState");
+            if (readerAdd == null)
+                return;
+            int.TryParse(readerAdd.GetAttribute("Id", readerAdd.NamespaceURI), NumberStyles.Number, CultureInfo.InvariantCulture, out _defaultStateId);
+        }
+    }
+}

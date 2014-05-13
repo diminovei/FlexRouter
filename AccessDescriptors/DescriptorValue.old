@@ -1,0 +1,146 @@
+﻿using System.Collections.Generic;
+using System.Linq;
+using FlexRouter.VariableSynchronization;
+
+namespace FlexRouter.AccessDescriptors
+{
+    public class DescriptorValue : DescriptorBase
+    {
+        private int _assignedControlProcessor = -1;
+        private int _defaultStateId = -1;
+        /// <summary>
+        /// Назначить контрол-процессор (и обновить состояния)
+        /// </summary>
+        /// <param name="controlProcessorId"></param>
+        public void AssignControlProcessor(int controlProcessorId)
+        {
+            // ToDo: как реагировать, если CP уже назначен?
+            _assignedControlProcessor = controlProcessorId;
+            var cp = Profile.GetControlProcessorById(controlProcessorId);
+            cp.RenewStatesInfo(_states.Values.ToArray());
+        }
+        /// <summary>
+        /// Установить состояние по-умолчанию. -1 - нет установленного по-умолчанию состояния
+        /// </summary>
+        /// <param name="id"></param>
+        public void SetDefaultState(int id)
+        {
+            _defaultStateId = id;
+        }
+        /// <summary>
+        /// Добавление состояния
+        /// </summary>
+        /// <param name="name">Имя состояния</param>
+        public void AddState(string name)
+        {
+            var accessDescriptorState = new AccessDescriptorState
+                {
+                    Id = Utils.GetNewId(_states),
+                    Name = name,
+                    Order = GetLastStateOrder()
+                };
+            _states.Add(accessDescriptorState.Id, accessDescriptorState);
+            if (_assignedControlProcessor == -1) 
+                return;
+            var cp = Profile.GetControlProcessorById(_assignedControlProcessor);
+            cp.RenewStatesInfo(_states.Values.ToArray());
+        }
+        /// <summary>
+        /// Установить формулу для переменной в определённом состоянии
+        /// </summary>
+        /// <param name="stateId">идентификатор состояния</param>
+        /// <param name="variableId">идентификатор переменной</param>
+        /// <param name="variableFormula">формула</param>
+        public void SetFormulaForVariable(int stateId, int variableId, ICalcToken[] variableFormula)
+        {
+            var vf = new VariableFormulas();
+            vf.VariableFormula.Add(variableId, variableFormula);
+
+            if (!_listOfAllVarsForState.ContainsKey(stateId))
+            {
+                _listOfAllVarsForState.Add(stateId, vf);
+            }
+            else
+            {
+                if (_listOfAllVarsForState[stateId].VariableFormula.ContainsKey(variableId))
+                    _listOfAllVarsForState[stateId].VariableFormula[variableId] = variableFormula;
+                else
+                    _listOfAllVarsForState[stateId].VariableFormula.Add(variableId, variableFormula);
+            }
+        }
+        /// <summary>
+        /// Получить подрядковый номер состояния
+        /// </summary>
+        /// <returns></returns>
+        private int GetLastStateOrder()
+        {
+            var order = 0;
+            while (true)
+            {
+                var found = false;
+                foreach (var s in _states)
+                {
+                    if (s.Value.Order != order)
+                        continue;
+                    found = true;
+                    break;
+                }
+                if (!found)
+                    return order;
+                order++;
+            }
+        }
+        
+        //  State1              State2              State3
+        //  ----------------------------------------------
+        //  Var1Id, VarFormula  Var1Id, VarFormula  Var1Id, VarFormula  
+        //  Var2Id, VarFormula  Var2Id, VarFormula  Var2Id, VarFormula
+
+        /// <summary>
+        /// Список всех переменных для каждого состояния. Dictionary "Идентификатор состояния, класс с переменными и формулами"
+        /// </summary>
+        readonly Dictionary<int, VariableFormulas> _listOfAllVarsForState = new Dictionary<int, VariableFormulas>();
+        /// <summary>
+        /// Класс, содержащий идентификатор переменной и формулу для переменной. Создаётся для каждой переменной каждого состояния
+        /// </summary>
+        public class VariableFormulas
+        {
+            /// <summary>
+            /// Идентификатор переменной, формула
+            /// </summary>
+            internal Dictionary<int, ICalcToken[]> VariableFormula = new Dictionary<int, ICalcToken[]>();
+        }
+        private readonly Dictionary<int, AccessDescriptorState> _states = new Dictionary<int, AccessDescriptorState>();
+
+        public Dictionary<AccessDescriptorState, VariableFormulas> GetStates()
+        {
+            var res = new Dictionary<AccessDescriptorState, VariableFormulas>();
+            foreach (var s in _states)
+            {
+                foreach (var v in _listOfAllVarsForState)
+                {
+                    
+                    _listOfAllVarsForState[]
+                }
+
+            }
+            return _states;
+        }
+        public override void SetState(int stateId)
+        {
+            if (!_listOfAllVarsForState.ContainsKey(stateId))
+                return;
+            var varWithformula = _listOfAllVarsForState[stateId].VariableFormula;
+            var calc = new Calculator();
+            foreach (var vwf in varWithformula)
+            {
+                var formulaResult = calc.CalculateMathFormula(vwf.Value);
+                VariableManager.WriteValue(vwf.Key, formulaResult.Value);
+            }
+        }
+        public override void SetDefaultState()
+        {
+            SetState(_defaultStateId);
+        }
+    }
+}

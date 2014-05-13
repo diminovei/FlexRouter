@@ -1,0 +1,15 @@
+﻿<UserControl x:Class="FlexRouter.EditorsUI.AccessDescriptorsEditor.RepeaterEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:local="clr-namespace:FlexRouter"
+             mc:Ignorable="d" 
+             d:DesignHeight="42" d:DesignWidth="370" Height="Auto" Width="Auto">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+        <Label x:Name="_repeaterLabel" Content="Repeater" HorizontalAlignment="Left" Margin="10,8,0,0" VerticalAlignment="Top"/>
+        <CheckBox x:Name="_repeater" Content="" HorizontalAlignment="Right" Margin="0,18,10,0" VerticalAlignment="Top" RenderTransformOrigin="2.471,-1.438"/>
+    </Grid>
+</UserControl>

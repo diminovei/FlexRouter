@@ -1,0 +1,18 @@
+﻿<UserControl x:Class="FlexRouter.ControlProcessorEditors.AxisSetLimitsEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:local="clr-namespace:FlexRouter"
+             mc:Ignorable="d" 
+             d:DesignHeight="101" d:DesignWidth="370" Height="Auto" Width="Auto">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+        <Label x:Name="_minimumLabel" Content="Limits" HorizontalAlignment="Left" Margin="10,37,0,0" VerticalAlignment="Top"/>
+        <Button x:Name="_resetLimits" Content="Reset" HorizontalAlignment="Left" Margin="167,65,0,0" VerticalAlignment="Top" Width="75" Click="ResetLimitsClick"/>
+        <ToggleButton x:Name="_calibrate" Content="Calibrate" HorizontalAlignment="Left" Margin="285,65,0,0" VerticalAlignment="Top" Width="75" Checked="CalibrateChecked" Unchecked="CalibrateUnchecked"/>
+        <Slider x:Name="_axisCurrentPosition" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="350"/>
+        <TextBox x:Name="_limits" HorizontalAlignment="Left" Height="23" Margin="244,37,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="116" IsReadOnly="True"/>
+    </Grid>
+</UserControl>

@@ -1,0 +1,22 @@
+﻿<UserControl x:Class="FlexRouter.EditorsUI.ControlProcessorEditors.AssignEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:local="clr-namespace:FlexRouter"
+             mc:Ignorable="d" 
+             d:DesignHeight="86" d:DesignWidth="370" Height="Auto" Width="Auto">
+    <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+        <DataGrid x:Name="AssignmentGrid" Margin="10,35,10,38" VerticalAlignment="Top, Bottom" CanUserResizeRows ="False" CanUserAddRows="False" CanUserSortColumns="False" CanUserReorderColumns="False" Height="Auto" Width="Auto" AutoGenerateColumns="True" MouseDoubleClick="OnDoubleClick" RenderTransformOrigin="-2.833,0.538" CanUserDeleteRows="False" GotFocus="StatesGrid_GotFocus" Loaded="AssignmentGrid_Loaded">
+            <DataGrid.Resources>
+                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="DarkGray"/>
+                </DataGrid.Resources>
+            </DataGrid>
+        <Label x:Name="_hardwareLabel" Content="Hardware" HorizontalAlignment="Left" Margin="10,0,0,7" VerticalAlignment="Bottom"/>
+        <TextBox x:Name="_hardware" HorizontalAlignment="Right" Height="23" Margin="0,0,58,10" TextWrapping="Wrap" VerticalAlignment="Bottom" Width="182" IsReadOnly="True" RenderTransformOrigin="0.283,0.391"/>
+        <TextBox x:Name="_direction" HorizontalAlignment="Right" Height="23" Margin="0,0,10,10" TextWrapping="Wrap" VerticalAlignment="Bottom" Width="43" IsReadOnly="True" RenderTransformOrigin="0.283,0.391"/>
+        <Label x:Name="_hardwareTypeLabel" Content="Label" Margin="10,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" BorderThickness="1" BorderBrush="Black" Width="Auto"/>
+    </Grid>
+</UserControl>

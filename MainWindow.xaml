@@ -1,0 +1,106 @@
+﻿<Window x:Class="FlexRouter.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="FlexRouter 0.42" Height="650" Width="800" Closing="WindowClosing1">
+    <Grid>
+        <TabControl HorizontalAlignment="Stretch" Name="tabControl1" VerticalAlignment="Stretch" IsHitTestVisible="True" Margin="12,12,12,17" VerticalContentAlignment="Top" Cursor="Arrow" SelectedIndex="-1">
+            <TabItem Header="Info" Name="tabInformation">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="5*"/>
+                        <ColumnDefinition Width="753*"/>
+                    </Grid.ColumnDefinitions>
+                    <ListBox Name="ConnectedDevicesList" Height="136" Width="273" Margin="8,112,472,311" Grid.Column="1"/>
+                    <TextBox Name="Output" HorizontalAlignment="Left" Height="23" Margin="8,266,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Grid.Column="1"/>
+                    <TextBox x:Name="_incomingEvent" HorizontalAlignment="Left" Height="23" Margin="5,294,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="738" Grid.Column="1" AcceptsTab="True"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="AccessDescriptors" Name="tabAccessDescriptors">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="92*"/>
+                        <ColumnDefinition Width="287*"/>
+                        <ColumnDefinition Width="379*"/>
+                    </Grid.ColumnDefinitions>
+                    <TreeView Grid.Column="0" Margin="0,6,10,37" x:Name="_accessDescriptorsTree" SelectedItemChanged="AccessDescriptorsTreeSelectedItemChanged" Grid.ColumnSpan="2"/>
+                    <ScrollViewer Grid.Column="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Margin="0,0,0,37">
+                        <StackPanel Grid.Column="1" x:Name="_accessDescriptorPanel" Margin="10" CanVerticallyScroll="True" VerticalAlignment="Stretch"/>
+                    </ScrollViewer>
+                    <Button x:Name="_saveAccessDescriptor" Content="Save" Grid.Column="2" Margin="0,0,10,0" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="75" Click="SaveAccessDescriptorClick" />
+                    <Button x:Name="_createAccessDescriptor" Content="Create" Grid.Column="2" Margin="214,0,0,0" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="75" Click="CreateAccessDescriptorClick"/>
+                    <ComboBox x:Name="_accessDescriptorsToCreateList" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Bottom" Width="199" Grid.Column="2" DropDownOpened="AccessDescriptorToCreateDropDownOpened"/>
+                    <TextBox Text="{Binding ElementName=__accessDescriptorsToCreateList, Path=Text}" TextChanged="OnAccessDescriptorsToCreateTextChanged" Visibility="Hidden" Grid.ColumnSpan="2"/>
+                    <Button x:Name="_removeAccessDescriptor" Content="Remove access descriptor" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="75" Click="RemoveAccessDescriptorClick"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Variables" Name="tabVariables" HorizontalAlignment="Left" Width="66">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="92*"/>
+                        <ColumnDefinition Width="287*"/>
+                        <ColumnDefinition Width="379*"/>
+                    </Grid.ColumnDefinitions>
+                    <TreeView Grid.Column="0" Margin="0,6,10,37" x:Name="_variablesTree" SelectedItemChanged="VariablesTreeSelectedItemChanged" Grid.ColumnSpan="2"/>
+                    <ScrollViewer Grid.Column="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Margin="0,0,0,37">
+                        <StackPanel Grid.Column="1" x:Name="_variablesPanel" Margin="10" CanVerticallyScroll="True" VerticalAlignment="Stretch"/>
+                    </ScrollViewer>
+                    <Button x:Name="_saveVariable" Content="Save" Grid.Column="2" Margin="0,0,10,0" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="75" Click="SaveVariableClick" />
+                    <Button x:Name="_createVariable" Content="Create" Grid.Column="2" Margin="214,0,0,0" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="75" Click="CreateVariableClick"/>
+                    <ComboBox x:Name="_accessMethods" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Bottom" Width="199" Grid.Column="2" DropDownOpened="VariableToCreateDropDownOpened"/>
+                    <TextBox Text="{Binding ElementName=_accessMethods, Path=Text}" TextChanged="OnVariablesToCreateTextChanged" Visibility="Hidden" Grid.ColumnSpan="2"/>
+                    <Button x:Name="_removeVariable" Content="RemoveVariable" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="75" Click="RemoveVariableClick"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="ControlProcessors" Name="tabControlProcessors" HorizontalAlignment="Left" Width="66">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="92*"/>
+                        <ColumnDefinition Width="287*"/>
+                        <ColumnDefinition Width="379"/>
+                    </Grid.ColumnDefinitions>
+                    <TreeView Grid.Column="0" Margin="0,6,10,37" x:Name="_controlProcessorsTree" SelectedItemChanged="ControlProcessorsTreeSelectedItemChanged" Grid.ColumnSpan="2"/>
+                    <ScrollViewer Grid.Column="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Margin="0,0,0,37">
+                        <StackPanel Grid.Column="1" x:Name="_controlProcessorsPanel" Margin="10" CanVerticallyScroll="True" VerticalAlignment="Stretch"/>
+                    </ScrollViewer>
+                    <Button x:Name="_saveControlProcessor" Content="Save" Grid.Column="2" Margin="0,0,10,0" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="75" Click="SaveControlProcrssorClick" />
+                    <Button x:Name="_createControlProcessor" Content="Create" Grid.Column="2" Margin="214,0,0,0" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="75" Click="CreateControlProcessorClick"/>
+                    <ComboBox x:Name="_controlProcessorsList" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Bottom" Width="199" Grid.Column="2"/>
+                    <TextBox Text="{Binding ElementName=_controlProcessorsList, Path=Text}" TextChanged="OnControlProcessorsToCreateTextChanged" Visibility="Hidden" Grid.ColumnSpan="2"/>
+                    <Button x:Name="_removeControlProcessor" Content="MainFormRemove" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="75" Click="RemoveControlProcessorClick"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="FormulaEditor" Name="tabFormulaEditor">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="92*"/>
+                        <ColumnDefinition Width="287*"/>
+                        <ColumnDefinition Width="379*"/>
+                    </Grid.ColumnDefinitions>
+                    <TreeView Grid.Column="0" Margin="0,6,10,37" x:Name="_variablesForFormulaTree" Grid.ColumnSpan="2"/>
+                    <RichTextBox x:Name="_formulaTextBox" Grid.Column="2" HorizontalAlignment="Left" Height="366" Margin="10,39,0,0" VerticalAlignment="Top" Width="359" TextChanged="FormulaTextBoxTextChanged"/>
+                    <TextBox x:Name="_formulaEditorInputValueHex" HorizontalAlignment="Left" Height="23" Margin="249,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Grid.Column="2" PreviewTextInput="FormulaEditorInputValueHexPreviewTextInput" TextChanged="FormulaEditorInputValueHexTextChanged"/>
+                    <TextBox x:Name="_formulaResultHex" Grid.Column="2" HorizontalAlignment="Left" Height="23" Margin="249,499,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" IsReadOnly="True"/>
+                    <Label x:Name="_result" Content="[R]=Dec/Hex" Grid.Column="2" HorizontalAlignment="Left" Margin="10,8,0,0" VerticalAlignment="Top"/>
+                    <Label Content="Result = Dec/Hex" Grid.Column="2" HorizontalAlignment="Left" Margin="10,496,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.316,0.077"/>
+                    <TextBox x:Name="_formulaEditorInputValueDec" Grid.Column="2" HorizontalAlignment="Left" Height="23" Margin="124,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" PreviewTextInput="FormulaEditorInputValueDecPreviewTextInput" TextChanged="FormulaEditorInputValueDecTextChanged"/>
+                    <TextBox x:Name="_formulaResultDec" Grid.Column="2" HorizontalAlignment="Left" Height="23" Margin="124,499,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" IsReadOnly="True"/>
+                    <Label x:Name="_error" Content="Error" Grid.Column="2" HorizontalAlignment="Left" Margin="10,410,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.342,-0.231"/>
+                    <TextBox x:Name="_formulaError" Grid.Column="2" HorizontalAlignment="Left" Height="50" Margin="10,441,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="359"/>
+                    <Button x:Name="_copyFormulaToClipboard" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Copy" Width="75" Margin="294,527,10,10" RenderTransformOrigin="3.187,8.184" Grid.Column="2" Click="_copyFormulaToClipboard_Click"/>
+                    <Button x:Name="_addVarToFormula" Content="&gt;" Width="75" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="202,527,10,10" RenderTransformOrigin="4.4,11.769" Grid.Column="1" Click="_addVarToFormula_Click"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Settings" Name="tabSettings">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="5*"/>
+                        <ColumnDefinition Width="753*"/>
+                    </Grid.ColumnDefinitions>
+                    <ComboBox x:Name="_selectLanguage" Width="120" Grid.Column="1" Margin="623,10,10,520" DropDownOpened="SelectLanguageDropDownOpened" DropDownClosed="_selectLanguage_DropDownClosed"/>
+                    <Label x:Name="_selectLanguageLabel" Content="Label" Width="100" Grid.Column="1" Margin="10,10,643,520"/>
+                </Grid>
+            </TabItem>
+        </TabControl>
+        <Grid Margin="12" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+    </Grid>
+</Window>

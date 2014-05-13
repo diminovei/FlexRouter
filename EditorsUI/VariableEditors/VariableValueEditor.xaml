@@ -1,0 +1,14 @@
+﻿<UserControl x:Class="FlexRouter.EditorsUI.VariableEditors.VariableValueEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="70" d:DesignWidth="313" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="Auto">
+    <Grid Margin="0">
+        <Label x:Name="_variableDecValueLabel" Content="Dec Value" HorizontalAlignment="Left" Margin="10,8,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.184,-3" Width="168"/>
+        <TextBox x:Name="_variableDecValue" Height="23" Margin="0,11,10,0" VerticalAlignment="Top" Width="120" HorizontalAlignment="Right"/>
+        <Label x:Name="_variableHexValueLabel" Content="Hex Value" HorizontalAlignment="Left" Margin="10,36,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.184,-3" Width="168"/>
+        <TextBox x:Name="_variableHexValue" Height="23" Margin="0,39,10,0" VerticalAlignment="Top" Width="120" HorizontalAlignment="Right"/>
+    </Grid>
+</UserControl>

@@ -1,0 +1,24 @@
+﻿<UserControl x:Class="FlexRouter.EditorsUI.AccessDescriptorsEditor.DescriptorValueEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:local="clr-namespace:FlexRouter"
+             mc:Ignorable="d" 
+             d:DesignHeight="95" d:DesignWidth="370" Height="Auto" Width="Auto">
+    <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+        <DataGrid x:Name="StatesGrid" Margin="10,0,10,72" VerticalAlignment="Top, Bottom" CanUserResizeRows ="False" CanUserAddRows="False" CanUserSortColumns="False" CanUserReorderColumns="False" Height="Auto" Width="Auto" AutoGenerateColumns="True" MouseDoubleClick="OnDoubleClick" RenderTransformOrigin="-2.833,0.538" CanUserDeleteRows="False" GotFocus="StatesGridGotFocus">
+            <DataGrid.Resources>
+                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="DarkGray"/>
+                </DataGrid.Resources>
+            </DataGrid>
+            <Button x:Name="AddState" Content="Add state" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="75" Click="AddStateClick"/>
+            <Button x:Name="RemoveState" Content="Remove state" HorizontalAlignment="Left" Margin="90,0,0,10" VerticalAlignment="Bottom" Width="75" Click="RemoveStateClick"/>
+            <Button x:Name="AddVariable" Content="Add variable" HorizontalAlignment="Left" Margin="10,0,0,45" VerticalAlignment="Bottom" Width="75" Click="AddVariableClick"/>
+            <Button x:Name="RemoveVariable" Content="Remove variable" HorizontalAlignment="Left" Margin="90,0,0,45" VerticalAlignment="Bottom" Width="75" Click="RemoveVariableClick"/>
+        <Button x:Name="RenameState" Content="Rename state" HorizontalAlignment="Left" Margin="170,0,0,10" VerticalAlignment="Bottom" Width="75" Click="RenameStateClick"/>
+        <Button x:Name="SelectDefaultState" Content="Select default" HorizontalAlignment="Left" Margin="250,0,0,10" VerticalAlignment="Bottom" Width="75" Click="SelectDefaultStateClick"/>
+    </Grid>
+</UserControl>
