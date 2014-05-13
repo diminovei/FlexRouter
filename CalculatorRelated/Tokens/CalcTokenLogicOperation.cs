@@ -18,6 +18,10 @@ namespace FlexRouter.CalculatorRelated.Tokens
     {
         public CalcLogicOperation LogicOperation;
 
+        public CalcTokenLogicOperation(int currentTokenPosition) : base(currentTokenPosition)
+        {
+        }
+
         public static string ToText(CalcLogicOperation operation)
         {
             switch (operation)
@@ -50,7 +54,7 @@ namespace FlexRouter.CalculatorRelated.Tokens
         /// <returns>информация о токене, null - токен не обнаружен</returns>
         public static ICalcToken TryToExtract(string formula, int currentTokenPosition)
         {
-            var token = new CalcTokenLogicOperation { Position = currentTokenPosition };
+            var token = new CalcTokenLogicOperation(currentTokenPosition);
 
             var formulaCut = formula.Remove(0, currentTokenPosition);
             foreach (var op in Enum.GetValues(typeof(CalcLogicOperation)))

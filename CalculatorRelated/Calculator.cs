@@ -87,7 +87,7 @@ namespace FlexRouter.CalculatorRelated
             if (_tokenizers.Any(tokenizer => (token = tokenizer(formula, position)) != null))
                 return token;
 
-            return new CalcTokenUnknown { Error = TokenError.UnexpectedSymbols, TokenText=formula[position].ToString(CultureInfo.InvariantCulture), Position = position };
+            return new CalcTokenUnknown(position) { Error = TokenError.UnexpectedSymbols, TokenText=formula[position].ToString(CultureInfo.InvariantCulture)};
         }
         private ICalcToken[] PreprocessTokens(ICalcToken[] formula)
         {
@@ -221,7 +221,7 @@ namespace FlexRouter.CalculatorRelated
                     default:
                         res = 0; break;
                 }
-                var newToken = new CalcTokenNumber {Value = res};
+                var newToken = new CalcTokenNumber(0) {Value = res};
                 valStack.Push(newToken);
             }
             var value = valStack.Pop();
@@ -325,7 +325,7 @@ namespace FlexRouter.CalculatorRelated
                         };
                     return processResult;
                 }
-                var resultToken = new CalcTokenBoolean {Value = boolResult};
+                var resultToken = new CalcTokenBoolean(0) {Value = boolResult};
                 valStack.Push(resultToken);
             }
             // Формула состояла из пробелов и переносов строк

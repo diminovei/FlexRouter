@@ -43,7 +43,7 @@ namespace FlexRouter.CalculatorRelated
         /// <returns>Токен</returns>
         public ICalcToken VariableTokenizer(string formula, int currentTokenPosition)
         {
-            var token = new CalcTokenNumber { Position = currentTokenPosition };
+            var token = new CalcTokenNumber(currentTokenPosition);
             string text = string.Empty;
             if (formula[currentTokenPosition] != '[' || formula.Length < currentTokenPosition+2)
                 return null;
@@ -51,15 +51,14 @@ namespace FlexRouter.CalculatorRelated
             for (var i = currentTokenPosition + 1; i < formula.Length; i++)
             {
                 if (formula[i] == '[')
-                    return new CalcTokenUnknown { Error = TokenError.UnexpectedSymbols, TokenText = text };
+                    return new CalcTokenUnknown(currentTokenPosition) { Error = TokenError.UnexpectedSymbols, TokenText = text };
                 text += formula[i];
 
                 if (formula[i] != ']')
                     continue;
                 if (text.Length == 2)
-                    return new CalcTokenUnknown { Error = TokenError.UnexpectedSymbols, TokenText = text };
+                    return new CalcTokenUnknown(currentTokenPosition) { Error = TokenError.UnexpectedSymbols, TokenText = text };
                 token.TokenText = text;
-//                token.IsNeedPreprocess = true;
                 var varAndPanelName = text.Substring(1, text.Length - 2).Split('.');
                 if (varAndPanelName.Length != 2)
                     return null;
@@ -69,7 +68,7 @@ namespace FlexRouter.CalculatorRelated
                 token.Error = TokenError.Ok;
                 return token;
             }
-            return new CalcTokenUnknown { Error = TokenError.UnexpectedSymbols, TokenText = text };
+            return new CalcTokenUnknown(currentTokenPosition) { Error = TokenError.UnexpectedSymbols, TokenText = text };
         }
     }
 }

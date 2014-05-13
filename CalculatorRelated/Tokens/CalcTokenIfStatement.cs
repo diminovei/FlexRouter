@@ -5,6 +5,10 @@
     /// </summary>
     class CalcTokenIfStatement : CalcTokenBase
     {
+        public CalcTokenIfStatement(int currentTokenPosition) : base(currentTokenPosition)
+        {
+        }
+
         public static string ToText()
         {
             return "?";
@@ -17,30 +21,11 @@
         /// <returns>информация о токене, null - токен не обнаружен</returns>
         public static ICalcToken TryToExtract(string formula, int currentTokenPosition)
         {
-            var token = new CalcTokenIfStatement { Position = currentTokenPosition };
-
-            for (var i = currentTokenPosition; i < formula.Length; i++)
-            {
-                switch (formula[i])
-                {
-                    case ' ':
-                        token.Formatter = CalcFormatterType.Space;
-                        token.TokenText += formula[i];
-                        break;
-                    case '\t':
-                        token.Formatter = CalcFormatterType.Tab;
-                        token.TokenText += formula[i];
-                        break;
-                    case '\n':
-                    case '\r':
-                        token.Formatter = CalcFormatterType.NewLine;
-                        token.TokenText += formula[i];
-                        break;
-                    default:
-                        return null;
-                }
-            }
-            return token.TokenText == string.Empty ? null : token;
+            var token = new CalcTokenIfStatement(currentTokenPosition);
+            if (formula[currentTokenPosition] != '?')
+                return null;
+            token.TokenText = ToText();
+            return token;
         }
     }
 }

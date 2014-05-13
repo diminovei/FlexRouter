@@ -122,7 +122,7 @@ namespace FlexRouter.AccessDescriptors
         private ICalcToken FormulaResultTokenizer(string formula, int currentTokenPosition)
         {
             const string resultTokenText = "[R]";
-            var token = new CalcTokenNumber {Position = currentTokenPosition, TokenText = resultTokenText};
+            var token = new CalcTokenNumber(currentTokenPosition) {TokenText = resultTokenText };
             return formula.Substring(currentTokenPosition, 3) != resultTokenText ? null : token;
         }
 

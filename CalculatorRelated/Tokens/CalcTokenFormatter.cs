@@ -13,6 +13,11 @@
     public class CalcTokenFormatter : CalcTokenBase
     {
         public CalcFormatterType Formatter;
+
+        public CalcTokenFormatter(int currentTokenPosition) : base(currentTokenPosition)
+        {
+        }
+
         /// <summary>
         /// Попытка извлечь незначимый токен (пробел, конец строки, ...)
         /// </summary>
@@ -21,7 +26,7 @@
         /// <returns>информация о токене, null - токен не обнаружен</returns>
         public static ICalcToken TryToExtract(string formula, int currentTokenPosition)
         {
-            var token = new CalcTokenFormatter { Position = currentTokenPosition };
+            var token = new CalcTokenFormatter(currentTokenPosition);
 
             for (var i = currentTokenPosition; i < formula.Length; i++)
             {

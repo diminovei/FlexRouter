@@ -1016,7 +1016,7 @@ namespace FlexRouter
             const string resultTokenText = "[R]";
             if (formula.Length == 0 || formula.Length < currentTokenPosition + 3)
                 return null;
-            var token = new CalcTokenNumber { Position = currentTokenPosition };
+            var token = new CalcTokenNumber(currentTokenPosition);
             if (formula.Substring(currentTokenPosition, 3) != resultTokenText)
                 return null;
             token.TokenText = resultTokenText;

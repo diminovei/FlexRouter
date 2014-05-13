@@ -8,6 +8,11 @@
     public class CalcTokenBracket : CalcTokenBase
     {
         public CalcBracket Bracket;
+
+        public CalcTokenBracket(int currentTokenPosition) : base(currentTokenPosition)
+        {
+        }
+
         /// <summary>
         /// Попытка извлечь токен - скобку
         /// </summary>
@@ -17,9 +22,9 @@
         public static ICalcToken TryToExtract(string formula, int currentTokenPosition)
         {
             if (formula[currentTokenPosition] == '(')
-                return new CalcTokenBracket { Position = currentTokenPosition, Bracket = CalcBracket.Open, TokenText = "(" };
+                return new CalcTokenBracket(currentTokenPosition) { Bracket = CalcBracket.Open, TokenText = "(" };
             if (formula[currentTokenPosition] == ')')
-                return new CalcTokenBracket { Position = currentTokenPosition, Bracket = CalcBracket.Close, TokenText = ")" };
+                return new CalcTokenBracket(currentTokenPosition) { Bracket = CalcBracket.Close, TokenText = ")" };
             return null;
         }
     }

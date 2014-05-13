@@ -6,6 +6,11 @@ namespace FlexRouter.CalculatorRelated.Tokens
     public class CalcTokenNumber : CalcTokenBase
     {
         public double Value;
+
+        public CalcTokenNumber(int currentTokenPosition) : base(currentTokenPosition)
+        {
+        }
+
         /// <summary>
         /// Попытка извлечь токен-число
         /// </summary>
@@ -15,29 +20,7 @@ namespace FlexRouter.CalculatorRelated.Tokens
         /// <returns>информация о токене, null - токен не обнаружен</returns>
         public static ICalcToken TryToExtract(string formula, ICalcToken previousToken, int currentTokenPosition)
         {
-            var token = new CalcTokenNumber { Position = currentTokenPosition };
-            //  Если первый символ - минус (парсим отрицательное число):
-            //  -10 - начало формулы
-            //  (-10 - после открывающей скобки
-            //  =-10 - после знака равно
-/*            var isPrevTokenOpenBracket = false;
-            if (previousToken != null)
-            {
-                var bracket = previousToken as CalcTokenBracket;
-                if (bracket != null)
-                    isPrevTokenOpenBracket = bracket.Bracket == CalcBracket.Open;
-            }
-
-            if (formula[currentTokenPosition] == '-')
-            {
-                if (formula.Length > currentTokenPosition + 1 && (previousToken == null || previousToken is CalcTokenLogicOperation || isPrevTokenOpenBracket))
-                {
-                    token.TokenText += formula[currentTokenPosition];
-                    currentTokenPosition++;
-                }
-                else
-                    return null;
-            }*/
+            var token = new CalcTokenNumber(currentTokenPosition);
             // Если начало текста токена, или следующий символ после знака минус не содержит цифр, значит это не число
             if (formula[currentTokenPosition] < '0' || formula[currentTokenPosition] > '9')
                 return null;

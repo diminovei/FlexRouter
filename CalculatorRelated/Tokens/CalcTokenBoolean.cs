@@ -8,5 +8,9 @@
     public class CalcTokenBoolean : CalcTokenBase
     {
         public bool Value;
+
+        public CalcTokenBoolean(int currentTokenPosition) : base(currentTokenPosition)
+        {
+        }
     }
 }
