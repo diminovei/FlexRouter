@@ -32,14 +32,14 @@ namespace FlexRouter.CalculatorRelated.Tokens
                 // Число не может содержать две точки
                 if (formula[i] == '.' && token.TokenText.Contains("."))
                 {
-                    token.Error = TokenError.MultipluDotInNumber;
+                    token.Error = FormulaError.MultipluDotInNumber;
                     break;
                 }
                 token.TokenText += formula[i];
             }
             // Число не может заканчиваться на точку
             if (token.TokenText[token.TokenText.Length - 1] == '.')
-                token.Error = TokenError.DotCantBeLastSymbolOfNumber;
+                token.Error = FormulaError.DotCantBeLastSymbolOfNumber;
             token.Value = Convert.ToDouble(token.TokenText, CultureInfo.InvariantCulture);
             return token;
         }

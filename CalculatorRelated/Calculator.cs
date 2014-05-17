@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Windows.Forms;
 using FlexRouter.CalculatorRelated.Tokens;
 
 namespace FlexRouter.CalculatorRelated
@@ -17,7 +18,15 @@ namespace FlexRouter.CalculatorRelated
         {
             _preprocessors.Add(preprocessor);
         }
+        /// <summary>
+        /// Список внешних токенизаторов-плагинов
+        /// </summary>
         private readonly List<TryToExtractToken> _tokenizers = new List<TryToExtractToken>();
+        /// <summary>
+        /// Зарегистрировать внешний токенайзер-плагин
+        /// Токенизатор преобразует часть формулы в класс. Например, число, операция, скобка, ...
+        /// </summary>
+        /// <param name="tokenizer">метод токенизации</param>
         public void RegisterTokenizer(TryToExtractToken tokenizer)
         {
             _tokenizers.Add(tokenizer);
@@ -57,7 +66,7 @@ namespace FlexRouter.CalculatorRelated
                 }
 
                 // Если произошла ошибка при разборе формулы, заканчиваем разбор
-                if (lastToken.Error != TokenError.Ok)
+                if (lastToken.Error != FormulaError.Ok)
                     return tokens.ToArray();
             }
         }
@@ -74,21 +83,30 @@ namespace FlexRouter.CalculatorRelated
             if (formula.Length == position)
                 return null; // Формула распаршена
 
+            if ((token = CalcTokenIfStatement.TryToExtract(formula, position)) != null)
+                return token;
+            if ((token = CalcTokenFormulaSeparator.TryToExtract(formula, position)) != null)
+                return token;
             if ((token = CalcTokenNumber.TryToExtract(formula, previousToken, position)) != null)
                 return token;
             if ((token = CalcTokenFormatter.TryToExtract(formula, position)) != null)
                 return token;
             if ((token = CalcTokenBracket.TryToExtract(formula, position)) != null)
                 return token;
-            if((token = CalcTokenLogicOperation.TryToExtract(formula, position)) != null)
+            if ((token = CalcTokenLogicOperation.TryToExtract(formula, position)) != null)
                 return token;
             if ((token = CalcTokenMathOperation.TryToExtract(formula, previousToken, position)) != null)
                 return token;
             if (_tokenizers.Any(tokenizer => (token = tokenizer(formula, position)) != null))
                 return token;
 
-            return new CalcTokenUnknown(position) { Error = TokenError.UnexpectedSymbols, TokenText=formula[position].ToString(CultureInfo.InvariantCulture)};
+            return new CalcTokenUnknown(position) { Error = FormulaError.UnexpectedSymbols, TokenText = formula[position].ToString(CultureInfo.InvariantCulture) };
         }
+        /// <summary>
+        /// Предобработка токена перед тем, как передать его методу расчёта значения
+        /// </summary>
+        /// <param name="formula"></param>
+        /// <returns></returns>
         private ICalcToken[] PreprocessTokens(ICalcToken[] formula)
         {
             for (var i = 0; i < formula.Length; i++)
@@ -107,243 +125,468 @@ namespace FlexRouter.CalculatorRelated
             }
             return formula;
         }
-
         /// <summary>
-        /// Временная надстройка для возможности обработки формул вида XXX ? 0 ; 1
+        /// Класс, содержащий результаты проверки формулы с координатами, которые следует отметить как ошибочные в визуализации
+        /// </summary>
+        public class CheckFormulaResult
+        {
+            /// <summary>
+            /// Тип найденной ошибки
+            /// </summary>
+            public FormulaError Error;
+            /// <summary>
+            /// Позиция, где начинается ошибочный токен
+            /// </summary>
+            public int ErrorTokenPosition;
+            /// <summary>
+            /// Длина ошибочного токена
+            /// </summary>
+            public int ErrorTokenLength;
+            /// <summary>
+            /// Найдены ли ошибки при проверке формулы
+            /// </summary>
+            /// <returns></returns>
+            public bool IsResultHasError()
+            {
+                return Error != FormulaError.Ok;
+            }
+            public CheckFormulaResult(ICalcToken tokenWithError)
+            {
+                Error = tokenWithError.Error;
+                ErrorTokenPosition = tokenWithError.Position;
+                ErrorTokenLength = tokenWithError.GetTokenTextLentgh();
+            }
+            public CheckFormulaResult()
+            {
+                Error = FormulaError.Ok;
+                ErrorTokenPosition = 0;
+                ErrorTokenLength = 0;
+            }
+            public CheckFormulaResult(FormulaError error)
+            {
+                Error = error;
+                ErrorTokenPosition = 0;
+                ErrorTokenLength = 0;
+            }
+        }
+        public enum ComputeResultType
+        {
+            Error,
+            FormulaWasEmpty,
+            BooleanResult,
+            DoubleResult
+        }
+        public class ComputeResult
+        {
+            private readonly CheckFormulaResult _checkResult;
+            private readonly bool _resultIsBoolean;
+            public ComputeResultType GetResultType()
+            {
+                if (_checkResult.Error == FormulaError.FormulaIsEmpty)
+                    return ComputeResultType.FormulaWasEmpty;
+                if (_checkResult.IsResultHasError())
+                    return ComputeResultType.Error;
+                return _resultIsBoolean ? ComputeResultType.BooleanResult : ComputeResultType.DoubleResult;
+            }
+
+            public bool IsCalculatedSuccessfully()
+            {
+                return !_checkResult.IsResultHasError();
+            }
+            public FormulaError GetError()
+            {
+                return _checkResult.Error;
+            }
+            public int GetErrorBeginPositionInFormulaText()
+            {
+                return _checkResult.ErrorTokenPosition;
+            }
+            public int GetErrorLengthPositionInFormulaText()
+            {
+                return _checkResult.ErrorTokenLength;
+            }
+            public double CalculatedDoubleValue;
+            public bool CalculatedBoolValue 
+            {
+                get
+                {
+                    return CalculatedDoubleValue != 0; 
+                }
+            }
+            public ComputeResult(FormulaError formulaError)
+            {
+                _checkResult = new CheckFormulaResult(formulaError);
+            }
+
+            public ComputeResult(CheckFormulaResult result)
+            {
+                _checkResult = result;
+            }
+            public ComputeResult(double doubleValue)
+            {
+                _checkResult = new CheckFormulaResult();
+                CalculatedDoubleValue = doubleValue;
+                _resultIsBoolean = false;
+            }
+            public ComputeResult(bool value)
+            {
+                _checkResult = new CheckFormulaResult();
+                CalculatedDoubleValue = value ? 1 : 0;
+                _resultIsBoolean = true;
+            }
+            public ComputeResult(ICalcToken token)
+            {
+                _checkResult = new CheckFormulaResult(token);
+            }
+
+            /// <summary>
+            /// Формула рассчитана успешно, не пустая, рассчитанное значение - число
+            /// </summary>
+            /// <returns></returns>
+            public bool CanUseDoubleValue()
+            {
+                return IsCalculatedSuccessfully() && GetError() != FormulaError.FormulaIsEmpty && GetResultType() == ComputeResultType.DoubleResult;
+            }
+            /// <summary>
+            /// Формула рассчитана успешно, не пустая, рассчитанное значение - булевое
+            /// </summary>
+            /// <returns></returns>
+            public bool CanUseBooleanValue()
+            {
+                return IsCalculatedSuccessfully() && GetError() != FormulaError.FormulaIsEmpty && GetResultType() == ComputeResultType.BooleanResult;
+            }
+        }
+        enum ConditionFormulaState
+        {
+            Idle,                               // Логической формулы не было, ждём установки значения
+            LogicPartWasTrueWaitingForMathPart,
+            LogicPartWasFalseSkipMathPart
+        }
+        /// <summary>
+        /// Рассчитать формулу. Вернуть результат или описание ошибки в формуле
         /// </summary>
         /// <param name="formula">текст формулы</param>
-        /// <returns>результат вычислений</returns>
-        public ProcessingMathFormulaResult CalculateMathFormula(string formula)
+        /// <returns>результат ресчёта или описание ошибки в формуле</returns>
+        public ComputeResult ComputeFormula(string formula)
         {
-            // Обработка выражения logicformula == true ? mathformula ; mathformula
-            var splittedFormulaCombonations = formula.Split(';');
-            foreach (var sf in splittedFormulaCombonations)
+            try
             {
-                var splittedIf = sf.Split('?');
-                if (splittedIf.Length == 2)
+                if (string.IsNullOrEmpty(formula))
+                    return new ComputeResult(FormulaError.FormulaIsEmpty);
+                var tokenizedFormula = TokenizeFormula(formula);
+                if (tokenizedFormula.Length == 0)
+                    return new ComputeResult(FormulaError.FormulaIsEmpty);
+                if (tokenizedFormula[tokenizedFormula.Length - 1].Error != FormulaError.Ok)
+                    return new ComputeResult(tokenizedFormula[tokenizedFormula.Length - 1]);
+                var tokensToProcess = new List<ICalcToken>();
+                var conditionFormulaState = ConditionFormulaState.Idle;
+                foreach (var token in tokenizedFormula)
                 {
-                    var logicResult = CalculateLogicFormula(splittedIf[0]);
-                    if (logicResult.Error != ProcessingLogicFormulaError.Ok)
-                        return new ProcessingMathFormulaResult
-                        {
-                            Error = ProcessingMathFormulaError.LogicConditionIsIncorrect,
-                            Value = 0
-                        };
-                    if(logicResult.Value)
-                        return CalculateMathFormula2(splittedIf[1]);
+                    // Если встретили ?
+                    if (token is CalcTokenIfStatement)
+                    {
+                        // x == true ? y == true ? (ошибка, 2 условия подряд без установки значения)
+                        if (conditionFormulaState == ConditionFormulaState.LogicPartWasTrueWaitingForMathPart)
+                            return new ComputeResult(FormulaError.ThisFormulaPartMustBeMath);
+                        // Обрабатываем логическую формулу
+                        var calculateResult = ComputeTokenizedFormula(tokensToProcess.ToArray());
+                        if (!calculateResult.IsCalculatedSuccessfully())
+                            return calculateResult;
+                        // x+1 ? 11 (часть до ? не была логическим условием)
+                        if (calculateResult.GetResultType() != ComputeResultType.BooleanResult)
+                            return new ComputeResult(FormulaError.ThisFormulaPartMustBeLogic);
+                        // Решаем, установка значения или его пропуск в зависимости от срабатывания условия в логической формуле
+                        conditionFormulaState = calculateResult.CalculatedBoolValue ? ConditionFormulaState.LogicPartWasTrueWaitingForMathPart : ConditionFormulaState.LogicPartWasFalseSkipMathPart;
+                        tokensToProcess.Clear();
+                        continue;
+                    }
+                    // Если встретили ;
+                    if (token is CalcTokenFormulaSeparator)
+                    {
+                        // Если условие отработало с true - считаем формулу после условия и выходим
+                        if (conditionFormulaState != ConditionFormulaState.LogicPartWasFalseSkipMathPart)
+                            break;
+                        conditionFormulaState = ConditionFormulaState.Idle;
+                        tokensToProcess.Clear();
+                        continue;
+                    }
+                    tokensToProcess.Add(token);
+                }
+                // Если токены закончились
+                return ComputeTokenizedFormula(tokensToProcess.ToArray());
+            }
+            catch (Exception)
+            {
+                return new ComputeResult(FormulaError.Exception);
+            }
+        }
+        /// <summary>
+        /// Рассчитать значение токенизированной формулы
+        /// </summary>
+        /// <param name="tokenizedFormula">Токенизированная формула</param>
+        /// <returns></returns>
+        private ComputeResult ComputeTokenizedFormula(ICalcToken[] tokenizedFormula)
+        {
+            tokenizedFormula = PreprocessTokens(tokenizedFormula);
+            if (tokenizedFormula == null || tokenizedFormula.Length == 0)
+                return new ComputeResult(new CheckFormulaResult(FormulaError.FormulaIsEmpty));
+            var checkResult = CheckFormula(tokenizedFormula);
+            if(checkResult.IsResultHasError())
+                return new ComputeResult(checkResult);
+            var formulaRpn = ConvertFormulaToReversePolishNotation(tokenizedFormula);
+            if (formulaRpn.Length == 0)
+                return new ComputeResult(new CheckFormulaResult(FormulaError.FormulaIsEmpty));
+            var valStack = new Stack<ICalcToken>();
+
+            foreach (var token in formulaRpn)
+            {
+                if (token is CalcTokenNumber || token is CalcTokenBoolean)
+                {
+                    valStack.Push(token);
+                    continue;
+                }
+
+                if (!(token is CalcTokenMathOperation) && !(token is CalcTokenLogicOperation))
+                    continue;
+
+                var mathValueToken1 = valStack.Pop();
+
+                ICalcToken resultToken;
+                if (token is CalcTokenMathOperation)
+                {
+                    // Выполняем унарную операцию -
+                    if (((token as CalcTokenMathOperation).MathOperation == CalcMathOperation.UnaryMinus)
+                        || ((token as CalcTokenMathOperation).MathOperation == CalcMathOperation.UnaryPlus))
+                    {
+                        resultToken = ProcessUnaryMathOperation(((CalcTokenNumber) mathValueToken1), token as CalcTokenMathOperation);
+                    }
+                    else
+                    {
+                        var mathValueToken2 = valStack.Pop();
+                        if (mathValueToken1.GetType() != mathValueToken2.GetType())
+                            return new ComputeResult(new CheckFormulaResult(FormulaError.CantOperateMathAndLogicValues));
+                        resultToken = ProcessMathOperation(mathValueToken2, mathValueToken1, (CalcTokenMathOperation)token);
+                        if(resultToken.Error!=FormulaError.Ok)
+                            return new ComputeResult(resultToken);
+                    }
                 }
                 else
                 {
-                    return CalculateMathFormula2(sf);
+                    // Выполняем логические операции
+                    var valueToken2 = valStack.Pop();
+                    resultToken = ProcessLogicOperation(valueToken2, mathValueToken1, token as CalcTokenLogicOperation);
+                    if (resultToken.Error != FormulaError.Ok)
+                        return new ComputeResult(resultToken);
                 }
-            }
-            return new ProcessingMathFormulaResult
-            {
-                Error = ProcessingMathFormulaError.FormulaIsEmpty,
-                Value = 0
-            };
-        }
-        /// <summary>
-        /// Рассчитать значение формулы
-        /// </summary>
-        /// <param name="formula">текст формулы</param>
-        /// <returns>результат расчёта</returns>
-        private ProcessingMathFormulaResult CalculateMathFormula2(string formula)
-        {
-            if (string.IsNullOrEmpty(formula))
-            {
-                var processResult = new ProcessingMathFormulaResult
-                {
-                    Error = ProcessingMathFormulaError.Ok,
-                    Value = 0
-                };
-                return processResult;
-            }
-
-            var tokenizedFormula = TokenizeFormula(formula);
-//            tokenizedFormula = PreprocessTokens(tokenizedFormula);
-            return CalculateMathFormula(tokenizedFormula);
-        }
-        /// <summary>
-        /// Расчёт математической формулы
-        /// </summary>
-        /// <returns>Результат расчёта</returns>
-        public ProcessingMathFormulaResult CalculateMathFormula(ICalcToken[] formula)
-        {
-            formula = PreprocessTokens(formula);
-            if(formula == null)
-                return new ProcessingMathFormulaResult { Error = ProcessingMathFormulaError.FormulaIsEmpty, Value = 0};
-            var formulaRpn = ConvertFormulaToReversePolishNotation(formula);
-            if (formulaRpn.Length == 0)
-                return new ProcessingMathFormulaResult {Error = ProcessingMathFormulaError.Ok, Value = 0};
-
-            var valStack = new Stack<ICalcToken>();
-
-            foreach (var t in formulaRpn)
-            {
-                if (t is CalcTokenNumber)
-                {
-                    valStack.Push(t);
-                    continue;
-                }
-
-                if (!(t is CalcTokenMathOperation))
-                    continue;
-
-                var v1 = valStack.Pop();
-
-                if ((t as CalcTokenMathOperation).MathOperation == CalcMathOperation.UnaryMinus)
-                {
-                    ((CalcTokenNumber) v1).Value = ((CalcTokenNumber) v1).Value * -1;
-                    valStack.Push(v1);
-                    continue;
-                }
-                if ((t as CalcTokenMathOperation).MathOperation == CalcMathOperation.UnaryPlus)
-                {
-                    ((CalcTokenNumber)v1).Value = Math.Abs(((CalcTokenNumber)v1).Value);
-                    valStack.Push(v1);
-                    continue;
-                }
-
-                double res;
-                var n1 = ((CalcTokenNumber)v1).Value;
-                var v2 = valStack.Pop();
-                var n2 = ((CalcTokenNumber) v2).Value;
-
-                switch (((CalcTokenMathOperation)t).MathOperation)
-                {
-                    case CalcMathOperation.Plus: res = n1 + n2; break;
-                    case CalcMathOperation.Minus: res = n1 - n2; break;
-                    case CalcMathOperation.Multiply: res = n1 * n2; break;
-                    case CalcMathOperation.Divide: res = n1 / n2; break;
-                    case CalcMathOperation.DivideModulo: res = n1 % n2; break;
-                    case CalcMathOperation.DivideInteger: res = (long)(n1 / n2); break;
-                    default:
-                        res = 0; break;
-                }
-                var newToken = new CalcTokenNumber(0) {Value = res};
-                valStack.Push(newToken);
-            }
-            var value = valStack.Pop();
-            return new ProcessingMathFormulaResult { Error = ProcessingMathFormulaError.Ok, Value = ((CalcTokenNumber)value).Value };
-        }
-        public ProcessingLogicFormulaResult CalculateLogicFormula(string formula)
-        {
-            if (string.IsNullOrEmpty(formula))
-            {
-                var processResult = new ProcessingLogicFormulaResult
-                {
-                    Error = ProcessingLogicFormulaError.Ok,
-                    Value = true
-                };
-                return processResult;
-            }
-            var tokenizedFormula = TokenizeFormula(formula);
-//            tokenizedFormula = PreprocessTokens(tokenizedFormula);
-            return CalculateLogicFormula(tokenizedFormula);
-        }
-        /// <summary>
-        /// Расчёт логической формулы
-        /// </summary>
-        /// <returns>Результат расчёта</returns>
-        public ProcessingLogicFormulaResult CalculateLogicFormula(ICalcToken[] formula)
-        {
-            formula = PreprocessTokens(formula);
-            var formulaRpn = ConvertFormulaToReversePolishNotation(formula);
-            if (formulaRpn.Length == 0)
-                return new ProcessingLogicFormulaResult {Error = ProcessingLogicFormulaError.Ok, Value = true};
-
-            var valStack = new Stack<ICalcToken>();
-
-            for (var i = 0; i < formulaRpn.Length; ++i)
-            {
-                if (formulaRpn[i] is CalcTokenNumber || formulaRpn[i] is CalcTokenBoolean)
-                {
-                    valStack.Push(formulaRpn[i]);
-                    continue;
-                }
-
-                // Добавить сюда расчёт математики (+-*%...)
-                if (!(formulaRpn[i] is CalcTokenLogicOperation))
-                    continue;
-
-                var v2 = valStack.Pop();
-                var v1 = valStack.Pop();
-                bool boolResult = false;
-                if (v1 is CalcTokenNumber && v2 is CalcTokenNumber)
-                {
-                    var v1Value = ((CalcTokenNumber) v1).Value;
-                    var v2Value = ((CalcTokenNumber) v2).Value;
-                    switch (((CalcTokenLogicOperation) formulaRpn[i]).LogicOperation)
-                    {
-                        case CalcLogicOperation.Equal:
-                            boolResult = v1Value == v2Value;
-                            break;
-                        case CalcLogicOperation.Greater:
-                            boolResult = v1Value > v2Value;
-                            break;
-                        case CalcLogicOperation.GreaterOrEqual:
-                            boolResult = v1Value >= v2Value;
-                            break;
-                        case CalcLogicOperation.Less:
-                            boolResult = v1Value < v2Value;
-                            break;
-                        case CalcLogicOperation.LessOrEqual:
-                            boolResult = v1Value <= v2Value;
-                            break;
-                        case CalcLogicOperation.Not:
-                            boolResult = v1Value != v2Value;
-                            break;
-                    }
-                }
-                else if (v1 is CalcTokenBoolean && v2 is CalcTokenBoolean)
-                {
-                    var v1Value = ((CalcTokenBoolean) v1).Value;
-                    var v2Value = ((CalcTokenBoolean) v2).Value;
-                    switch (((CalcTokenLogicOperation) formulaRpn[i]).LogicOperation)
-                    {
-                        case CalcLogicOperation.And:
-                            boolResult = v1Value && v2Value;
-                            break;
-                        case CalcLogicOperation.Equal:
-                            boolResult = v1Value == v2Value;
-                            break;
-                        case CalcLogicOperation.Not:
-                            boolResult = v1Value != v2Value;
-                            break;
-                        case CalcLogicOperation.Or:
-                            boolResult = v1Value || v2Value;
-                            break;
-                    }
-                }
-                else
-                {
-                    var processResult = new ProcessingLogicFormulaResult
-                        {
-                            Error = ProcessingLogicFormulaError.CantCompareDifferentTypes,
-                            Value = false
-                        };
-                    return processResult;
-                }
-                var resultToken = new CalcTokenBoolean(0) {Value = boolResult};
                 valStack.Push(resultToken);
             }
-            // Формула состояла из пробелов и переносов строк
-            if (valStack.Count == 0)
-                return new ProcessingLogicFormulaResult {Error = ProcessingLogicFormulaError.Ok, Value = true};
+            var value = valStack.Pop();
 
-            var lastToken = valStack.Pop();
-            return !(lastToken is CalcTokenBoolean)
-                       ? new ProcessingLogicFormulaResult
-                           {
-                               Error = ProcessingLogicFormulaError.LogicFormulaResultIsNotBoolean,
-                               Value = false
-                           }
-                       : new ProcessingLogicFormulaResult
-                           {
-                               Error = ProcessingLogicFormulaError.Ok,
-                               Value = ((CalcTokenBoolean) lastToken).Value
-                           };
+            return value is CalcTokenBoolean
+                ? new ComputeResult((value as CalcTokenBoolean).Value)
+                : new ComputeResult((value as CalcTokenNumber).Value);
+        }
+        /// <summary>
+        /// Обработать унарную математическую операцию (один токен + операция. Например, -10 - сменить знак у 10 на отрицательный)
+        /// </summary>
+        /// <param name="token">токен</param>
+        /// <param name="mathUnaryOperationToken">токен логической операции</param>
+        /// <returns>результирующий токен или ошибка. Ошибок быть не может</returns>
+        private ICalcToken ProcessUnaryMathOperation(CalcTokenNumber token, CalcTokenMathOperation mathUnaryOperationToken)
+        {
+            // Выполняем унарную операцию -
+            if (mathUnaryOperationToken.MathOperation == CalcMathOperation.UnaryMinus)
+                token.Value = token.Value * -1;
+            // Выполняем унарную операцию +
+            if(mathUnaryOperationToken.MathOperation == CalcMathOperation.UnaryPlus)
+                token.Value = Math.Abs(token.Value);
+            return token;
+        }
+        /// <summary>
+        /// Обработать математическую операцию над двумя токенами
+        /// </summary>
+        /// <param name="token1">первый токен</param>
+        /// <param name="token2">второй токен</param>
+        /// <param name="mathOperationToken">токен матеметической операции</param>
+        /// <returns>результирующий токен или ошибка, установленная методом в одном из входных токенов</returns>
+        private ICalcToken ProcessMathOperation(ICalcToken token1, ICalcToken token2, CalcTokenMathOperation mathOperationToken)
+        {
+            // Выполняем метематическую операцию
+            double mathResult;
+            var n1 = ((CalcTokenNumber)token1).Value;
+            var n2 = ((CalcTokenNumber)token2).Value;
+
+            switch (mathOperationToken.MathOperation)
+            {
+                case CalcMathOperation.Plus:
+                    mathResult = n1 + n2;
+                    break;
+                case CalcMathOperation.Minus:
+                    mathResult = n1 - n2;
+                    break;
+                case CalcMathOperation.Multiply:
+                    mathResult = n1 * n2;
+                    break;
+                case CalcMathOperation.Divide:
+                    mathResult = n1 / n2;
+                    break;
+                case CalcMathOperation.DivideModulo:
+                    mathResult = n1 % n2;
+                    break;
+                case CalcMathOperation.DivideInteger:
+                    mathResult = (long)(n1 / n2);
+                    break;
+                default:
+                     mathOperationToken.Error = FormulaError.UnknownMathOperation;
+                     return mathOperationToken;
+            }
+            // Результат возвращаем в стэк
+            return new CalcTokenNumber(0) { Value = mathResult };
+        }
+        /// <summary>
+        /// Обработать логическую операцию над двумя логическими токенами (bool) или двумя числами
+        /// </summary>
+        /// <param name="token1">первый токен</param>
+        /// <param name="token2">второй токен</param>
+        /// <param name="logicOperationToken">токен логической операции</param>
+        /// <returns>результирующий токен или ошибка, установленная методом в одном из входных токенов</returns>
+        private ICalcToken ProcessLogicOperation(ICalcToken token1, ICalcToken token2, CalcTokenLogicOperation logicOperationToken)
+        {
+            bool boolResult;
+            if (token1 is CalcTokenNumber && token2 is CalcTokenNumber)
+            {
+                var v1Value = ((CalcTokenNumber)token1).Value;
+                var v2Value = ((CalcTokenNumber)token2).Value;
+                switch (logicOperationToken.LogicOperation)
+                {
+                    case CalcLogicOperation.Equal:
+                        boolResult = v1Value == v2Value;
+                        break;
+                    case CalcLogicOperation.Greater:
+                        boolResult = v1Value > v2Value;
+                        break;
+                    case CalcLogicOperation.GreaterOrEqual:
+                        boolResult = v1Value >= v2Value;
+                        break;
+                    case CalcLogicOperation.Less:
+                        boolResult = v1Value < v2Value;
+                        break;
+                    case CalcLogicOperation.LessOrEqual:
+                        boolResult = v1Value <= v2Value;
+                        break;
+                    case CalcLogicOperation.Not:
+                        boolResult = v1Value != v2Value;
+                        break;
+                    default:
+                        logicOperationToken.Error = FormulaError.UnknownLogicOperation;
+                        return logicOperationToken;
+                }
+            }
+            else if (token1 is CalcTokenBoolean && token2 is CalcTokenBoolean)
+            {
+                var v1Value = ((CalcTokenBoolean)token1).Value;
+                var v2Value = ((CalcTokenBoolean)token2).Value;
+                switch (logicOperationToken.LogicOperation)
+                {
+                    case CalcLogicOperation.And:
+                        boolResult = v1Value && v2Value;
+                        break;
+                    case CalcLogicOperation.Equal:
+                        boolResult = v1Value == v2Value;
+                        break;
+                    case CalcLogicOperation.Not:
+                        boolResult = v1Value != v2Value;
+                        break;
+                    case CalcLogicOperation.Or:
+                        boolResult = v1Value || v2Value;
+                        break;
+                    default:
+                        logicOperationToken.Error = FormulaError.UnknownLogicOperation;
+                        return logicOperationToken;
+                }
+            }
+            else
+            {
+                return new CalcTokenUnknown(0) {Error = FormulaError.CantOperateMathAndLogicValues};
+            }
+            return new CalcTokenBoolean(0) { Value = boolResult };
+        }
+        /// <summary>
+        /// Проверить корректность токенизированной формулы. Токены типа Formatter должны быть уже исключены.
+        /// </summary>
+        /// <param name="tokens">токенизированная формула</param>
+        /// <returns>результат проверки</returns>
+        private CheckFormulaResult CheckFormula(ICalcToken[] tokens)
+        {
+            var bracketCounter = 0; // +1 - открыта, -1 - закрыта
+            var lastOpenBracketIndex = -1; // Индекс первой открытой скобки
+            if (tokens.Length == 0)
+                return null;
+            for (var i = 0; i < tokens.Length; i++)
+            {
+                var prevToken = i == 0 ? null : tokens[i - 1];
+                var currentToken = tokens[i];
+                var nextToken = i == tokens.Length - 1 ? null : tokens[i + 1];
+
+                // Если ошибка была обнаружена на этапе токенизации
+                if (currentToken.Error != FormulaError.Ok)
+                    return new CheckFormulaResult(currentToken);
+
+                // Если закрывающих скобок стало больше, чем открывающих
+                if (currentToken is CalcTokenBracket)
+                {
+                    if (((CalcTokenBracket)currentToken).Bracket == CalcBracket.Open)
+                    {
+                        bracketCounter++;
+                        lastOpenBracketIndex = i;
+                    }
+                    else
+                    {
+                        bracketCounter--;
+                        if (bracketCounter < 0)
+                        {
+                            currentToken.Error = FormulaError.ClosingBracketNotOpened;
+                            return new CheckFormulaResult(currentToken);
+                        }
+                    }
+                }
+                // Если подряд два токена одинакового типа
+                if (prevToken!= null && (prevToken.GetType() == currentToken.GetType()))
+                {
+                    currentToken.Error = FormulaError.SimilarTokensOneByOne;
+                    return new CheckFormulaResult(currentToken);
+                }
+                //  Двойная точка в числе или число оканчивается на точку
+                if (currentToken is CalcTokenNumber)
+                {
+                    if ((currentToken as CalcTokenNumber).TokenText.EndsWith("."))
+                    {
+                        currentToken.Error = FormulaError.DotCantBeLastSymbolOfNumber;
+                        return new CheckFormulaResult(currentToken);
+                    }
+                    if ((currentToken as CalcTokenNumber).TokenText.IndexOf('.') !=
+                        (currentToken as CalcTokenNumber).TokenText.LastIndexOf('.'))
+                    {
+                        currentToken.Error = FormulaError.MultipluDotInNumber;
+                        return new CheckFormulaResult(currentToken);
+                    }
+                }
+                // Если обрабатываем последний токен
+                if (nextToken == null || nextToken is CalcTokenIfStatement || nextToken is CalcTokenFormulaSeparator)
+                {
+                    if (!(currentToken is CalcTokenNumber))
+                    {
+                        currentToken.Error = FormulaError.LastTokenCantBeOperation;
+                        return new CheckFormulaResult(currentToken);
+                    }
+                }
+            }
+            if (bracketCounter > 0)
+            {
+                tokens[lastOpenBracketIndex].Error = FormulaError.OpeningBracketNotClosed;
+                return new CheckFormulaResult(tokens[lastOpenBracketIndex]);
+            }
+            return new CheckFormulaResult();
         }
         /// <summary>
         /// Превращаем токенизированную формулу в обратную польскую нотацию
@@ -446,7 +689,7 @@ namespace FlexRouter.CalculatorRelated
                     || t.LogicOperation == CalcLogicOperation.Or
                     || t.LogicOperation == CalcLogicOperation.Not
                     )
-                    return 2;
+                    return 3;
             }
             if (calcTokenBase is CalcTokenMathOperation)
             {
@@ -454,98 +697,19 @@ namespace FlexRouter.CalculatorRelated
                 if (t.MathOperation == CalcMathOperation.UnaryPlus
                     || t.MathOperation == CalcMathOperation.UnaryMinus
                 )
-                    return 5;
+                    return 10;
                 if (t.MathOperation == CalcMathOperation.Multiply
                     || t.MathOperation == CalcMathOperation.Divide
                     ||t.MathOperation == CalcMathOperation.DivideModulo
                     ||t.MathOperation == CalcMathOperation.DivideInteger
                 )
-                return 4;
+                return 8;
                 if (t.MathOperation == CalcMathOperation.Plus
                     ||t.MathOperation == CalcMathOperation.Minus
                 )
-                return 3;
+                return 6;
             }
             return 0;
-        }
-
-        public ICalcToken CheckTokenizedFormula(ICalcToken[] formulaTokens)
-        {
-            var bracketCounter = 0; // +1 - открыта, -1 - закрыта
-            var lastOpenBracketIndex = -1; // Индекс первой открытой скобки
-            var importantTokenCounter = 0; // Нечётный токен - должен быть значением, чётный - операцией. А что насчёт скобок?
-
-            // Если формулы нет
-            if (formulaTokens.Length == 0)
-                return null;
-            // Если последний распаршенный токен имеет ошибку
-            if (formulaTokens[formulaTokens.Length - 1].Error != TokenError.Ok)
-                return formulaTokens[formulaTokens.Length - 1];
-
-
-            for (int i = 0; i < formulaTokens.Length; i++)
-            {
-                ICalcToken token = formulaTokens[i];
-                // Если очередной токен имеет ошибку
-                if (token.Error != TokenError.Ok)
-                    return token;
-                if (token is CalcTokenBracket)
-                {
-                    if (((CalcTokenBracket) token).Bracket == CalcBracket.Open)
-                    {
-                        bracketCounter++;
-                        lastOpenBracketIndex = i;
-                    }
-                    else
-                    {
-                        bracketCounter--;
-                        if (bracketCounter < 0)
-                        {
-                            token.Error = TokenError.ClosingBracketNotOpened;
-                            return token;
-                        }
-                    }
-                }
-                if (!(token is CalcTokenNumber) && !(token is CalcTokenLogicOperation) &&
-                    !(token is CalcTokenMathOperation) && !(token is CalcTokenBoolean))
-                    continue;
-                // Одинаковые значимые токены?
-                if (i > 0 && token.GetType() == formulaTokens[i - 1].GetType())
-                {
-                    token.Error = TokenError.SimilarTokensOneByOne;
-                    return token;
-                }
-                importantTokenCounter++;
-                if (importantTokenCounter%2 == 0) // Если токен чётный, это должна быть операция
-                {
-                    if (!(token is CalcTokenLogicOperation || token is CalcTokenMathOperation))
-                    {
-                        token.Error = TokenError.TokenMustBeOperation;
-                        return token;
-                    }
-                }
-                else // Если токен НЕчётный, это должно быть значение
-                {
-                    if (token is CalcTokenLogicOperation || token is CalcTokenMathOperation)
-                    {
-                        token.Error = TokenError.TokenMustBeValue;
-                        return token;
-                    }
-                }
-            }
-            if (bracketCounter > 0)
-            {
-                formulaTokens[lastOpenBracketIndex].Error = TokenError.OpeningBracketNotClosed;
-                return formulaTokens[lastOpenBracketIndex];
-            }
-            int lastTokenIndex = formulaTokens.Length - 1;
-            if (formulaTokens[lastTokenIndex] is CalcTokenLogicOperation ||
-                formulaTokens[lastTokenIndex] is CalcTokenMathOperation)
-            {
-                formulaTokens[lastTokenIndex].Error = TokenError.LastTokenCantBeOperation;
-                return formulaTokens[lastTokenIndex];
-            }
-            return formulaTokens[lastTokenIndex];
         }
     }
 }

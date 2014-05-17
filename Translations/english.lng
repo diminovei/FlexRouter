@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<FlexRouterProfile Type="Language" Name="English">
+  <Phrase Name="MainFormName" Value = "FlexRouter"/>
+
+  <Phrase Name="SizeByte" Value = "1 byte integer"/>
+  <Phrase Name="SizeByteSigned" Value = "1 byte integer signed"/>
+  <Phrase Name="SizeTwoBytes" Value = "2 bytes integer"/>
+  <Phrase Name="SizeTwoBytesSigned" Value = "2 bytes integer signed"/>
+  <Phrase Name="SizeFourBytes" Value = "4 bytes integer"/>
+  <Phrase Name="SizeFourBytesSigned" Value = "4 bytes integer signed"/>
+  <Phrase Name="SizeFourBytesFloat" Value = "4 bytes float"/>
+  <Phrase Name="SizeEightBytes" Value = "8 byte integer"/>
+  <Phrase Name="SizeEightBytesSigned" Value = "8 byte integer signed"/>
+  <Phrase Name="SizeEightByteFloat" Value = "8 byte float"/>
+
+  <Phrase Name="EditorPanel" Value = "Panel"/>
+  <Phrase Name="EditorAccessDescriptor" Value = "AccessDescriptor"/>
+  <Phrase Name="EditorName" Value = "Name"/>
+  <Phrase Name="EditorBadSymbols" Value = "bad symbols"/>
+  <Phrase Name="EditorPanelName" Value = "Panel"/>
+  <Phrase Name="EditorVariableModule" Value = "Module"/>
+  <Phrase Name="EditorVariableSize" Value = "Variable size"/>
+  <Phrase Name="EditorVariableRelativeOffset" Value = "Offset"/>
+  <Phrase Name="EditorVariableHexValue" Value = "Hex value in memory"/>
+  <Phrase Name="EditorVariableDecValue" Value = "Dex value in memory"/>
+  <Phrase Name="EditorDigitsAfterPoint" Value = "Digits after point"/>
+  <Phrase Name="EditorDescription" Value = "Description"/>
+  <Phrase Name="EditorAbsoluteOffset" Value = "Absolute offset"/>
+  <Phrase Name="EditorConvertAbsoluteOffsetToRelative" Value = "To relative"/>
+  <Phrase Name="EditorPowerFormula" Value = "Power formula"/>
+  <Phrase Name="EditorUsePanelPowerFormula" Value = "Use panel power formula"/>
+  <Phrase Name="EditorOutputFormula" Value = "Output formula"/>
+  <Phrase Name="EditorRangeMinimumValue" Value = "Minimum"/>
+  <Phrase Name="EditorRangeMaximumValue" Value = "Maximum"/>
+  <Phrase Name="EditorRangeDefaultValue" Value = "Default"/>
+  <Phrase Name="EditorRangeUseDefaultValue" Value = "Use default value"/>
+  <Phrase Name="EditorRangeStep" Value = "Step"/>
+  <Phrase Name="EditorRangeGetValueFormula" Value = "Get value formula"/>
+  <Phrase Name="EditorLoopRange" Value = "Cyclic"/>
+  <Phrase Name="EditorOutputFormula" Value = "Output formula"/>
+  <Phrase Name="EditorState" Value = "State"/>
+  <Phrase Name="EditorHardware" Value = "Hardware"/>
+  <Phrase Name="EditorInvert" Value = "Invert"/>
+  <Phrase Name="EditorToggleEmulator" Value = "Toggle emulator"/>
+  <Phrase Name="EditorRepeater" Value = "Repeater"/>
+  <Phrase Name="EditorHardwareMotherboard" Value = "Motherboard"/>
+  <Phrase Name="EditorHardwareModule" Value = "Module"/>
+  <Phrase Name="EditorHardwareControl" Value = "Control"/>
+  <Phrase Name="EditorRenameState" Value = "Rename state"/>
+  <Phrase Name="EditorRemoveState" Value = "Remove state"/>
+  <Phrase Name="EditorAddState" Value = "Add state"/>
+  <Phrase Name="EditorAddVariable" Value = "Add variable"/>
+  <Phrase Name="EditorRemoveVariable" Value = "Remove variable"/>
+  <Phrase Name="EditorDefaultStateColumnHeader" Value = "Default"/>
+  <Phrase Name="MainFormRemove" Value = "Remove"/>
+  <Phrase Name="EditorAxisReset" Value = "Reset"/>
+  <Phrase Name="EditorAxisCalibrate" Value = "Calibrate"/>
+  <Phrase Name="EditorVariableIsAlreadyExists" Value = "Selected variable is already exists in access descriptor"/>
+
+  <Phrase Name="EditorTypeMemoryMultistate" Value = "Memory access (values set)"/>
+  <Phrase Name="EditorTypeMemoryIndicator" Value = "Memory access (indicator)"/>
+  <Phrase Name="EditorTypeMemoryBinaryOutput" Value = "Memory access (binary output)"/>
+  <Phrase Name="EditorTypeMemoryRange" Value = "Memory access (values range)"/>
+  <Phrase Name="EditorTypeRangeUnion" Value = "Range union"/>
+
+  <Phrase Name="EditorMessageAbsoluteOffsetIsOutOfModule" Value = "Absolete offset is not correspond to any simulator module"/>
+  <Phrase Name="EditorMessageAbsoluteIsNotAhexNumber" Value = "Absolute offset must be a a hex number"/>
+  <Phrase Name="EditorMessageDataIsIncorrect" Value = "The following fields are empty or incorrect:"/>
+  <Phrase Name="EditorMessageRemoveVariableFromAccessDescriptor" Value = "Remove variable"/>
+  <Phrase Name="EditorMessageRemoveStateFromAccessDescriptor" Value = "Remove state"/>
+  <Phrase Name="EditorMessageStateNameIsAlreadyExist" Value = "State name is already exist"/>
+  <Phrase Name="EditorMessageInputStateName" Value = "Input state name"/>
+  <Phrase Name="EditorMessageRemoveAccessDescriptor" Value = "Remove access descriptor"/>
+  <Phrase Name="EditorMessageRemovePanel" Value = "Remove panel"/>
+  <Phrase Name="EditorMessageRemoveControlProcessor" Value = "Remove control processor"/>
+  <Phrase Name="EditorMessageCantRemoveNotEmptyPanel" Value = "Can't remove not empty panel, remove access descriptors and variable assigned to this panel first"/>
+  <Phrase Name="EditorMessageCantRemoveVariableInUse" Value = "Unable remove variable because it is used by:"/>
+  <Phrase Name="EditorMessageRemoveVariable" Value = "Remove variable"/>
+  <Phrase Name="EditorDependentDescriptorsList" Value = "Dependent descriptors list"/>
+  <Phrase Name="EditorAccessDescriptorTypeIsNotSuitable" Value = "Access descriptor type is not suitable"/>
+  <Phrase Name="EditorAccessDescriptorIsAlreadyInList" Value = "Access descriptor is already in list"/>
+  <Phrase Name="EditorSelectAnItemFirst" Value = "Select an item first"/>
+
+  <Phrase Name="MessageBoxErrorHeader" Value = "Error"/>
+  <Phrase Name="MessageBoxWarningHeader" Value = "Error"/>
+  <Phrase Name="MessageBoxUnsavedEditorData" Value = "Changed editor data was not saved. Continue?"/>
+
+  <Phrase Name="EditorHeaderMemoryPatch" Value = "Direct memory access"/>
+  <Phrase Name="EditorHeaderFsuipc" Value = "Fsuipc"/>
+  <Phrase Name="EditorHeaderPanel" Value = "Panel"/>
+  <Phrase Name="EditorHeaderFakeVariable" Value = "Commutator"/>
+                
+  <Phrase Name="HardwareButton" Value = "Button"/>
+  <Phrase Name="HardwareEncoder" Value = "Encoder"/>
+  <Phrase Name="HardwareIndicator" Value = "Indicator"/>
+  <Phrase Name="HardwareBinaryOutput" Value = "Binary output"/>
+  <Phrase Name="HardwareAxis" Value = "Axis"/>
+  <Phrase Name="HardwareButtonPlusMinus" Value = "Buttons +-"/>
+  <Phrase Name="HardwareBinaryInput" Value = "Binary input"/>
+
+  <Phrase Name="FormulaErrorUnexpectedSymbols" Value = "Unexpected symbol"/>
+  <Phrase Name="FormulaErrorSimilarTokensOneByOne" Value = "Similar tokens one after another"/>
+  <Phrase Name="FormulaErrorTokenMustBeOperation" Value = "Token must be an operation"/>
+  <Phrase Name="FormulaErrorTokenMustBeValue" Value = "Token must be a value"/>
+  <Phrase Name="FormulaErrorLastTokenCantBeOperation" Value = "Last token can't be an operation"/>
+  <Phrase Name="FormulaErrorOpeningBracketNotClosed" Value = "Opening bracket is not closed"/>
+  <Phrase Name="FormulaErrorClosingBracketNotOpened" Value = "Not enough opening brackets"/>
+  <Phrase Name="FormulaErrorMultiplyPointInNumber" Value = "More than one dot in number"/>
+  <Phrase Name="FormulaErrorTokenPointsAbsentItem" Value = "Token points to absent item"/>
+  <Phrase Name="FormulaErrorPointCantBeLastSymbolOfNumber" Value = "Point can't be last symbol of number"/>
+  <Phrase Name="FormulaErrorUnknownMathOperation" Value = "Unknown math operation"/>
+  <Phrase Name="FormulaErrorUnknownLogicOperation" Value = "Unknown logic operation"/>
+  <Phrase Name="FormulaErrorCantOperateMathAndLogicValues" Value = "Can't operate logic and math tokens together"/>
+  <Phrase Name="FormulaErrorThisFormulaPartMustBeLogic" Value = "This formula part must be logic"/>
+  <Phrase Name="FormulaErrorThisFormulaPartMustBeMath" Value = "This formula part must be math"/>
+  <Phrase Name="FormulaErrorException" Value = "Exception. Send this formula to router author"/>
+</FlexRouterProfile>

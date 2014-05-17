@@ -50,18 +50,17 @@ using FlexRouter.Localizers;
 //      Bug: бага в тушке. Если включить ввод ЗК на ПН-5, а затем выключить стабилизацию крена будут гореть и Сброс программы и ввод ЗК
 
 //  ***************************** Сделать
+//      DescriptorRange - Minimum/Maximum/Step - формулы.
+//          Поддержка клавиатуры (через SlimDX)
 //      Проверка формул:    
-//          Определять тип формулы
-//          Проверять логические формулы
-//          Реализовать проверку формул вида "1==1 ? 3;4"
 //          Кнопку "добавить переменную в формулу"
-//          Кнопка "скопировать в буфер обмена"
 //          Bug: формула корректна 3()
+//          Запретить использование [R] в получении значения в RangeDescriptor, используя отдельный инстанс калькулятора
+//          Обрабатывать деление на 0?
 //      Перенести Repeater в AccessDescriptor. Для PrevNext принудительно включен по-умолчанию.
 //      Управление профилем
 //      Бэкап и ротация изменениё профилей
 //      Мёрдж нового профиля и старых назначений
-//      DescriptorRange - Minimum/Maximum/Step - формулы.
 //      Если DefaultLanguage пустой роутер упадёт?
 //      Если модули недоступны, в переменных показывать N/A и формулы не считать, показывать AD, как не рабочий
 //      Если в формуле ошибка, формулу не считать, показывать AD, как не рабочий. Проверка формулы после добавления/изменения в FormulaKeeper, удалении переменной, пропаже модуля
@@ -74,7 +73,6 @@ using FlexRouter.Localizers;
 //      Железо:
 //          Нужно сделать маски. Каждое железо говорит, что для индикаторов мне нужен только модуль, а номер контрола нет. И роутер сам удалит ненужные упраляющие элементы и будет укорачивать строку Arcc:xxx|Indicator|1
 //          Поддержка L2/F2
-//          Поддержка клавиатуры (через SlimDX)
 //          Реализовать разовый дамп осей при старте роутера (это возможно?)
 //      AxisMultistate
 //      Редактор для AxisMultistate
@@ -968,48 +966,45 @@ namespace FlexRouter
             var text = range.Text;
             if (text.EndsWith("\r\n"))
                 text = text.Remove(text.Length - 2, 2);
-            var formula = _calculator.TokenizeFormula(text);
-            var lastToken = _calculator.CheckTokenizedFormula(formula);
-            if (lastToken == null)
+
+            var result = _calculator.ComputeFormula(text);
+            _formulaTextBox.TextChanged -= FormulaTextBoxTextChanged;
+            range.ClearAllProperties();
+            if(!result.IsCalculatedSuccessfully())
             {
                 _formulaResultDec.Text = string.Empty;
                 _formulaResultHex.Text = string.Empty;
-                return;
-            }
-
-            if (lastToken.Error == TokenError.Ok)
+                _formulaResultBool.Text = string.Empty;
+                var error = result.GetError();
+                if (error == FormulaError.FormulaIsEmpty)
+                    _formulaError.Text = string.Empty;
+                else
+                {
+                    _formulaError.Text = CalculatorErrorsLocalizer.TokenErrorToString(error);
+                    if (string.IsNullOrEmpty(_formulaError.Text))
+                        _formulaError.Text = error.ToString();
+                }
+                var keyword = text.Remove(0, result.GetErrorBeginPositionInFormulaText());
+                SelectText(keyword);
+             }
+            else
             {
-                var result = _calculator.CalculateMathFormula(text);
-                if (result.Error != ProcessingMathFormulaError.Ok)
+                _formulaError.Text = string.Empty;
+                if (result.GetResultType() == Calculator.ComputeResultType.BooleanResult)
                 {
                     _formulaResultDec.Text = string.Empty;
                     _formulaResultHex.Text = string.Empty;
-                    return;
+                    _formulaResultBool.Text = result.CalculatedBoolValue.ToString();
                 }
-                _formulaResultDec.Text = result.Value.ToString(CultureInfo.InvariantCulture);
-                _formulaResultHex.Text = (result.Value % 1) == 0 ? ((int)result.Value).ToString("X") : string.Empty;
-            }
-            else
-            {
-                _formulaResultDec.Text = string.Empty;
-                _formulaResultHex.Text = string.Empty;                
-            }
-            var errorText = CalculatorErrorsLocalizer.TokenErrorToString(lastToken.Error);
-            if (lastToken.Error == TokenError.Ok)
-                _formulaError.Text = string.Empty;
-            else
-                _formulaError.Text = string.IsNullOrEmpty(errorText) ? lastToken.Error.ToString() : errorText;
-
-            _formulaTextBox.TextChanged -= FormulaTextBoxTextChanged;
-            range.ClearAllProperties();
-            if (!string.IsNullOrEmpty(errorText))
-            {
-                var keyword = text.Remove(0, lastToken.Position);
-                SelectText(keyword);
+                else
+                {
+                    _formulaResultDec.Text = result.CalculatedDoubleValue.ToString(CultureInfo.InvariantCulture);
+                    _formulaResultHex.Text = (result.CalculatedDoubleValue % 1) == 0 ? ((int)result.CalculatedDoubleValue).ToString("X") : string.Empty;
+                    _formulaResultBool.Text = string.Empty;
+                }
             }
             _formulaTextBox.TextChanged += FormulaTextBoxTextChanged;
         }
-
         // Как потом раздать результат в другие переменные? Ввести в формулы термин "[R]"?
         private ICalcToken FormulaResultTokenizer(string formula, int currentTokenPosition)
         {
@@ -1051,34 +1046,47 @@ namespace FlexRouter
         private void FormulaEditorInputValueDecPreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
         {
             e.Handled = !Utils.IsNumeric(e.Text) || ((TextBox)sender).Text.Length > 8;
-            if (e.Handled) 
-                return;
-            int resultInt;
-            _formulaEditorInputValueHex.Text = int.TryParse(_formulaEditorInputValueDec.Text+e.Text, out resultInt) ? resultInt.ToString("X") : string.Empty;
         }
 
         private void FormulaEditorInputValueHexPreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
         {
             e.Handled = !Utils.IsHexNumber(e.Text) || ((TextBox)sender).Text.Length > 8;
-            if (e.Handled) 
-                return;
-            int result;
-            if (int.TryParse(_formulaEditorInputValueHex.Text + e.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out result))
-                _formulaEditorInputValueDec.Text = result.ToString(CultureInfo.InvariantCulture);
         }
 
         private void FormulaEditorInputValueDecTextChanged(object sender, TextChangedEventArgs e)
         {
+            _formulaEditorInputValueDec.TextChanged -= FormulaEditorInputValueDecTextChanged;
+            _formulaEditorInputValueHex.TextChanged -= FormulaEditorInputValueHexTextChanged;
+            if (string.IsNullOrEmpty(_formulaEditorInputValueDec.Text))
+                _formulaEditorInputValueHex.Text = string.Empty;
+            int resultInt;
+            _formulaEditorInputValueHex.Text = int.TryParse(_formulaEditorInputValueDec.Text, out resultInt) ? resultInt.ToString("X") : string.Empty;
+            _formulaEditorInputValueDec.TextChanged += FormulaEditorInputValueDecTextChanged;
+            _formulaEditorInputValueHex.TextChanged += FormulaEditorInputValueHexTextChanged;
             CalculateTestFormula();
         }
 
         private void FormulaEditorInputValueHexTextChanged(object sender, TextChangedEventArgs e)
         {
+            _formulaEditorInputValueDec.TextChanged -= FormulaEditorInputValueDecTextChanged;
+            _formulaEditorInputValueHex.TextChanged -= FormulaEditorInputValueHexTextChanged;
+            if (string.IsNullOrEmpty(_formulaEditorInputValueHex.Text))
+                _formulaEditorInputValueDec.Text = string.Empty;
+            int result;
+            if (int.TryParse(_formulaEditorInputValueHex.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out result))
+                _formulaEditorInputValueDec.Text = result.ToString(CultureInfo.InvariantCulture);
+            _formulaEditorInputValueDec.TextChanged += FormulaEditorInputValueDecTextChanged;
+            _formulaEditorInputValueHex.TextChanged += FormulaEditorInputValueHexTextChanged;
             CalculateTestFormula();
         }
+        [STAThread]
         private void _copyFormulaToClipboard_Click(object sender, RoutedEventArgs e)
         {
-
+            var range = new TextRange(_formulaTextBox.Document.ContentStart, _formulaTextBox.Document.ContentEnd);
+            var text = range.Text;
+            if (text.EndsWith("\r\n"))
+                text = text.Remove(text.Length - 2, 2);
+            Clipboard.SetText(text);
         }
 
         private void _addVarToFormula_Click(object sender, RoutedEventArgs e)

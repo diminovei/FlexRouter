@@ -51,24 +51,24 @@ namespace FlexRouter.CalculatorRelated
             for (var i = currentTokenPosition + 1; i < formula.Length; i++)
             {
                 if (formula[i] == '[')
-                    return new CalcTokenUnknown(currentTokenPosition) { Error = TokenError.UnexpectedSymbols, TokenText = text };
+                    return new CalcTokenUnknown(currentTokenPosition) { Error = FormulaError.UnexpectedSymbols, TokenText = text };
                 text += formula[i];
 
                 if (formula[i] != ']')
                     continue;
                 if (text.Length == 2)
-                    return new CalcTokenUnknown(currentTokenPosition) { Error = TokenError.UnexpectedSymbols, TokenText = text };
+                    return new CalcTokenUnknown(currentTokenPosition) { Error = FormulaError.UnexpectedSymbols, TokenText = text };
                 token.TokenText = text;
                 var varAndPanelName = text.Substring(1, text.Length - 2).Split('.');
                 if (varAndPanelName.Length != 2)
                     return null;
                 var varId = Profile.GetVariableByPanelAndName(varAndPanelName[0], varAndPanelName[1]);
                 if (varId == -1)
-                    token.Error = TokenError.TokenPointsAbsentItem;
-                token.Error = TokenError.Ok;
+                    token.Error = FormulaError.TokenPointsAbsentItem;
+                token.Error = FormulaError.Ok;
                 return token;
             }
-            return new CalcTokenUnknown(currentTokenPosition) { Error = TokenError.UnexpectedSymbols, TokenText = text };
+            return new CalcTokenUnknown(currentTokenPosition) { Error = FormulaError.UnexpectedSymbols, TokenText = text };
         }
     }
 }

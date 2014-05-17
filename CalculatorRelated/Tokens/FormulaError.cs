@@ -3,7 +3,7 @@
     /// <summary>
     /// Возможные ошибки при парсинге токена
     /// </summary>
-    public enum TokenError
+    public enum FormulaError
     {
         Ok,
         UnexpectedSymbols,
@@ -15,6 +15,13 @@
         ClosingBracketNotOpened,
         MultipluDotInNumber,
         DotCantBeLastSymbolOfNumber,
-        TokenPointsAbsentItem
+        TokenPointsAbsentItem,
+        FormulaIsEmpty,
+        UnknownMathOperation,
+        UnknownLogicOperation,
+        CantOperateMathAndLogicValues,
+        ThisFormulaPartMustBeLogic,
+        ThisFormulaPartMustBeMath,
+        Exception
     }
 }

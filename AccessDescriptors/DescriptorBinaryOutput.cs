@@ -21,10 +21,10 @@ namespace FlexRouter.AccessDescriptors
         {
             if (!IsPowerOn())
                 return false;
-            var calcResult = CalculatorE.CalculateLogicFormula(GetFormula());
-            if (calcResult.Error != ProcessingLogicFormulaError.Ok)
+            var calcResult = CalculatorE.ComputeFormula(GetFormula());
+            if (!calcResult.CanUseBooleanValue())
                 return false;
-            return calcResult.Value;
+            return calcResult.CalculatedBoolValue;
         }
   /*      // Как потом раздать результат в другие переменные? Ввести в формулы термин "[R]"?
         private ICalcToken FormulaResultProcessor(ICalcToken tokenToPreprocess)

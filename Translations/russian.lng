@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<FlexRouterProfile Type="Language" Name="Русский">
+  <Phrase Name="MainFormName" Value = "Flex Роутер"/>
+
+  <Phrase Name="SizeByte" Value = "1 байт целое"/>
+  <Phrase Name="SizeByteSigned" Value = "1 байт целое со знаком"/>
+  <Phrase Name="SizeTwoBytes" Value = "2 байта целое"/>
+  <Phrase Name="SizeTwoBytesSigned" Value = "2 байта целое со знаком"/>
+  <Phrase Name="SizeFourBytes" Value = "4 байта целое"/>
+  <Phrase Name="SizeFourBytesSigned" Value = "4 байта целое со знаком"/>
+  <Phrase Name="SizeFourBytesFloat" Value = "4 байта с точкой"/>
+  <Phrase Name="SizeEightBytes" Value = "8 байт целое"/>
+  <Phrase Name="SizeEightBytesSigned" Value = "8 байт целое со знаком"/>
+  <Phrase Name="SizeEightByteFloat" Value = "8 байт с точкой"/>
+
+  <Phrase Name="EditorPanel" Value = "Панель"/>
+  <Phrase Name="EditorAccessDescriptor" Value = "Описатель доступа"/>
+  <Phrase Name="EditorName" Value = "Имя"/>
+  <Phrase Name="EditorBadSymbols" Value = "неразрешённые символы"/>
+  <Phrase Name="EditorPanelName" Value = "Панель"/>
+  <Phrase Name="EditorVariableModule" Value = "Модуль"/>
+  <Phrase Name="EditorVariableSize" Value = "Размер"/>
+  <Phrase Name="EditorVariableRelativeOffset" Value = "Смещение"/>
+  <Phrase Name="EditorVariableHexValue" Value = "Hex значение в памяти"/>
+  <Phrase Name="EditorVariableDecValue" Value = "Dec значение в памяти"/>
+  <Phrase Name="EditorDescription" Value = "Описание"/>
+  <Phrase Name="EditorDigitsAfterPoint" Value = "Знаков после запятой"/>
+  <Phrase Name="EditorAbsoluteOffset" Value = "Абсолютное смещение"/>
+  <Phrase Name="EditorConvertAbsoluteOffsetToRelative" Value = "В относительное"/>
+  <Phrase Name="EditorPowerFormula" Value = "Формула подачи питания"/>
+  <Phrase Name="EditorUsePanelPowerFormula" Value = "Использовать формулу питания панели"/>
+  <Phrase Name="EditorOutputFormula" Value = "Формула выходных данных"/>
+  <Phrase Name="EditorRangeMinimumValue" Value = "Минимум"/>
+  <Phrase Name="EditorRangeMaximumValue" Value = "Максимум"/>
+  <Phrase Name="EditorRangeDefaultValue" Value = "По-умолчанию"/>
+  <Phrase Name="EditorRangeUseDefaultValue" Value = "Использовать значени по-умолчанию"/>
+  <Phrase Name="EditorRangeStep" Value = "Шаг"/>
+  <Phrase Name="EditorLoopRange" Value = "Цикличность"/>
+  <Phrase Name="EditorRangeGetValueFormula" Value = "Формула для получения значения"/>
+  <Phrase Name="EditorState" Value = "Состояние"/>
+  <Phrase Name="EditorHardware" Value = "Железо"/>
+  <Phrase Name="EditorInvert" Value = "Инверсия"/>
+  <Phrase Name="EditorToggleEmulator" Value = "Эмулятор фиксации"/>
+  <Phrase Name="EditorRepeater" Value = "Повторитель"/>
+  <Phrase Name="EditorHardwareMotherboard" Value = "Материнская плата"/>
+  <Phrase Name="EditorHardwareModule" Value = "Модуль"/>
+  <Phrase Name="EditorHardwareControl" Value = "Элемент"/>
+  <Phrase Name="EditorRenameState" Value = "Переименовать состояние"/>
+  <Phrase Name="EditorRemoveState" Value = "Удалить состояние"/>
+  <Phrase Name="EditorAddState" Value = "Добавить состояние"/>
+  <Phrase Name="EditorAddVariable" Value = "Добавить переменную"/>
+  <Phrase Name="EditorRemoveVariable" Value = "Удалить переменную"/>
+  <Phrase Name="EditorDefaultStateColumnHeader" Value = "По-умолчанию"/>
+  <Phrase Name="MainFormRemove" Value = "Удалить"/>
+  <Phrase Name="EditorAxisReset" Value = "Сброс"/>
+  <Phrase Name="EditorAxisCalibrate" Value = "Калибровка"/>
+  <Phrase Name="EditorVariableIsAlreadyExists" Value = "Выбранная переменная уже добавлена"/>
+  <Phrase Name="EditorDependentDescriptorsList" Value = "Список зависимых описателей"/>
+
+  <Phrase Name="EditorTypeMemoryMultistate" Value = "Доступ к памяти (набор значений)"/>
+  <Phrase Name="EditorTypeMemoryIndicator" Value = "Доступ к памяти (управление индикатором)"/>
+  <Phrase Name="EditorTypeMemoryBinaryOutput" Value = "Доступ к памяти (бинарный вывод)"/>
+  <Phrase Name="EditorTypeMemoryRange" Value = "Доступ к памяти (диапазон значений)"/>
+  <Phrase Name="EditorTypeRangeUnion" Value = "Объединение (диапазон значений)"/>
+
+  <Phrase Name="EditorMessageAbsoluteOffsetIsOutOfModule" Value = "Смещение не соответствует ни одному модулю"/>
+  <Phrase Name="EditorMessageAbsoluteIsNotAhexNumber" Value = "Смещение должно представлять из себя число в формате hex"/>
+  <Phrase Name="EditorMessageDataIsIncorrect" Value = "Незаполнены или заполнены неверно следующие поля:"/>
+  <Phrase Name="EditorMessageRemoveVariableFromAccessDescriptor" Value = "Действительно отказаться от использования переменной"/>
+  <Phrase Name="EditorMessageRemoveStateFromAccessDescriptor" Value = "Действительно удалить состояние"/>
+  <Phrase Name="EditorMessageStateNameIsAlreadyExist" Value = "Такое имя уже существует"/>
+  <Phrase Name="EditorMessageInputStateName" Value = "Введите имя состояния"/>
+  <Phrase Name="EditorMessageRemoveAccessDescriptor" Value = "Удалить описатель доступа"/>
+  <Phrase Name="EditorMessageRemovePanel" Value = "Удалить панель"/>
+  <Phrase Name="EditorMessageRemoveControlProcessor" Value = "Удалить процессор"/>
+  <Phrase Name="EditorMessageCantRemoveNotEmptyPanel" Value = "Перед тем как удалить панель, нужно удалить все описатели доступа и переменные, принадлежащие панели"/>
+  <Phrase Name="EditorMessageCantRemoveVariableInUse" Value = "Нельзя удалить переменную, так как её используют:"/>
+  <Phrase Name="EditorMessageRemoveVariable" Value = "Удалить переменную"/>
+  <Phrase Name="EditorAccessDescriptorTypeIsNotSuitable" Value = "Неподходящий тип описателя доступа"/>
+  <Phrase Name="EditorAccessDescriptorIsAlreadyInList" Value = "Это описатель уже есть в списке"/>
+  <Phrase Name="EditorSelectAnItemFirst" Value = "Сначала выберите один из пунктов"/>
+
+  <Phrase Name="MessageBoxErrorHeader" Value = "Ошибка"/>
+  <Phrase Name="MessageBoxWarningHeader" Value = "Предупреждение"/>
+  <Phrase Name="MessageBoxUnsavedEditorData" Value = "Изменённые данные не сохранены. Продолжить?"/>
+
+  <Phrase Name="EditorHeaderMemoryPatch" Value = "Прямой доступ к памяти"/>
+  <Phrase Name="EditorHeaderFsuipc" Value = "Fsuipc"/>
+  <Phrase Name="EditorHeaderPanel" Value = "Панель"/>
+  <Phrase Name="EditorHeaderFakeVariable" Value = "Коммутатор"/>
+
+  <Phrase Name="HardwareButton" Value = "Кнопка"/>
+  <Phrase Name="HardwareEncoder" Value = "Энкодер"/>
+  <Phrase Name="HardwareIndicator" Value = "Индикатор"/>
+  <Phrase Name="HardwareBinaryOutput" Value = "Лампа"/>
+  <Phrase Name="HardwareAxis" Value = "Ось"/>
+  <Phrase Name="HardwareButtonPlusMinus" Value = "Кнопки +-"/>
+  <Phrase Name="HardwareBinaryInput" Value = "Бинарный ввод"/>
+
+  <Phrase Name="FormulaErrorUnexpectedSymbols" Value = "Неизвестный символ"/>
+  <Phrase Name="FormulaErrorSimilarTokensOneByOne" Value = "Два однотипных токена подряд"/>
+  <Phrase Name="FormulaErrorTokenMustBeOperation" Value = "Ожидался токен-действие"/>
+  <Phrase Name="FormulaErrorTokenMustBeValue" Value = "Ожидался токен-значение"/>
+  <Phrase Name="FormulaErrorLastTokenCantBeOperation" Value = "Последний токен не может быть действием"/>
+  <Phrase Name="FormulaErrorOpeningBracketNotClosed" Value = "Не закрыта скобка"/>
+  <Phrase Name="FormulaErrorClosingBracketNotOpened" Value = "Не хватает открывающей скобки"/>
+  <Phrase Name="FormulaErrorMultiplyPointInNumber" Value = "Число не может иметь более одной точки"/>
+  <Phrase Name="FormulaErrorTokenPointsAbsentItem" Value = "Токен указывает на отсутствующую сущность"/>
+  <Phrase Name="FormulaErrorPointCantBeLastSymbolOfNumber" Value = "Точка не может быть последним символом числа"/>
+  <Phrase Name="FormulaErrorUnknownMathOperation" Value = "Неизвестная математическая операция"/>
+  <Phrase Name="FormulaErrorUnknownLogicOperation" Value = "Неизвестная логическая операция"/>
+  <Phrase Name="FormulaErrorCantOperateMathAndLogicValues" Value = "Нельзя обработать операцию между математическим и логическим токеном"/>
+  <Phrase Name="FormulaErrorThisFormulaPartMustBeLogic" Value = "Эта часть формулы должна быть логической"/>
+  <Phrase Name="FormulaErrorThisFormulaPartMustBeMath" Value = "Эта часть формулы должна быть математической"/>
+  <Phrase Name="FormulaErrorException" Value = "Исключение. Пошлите формулу автору роутера"/>
+
+</FlexRouterProfile>

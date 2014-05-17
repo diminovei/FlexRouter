@@ -42,15 +42,15 @@ namespace FlexRouter.AccessDescriptors
         {
             if (!IsPowerOn())
                 return string.Empty;
-            var formulaResult = CalculatorE.CalculateMathFormula(GetFormula());
-            if (formulaResult.Error != ProcessingMathFormulaError.Ok)
+            var formulaResult = CalculatorE.ComputeFormula(GetFormula());
+            if (!formulaResult.CanUseDoubleValue())
                 return "Error";
             var mask = "{0:0.";
 
             for (var i = 0; i < _digitsAfterPoint; i++)
                 mask += "0";
             mask += "}";
-            var result = string.Format(mask, formulaResult.Value);
+            var result = string.Format(mask, formulaResult.CalculatedDoubleValue);
             return result;
         }
 

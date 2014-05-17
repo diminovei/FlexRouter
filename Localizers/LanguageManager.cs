@@ -114,8 +114,15 @@ namespace FlexRouter
         FormulaErrorLastTokenCantBeOperation,
         FormulaErrorOpeningBracketNotClosed,
         FormulaErrorClosingBracketNotOpened,
-        FormulaErrorMultiplyDotInNumber,
+        FormulaErrorMultiplyPointInNumber,
         FormulaErrorTokenPointsAbsentItem,
+        FormulaErrorPointCantBeLastSymbolOfNumber,
+        FormulaErrorUnknownMathOperation,
+        FormulaErrorUnknownLogicOperation,
+        FormulaErrorCantOperateMathAndLogicValues,
+        FormulaErrorThisFormulaPartMustBeLogic,
+        FormulaErrorThisFormulaPartMustBeMath,
+        FormulaErrorException
     }
 
     static public class LanguageManager

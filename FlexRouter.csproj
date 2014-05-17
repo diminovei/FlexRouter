@@ -119,7 +119,7 @@
     <Compile Include="CalculatorRelated\Tokens\CalcTokenBase.cs" />
     <Compile Include="CalculatorRelated\Tokens\CalcTokenLogicOperation.cs" />
     <Compile Include="CalculatorRelated\Tokens\ICalcToken.cs" />
-    <Compile Include="CalculatorRelated\Tokens\TokenError.cs" />
+    <Compile Include="CalculatorRelated\Tokens\FormulaError.cs" />
     <Compile Include="EditorsUI\AccessDescriptorsEditor\RepeaterEditor.xaml.cs">
       <DependentUpon>RepeaterEditor.xaml</DependentUpon>
     </Compile>
@@ -370,11 +370,14 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="app.config" />
+    <None Include="Profile\profile001.ap" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
+    <None Include="Translations\english.lng" />
+    <None Include="Translations\russian.lng" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0,Profile=Client">

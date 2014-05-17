@@ -21,7 +21,7 @@
         /// <returns>информация о токене, null - токен не обнаружен</returns>
         public static ICalcToken TryToExtract(string formula, int currentTokenPosition)
         {
-            var token = new CalcTokenIfStatement(currentTokenPosition);
+            var token = new CalcTokenFormulaSeparator(currentTokenPosition);
             if (formula[currentTokenPosition] != ';')
                 return null;
             token.TokenText = ToText();

@@ -5,7 +5,7 @@
         public int Id { get; set; }
         public int Position { get; set; }
         public string TokenText;
-        public TokenError Error { get; set; }
+        public FormulaError Error { get; set; }
         public int GetNextTokenPosition()
         {
             return Position + TokenText.Length;
@@ -16,7 +16,7 @@
         }
         protected CalcTokenBase(int currentTokenPosition)
         {
-            Error = TokenError.Ok;
+            Error = FormulaError.Ok;
             Position = currentTokenPosition;
         }
     }

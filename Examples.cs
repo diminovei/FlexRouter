@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using FlexRouter.AccessDescriptors;
-using FlexRouter.CalculatorRelated;
-using FlexRouter.ControlProcessors;
+﻿using System.Threading;
 using FlexRouter.VariableSynchronization;
 using System.Diagnostics;
 using FlexRouter.VariableWorkerLayer;
@@ -198,13 +190,6 @@ namespace FlexRouter
 //                       Thread.Sleep(10);
 //                   }
 //               }
-        private void CheckFormula()
-        {
-            var formula = "3+2*(4+1)"; // 13
-            var calc = new Calculator();
-            var tokenizedFormula = calc.TokenizeFormula(formula);
-            var res = calc.CalculateMathFormula(tokenizedFormula);
-        }
         private void CheckPlayMacro()
         {
             var windowInfo = new WindowInfo { Name = "Over" };
@@ -344,18 +329,5 @@ namespace FlexRouter
                     i = 0;
             }
         }
-        /*
-                         <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1*"/>
-                    </Grid.ColumnDefinitions>
-                    <TreeView Grid.Column="0" Margin="0,6,10,37" x:Name="_accessDescriptorsTree" SelectedItemChanged="AccessDescriptorsTreeSelectedItemChanged" />
-                    <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Margin="0,0,0,37">
-                        <StackPanel Grid.Column="1" x:Name="_accessDescriptorPanel" Margin="10" CanVerticallyScroll="True" VerticalAlignment="Stretch"/>
-                    </ScrollViewer>
-                    <Button x:Name="_saveAccessDescriptor" Content="Save" Width="75" Margin="294,527,10,6" Grid.Column="1" Click="SaveAccessDescriptorClick"/>
-                </Grid>
-*/
     }
 }

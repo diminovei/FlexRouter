@@ -5,13 +5,13 @@ namespace FlexRouter.CalculatorRelated.Tokens
     public enum CalcLogicOperation
     {
         Equal,          // ==
-        Not,            // !
+        Not,            // !=
         And,            // &&
         Or,             // ||
+        GreaterOrEqual, // >= Именно в таком порядке, чтобы при токенизации сначал проверялось >=, а потом >
+        LessOrEqual,    // <=
         Greater,        // >
         Less,           // <
-        GreaterOrEqual, // >=
-        LessOrEqual,    // <=
     }
 
     public class CalcTokenLogicOperation : CalcTokenBase

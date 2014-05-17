@@ -46,10 +46,10 @@
                         token.TokenText += formula[i];
                         break;
                     default:
-                        return null;
+                        return string.IsNullOrEmpty(token.TokenText) ? null : token;
                 }
             }
-            return token.TokenText == string.Empty ? null : token;
+            return string.IsNullOrEmpty(token.TokenText) ? null : token;
         }
     }
 }

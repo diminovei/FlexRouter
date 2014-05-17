@@ -80,21 +80,20 @@ namespace FlexRouter.AccessDescriptors
         private void ChangeState(int repeats, bool nextState)
         {
             var stepValue = Step * repeats;
-            var formulaResult = CalculatorE.CalculateMathFormula(GetReceiveValueFormula());
-            if (formulaResult.Error != ProcessingMathFormulaError.Ok)
+            var receivedValueFormula = GetReceiveValueFormula();
+            var formulaResult = CalculatorE.ComputeFormula(receivedValueFormula);
+            if (!formulaResult.CanUseDoubleValue())
                 return;
-
-            _currentFormulaResultForTokenizer = CalculateNewValue(formulaResult.Value, stepValue, nextState);
+            _currentFormulaResultForTokenizer = CalculateNewValue(formulaResult.CalculatedDoubleValue, stepValue, nextState);
             
             if (!IsPowerOn())
                 return;
             foreach (var varId in UsedVariables)
             {
                 var formula = GlobalFormulaKeeper.Instance.GetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, GetId(), varId, 0);
-                var formulaResult2 = CalculatorE.CalculateMathFormula(formula);
-                if (formulaResult2.Error != ProcessingMathFormulaError.Ok)
-                    return;
-                VariableManager.WriteValue(varId, formulaResult2.Value);
+                var formulaResult2 = CalculatorE.ComputeFormula(formula);
+                if (formulaResult2.CanUseDoubleValue())
+                    VariableManager.WriteValue(varId, formulaResult2.CalculatedDoubleValue);
             }
         }
 
@@ -106,10 +105,9 @@ namespace FlexRouter.AccessDescriptors
             foreach (var varId in UsedVariables)
             {
                 var formula = GlobalFormulaKeeper.Instance.GetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, GetId(), varId, 0);
-                var formulaResult2 = CalculatorE.CalculateMathFormula(formula);
-                if (formulaResult2.Error != ProcessingMathFormulaError.Ok)
-                    return;
-                VariableManager.WriteValue(varId, formulaResult2.Value);
+                var formulaResult = CalculatorE.ComputeFormula(formula);
+                if (formulaResult.CanUseDoubleValue())
+                    VariableManager.WriteValue(varId, formulaResult.CalculatedDoubleValue);
             }
         }
         public void SetPreviousState(int repeats)
@@ -155,10 +153,10 @@ namespace FlexRouter.AccessDescriptors
             else
                 finalPosition = MinimumValue + finalPosition;
 
-            var formulaResult = CalculatorE.CalculateMathFormula(GetReceiveValueFormula());
-            if (formulaResult.Error != ProcessingMathFormulaError.Ok)
+/*            var formulaResult = CalculatorE.ComputeFormula(GetReceiveValueFormula());
+            if (!formulaResult.CanUseDoubleValue())
                 return;
-            formulaResult.Value = finalPosition;
+            finalPosition = formulaResult.CalculatedDoubleValue;*/
             _currentFormulaResultForTokenizer = finalPosition;
 
             if (!IsPowerOn())
@@ -166,10 +164,9 @@ namespace FlexRouter.AccessDescriptors
             foreach (var varId in UsedVariables)
             {
                 var formula = GlobalFormulaKeeper.Instance.GetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, GetId(), varId, 0);
-                var formulaResult2 = CalculatorE.CalculateMathFormula(formula);
-                if (formulaResult2.Error != ProcessingMathFormulaError.Ok)
-                    return;
-                VariableManager.WriteValue(varId, formulaResult2.Value);
+                var formulaResult2 = CalculatorE.ComputeFormula(formula);
+                if (formulaResult2.CanUseDoubleValue())
+                    VariableManager.WriteValue(varId, formulaResult2.CalculatedDoubleValue);
             }
         }
     }
