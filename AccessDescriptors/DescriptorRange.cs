@@ -82,18 +82,32 @@ namespace FlexRouter.AccessDescriptors
             var stepValue = Step * repeats;
             var receivedValueFormula = GetReceiveValueFormula();
             var formulaResult = CalculatorE.ComputeFormula(receivedValueFormula);
-            if (!formulaResult.CanUseDoubleValue())
+            if (formulaResult.GetFormulaComputeResultType() != TypeOfComputeFormulaResult.DoubleResult)
                 return;
             _currentFormulaResultForTokenizer = CalculateNewValue(formulaResult.CalculatedDoubleValue, stepValue, nextState);
-            
+
+            CalculateVariablesFormulaAndWriteValues();
+/*            if (!IsPowerOn())
+                return;
+            foreach (var varId in UsedVariables)
+            {
+                var formula = GlobalFormulaKeeper.Instance.GetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, GetId(), varId, 0);
+                var formulaForVar = CalculatorE.ComputeFormula(formula);
+                if (formulaForVar.GetComputeResultType() != Calculator.TypeOfComputeFormulaResult.DoubleResult)
+                    VariableManager.WriteValue(varId, formulaForVar.CalculatedDoubleValue);
+            }*/
+        }
+
+        private void CalculateVariablesFormulaAndWriteValues()
+        {
             if (!IsPowerOn())
                 return;
             foreach (var varId in UsedVariables)
             {
                 var formula = GlobalFormulaKeeper.Instance.GetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, GetId(), varId, 0);
-                var formulaResult2 = CalculatorE.ComputeFormula(formula);
-                if (formulaResult2.CanUseDoubleValue())
-                    VariableManager.WriteValue(varId, formulaResult2.CalculatedDoubleValue);
+                var formulaForVar = CalculatorE.ComputeFormula(formula);
+                if (formulaForVar.GetFormulaComputeResultType() != TypeOfComputeFormulaResult.DoubleResult)
+                    VariableManager.WriteValue(varId, formulaForVar.CalculatedDoubleValue);
             }
         }
 
@@ -102,13 +116,14 @@ namespace FlexRouter.AccessDescriptors
             if (!EnableDefaultValue)
                 return;
             _currentFormulaResultForTokenizer = DefaultValue;
-            foreach (var varId in UsedVariables)
+/*            foreach (var varId in UsedVariables)
             {
                 var formula = GlobalFormulaKeeper.Instance.GetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, GetId(), varId, 0);
                 var formulaResult = CalculatorE.ComputeFormula(formula);
-                if (formulaResult.CanUseDoubleValue())
+                if (formulaResult.GetComputeResultType() != Calculator.TypeOfComputeFormulaResult.DoubleResult)
                     VariableManager.WriteValue(varId, formulaResult.CalculatedDoubleValue);
-            }
+            }*/
+            CalculateVariablesFormulaAndWriteValues();
         }
         public void SetPreviousState(int repeats)
         {
@@ -159,15 +174,16 @@ namespace FlexRouter.AccessDescriptors
             finalPosition = formulaResult.CalculatedDoubleValue;*/
             _currentFormulaResultForTokenizer = finalPosition;
 
-            if (!IsPowerOn())
+/*            if (!IsPowerOn())
                 return;
             foreach (var varId in UsedVariables)
             {
                 var formula = GlobalFormulaKeeper.Instance.GetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, GetId(), varId, 0);
-                var formulaResult2 = CalculatorE.ComputeFormula(formula);
-                if (formulaResult2.CanUseDoubleValue())
-                    VariableManager.WriteValue(varId, formulaResult2.CalculatedDoubleValue);
-            }
+                var formulaForVar = CalculatorE.ComputeFormula(formula);
+                if (formulaForVar.GetComputeResultType() != Calculator.TypeOfComputeFormulaResult.DoubleResult)
+                    VariableManager.WriteValue(varId, formulaForVar.CalculatedDoubleValue);
+            }*/
+            CalculateVariablesFormulaAndWriteValues();
         }
     }
 }

@@ -50,7 +50,7 @@ namespace FlexRouter.AccessDescriptors
                 if (string.IsNullOrEmpty(formula))
                     return;
                 var formulaResult = CalculatorE.ComputeFormula(formula);
-                if(formulaResult.CanUseDoubleValue())
+                if (formulaResult.GetFormulaComputeResultType() != TypeOfComputeFormulaResult.DoubleResult)
                     VariableManager.WriteValue(varId, formulaResult.CalculatedDoubleValue);
             }
         }

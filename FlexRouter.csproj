@@ -105,6 +105,7 @@
     <Compile Include="AccessDescriptors\Interfaces\IValueOfRange.cs" />
     <Compile Include="AccessDescriptors\RangeUnion.cs" />
     <Compile Include="ApplicationSettings.cs" />
+    <Compile Include="CalculatorRelated\FormulaComputeResult.cs" />
     <Compile Include="CalculatorRelated\Tokens\CalcTokenFormulaSeparator.cs" />
     <Compile Include="CalculatorRelated\Tokens\CalcTokenIfStatement.cs" />
     <Compile Include="CalculatorRelated\Tokens\CalcTokenUnknown.cs" />
@@ -120,6 +121,7 @@
     <Compile Include="CalculatorRelated\Tokens\CalcTokenLogicOperation.cs" />
     <Compile Include="CalculatorRelated\Tokens\ICalcToken.cs" />
     <Compile Include="CalculatorRelated\Tokens\FormulaError.cs" />
+    <Compile Include="CalculatorRelated\TypeOfComputeFormulaResult.cs" />
     <Compile Include="EditorsUI\AccessDescriptorsEditor\RepeaterEditor.xaml.cs">
       <DependentUpon>RepeaterEditor.xaml</DependentUpon>
     </Compile>

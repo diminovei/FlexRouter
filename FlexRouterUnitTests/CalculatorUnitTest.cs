@@ -11,32 +11,24 @@ namespace FlexRouterUnitTests
         public void CheckUnaryMinusFormula()
         {
             var calc = new Calculator();
-            var result = calc.CalculateMathFormula("-1");
-            Assert.AreEqual(-1, result.Value);
-            result = calc.CalculateMathFormula("1+(-10)");
-            Assert.AreEqual(-9, result.Value);
-            result = calc.CalculateMathFormula("1+(-(-10))");
-            Assert.AreEqual(11, result.Value);
-            result = calc.CalculateMathFormula("(-(10+3))");
-            Assert.AreEqual(-13, result.Value);
+            var result = calc.ComputeFormula("-1");
+            Assert.AreEqual(-1, result.CalculatedDoubleValue);
+            result = calc.ComputeFormula("1+(-10)");
+            Assert.AreEqual(-9, result.CalculatedDoubleValue);
+            result = calc.ComputeFormula("1+(-(-10))");
+            Assert.AreEqual(11, result.CalculatedDoubleValue);
+            result = calc.ComputeFormula("(-(10+3))");
+            Assert.AreEqual(-13, result.CalculatedDoubleValue);
         }
 
         [TestMethod]
-        public void CheckUnaryMinusFormulaNew()
+        public void CheckFormulaTypeRecognition()
         {
             var calc = new Calculator();
-            var result = calc.ComputeFormula("-1");
-//            Assert.AreEqual(false, result.CalculatedBoolValue);
-            Assert.AreEqual(-1, result.CalculatedDoubleValue);
-            result = calc.ComputeFormula("1+(-10)");
-//            Assert.AreEqual(false, result.CalculatedBoolValue);
-            Assert.AreEqual(-9, result.CalculatedDoubleValue);
-            result = calc.ComputeFormula("1+(-(-10))");
-//            Assert.AreEqual(false, result.CalculatedBoolValue);
-            Assert.AreEqual(11, result.CalculatedDoubleValue);
-            result = calc.ComputeFormula("(-(10+3))");
-//            Assert.AreEqual(false, result.CalculatedBoolValue);
-            Assert.AreEqual(-13, result.CalculatedDoubleValue);
+            var result = calc.ComputeFormula("1+1");
+            Assert.AreEqual(TypeOfComputeFormulaResult.DoubleResult, result.GetFormulaComputeResultType());
+            result = calc.ComputeFormula("1!=1");
+            Assert.AreEqual(TypeOfComputeFormulaResult.BooleanResult, result.GetFormulaComputeResultType());
         }
 
         [TestMethod]
@@ -44,18 +36,17 @@ namespace FlexRouterUnitTests
         {
             var calc = new Calculator();
             var result = calc.ComputeFormula("-30-2*3*(2+4)");
-            Assert.AreEqual(true, result.IsCalculatedSuccessfully());
-            Assert.AreEqual(false, result.CalculatedBoolValue);
+            Assert.AreNotEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
+            Assert.AreEqual(false, result.CalculatedBoolBoolValue);
             Assert.AreEqual(-66, result.CalculatedDoubleValue);
         }
         [TestMethod]
-        public void CheckErrors()
+        public void CheckErrorDoubleOperation()
         {
             var calc = new Calculator();
             var result = calc.ComputeFormula("-30+-2");
-            Assert.AreEqual(false, result.IsCalculatedSuccessfully());
-            Assert.AreEqual(Calculator.ComputeResultType.Error, result.GetResultType());
-            Assert.AreEqual(FormulaError.TokenMustBeValue, result.GetError());
+            Assert.AreEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
+            Assert.AreEqual(FormulaError.SimilarTokensOneByOne, result.GetFormulaCheckResult());
             Assert.AreEqual(4, result.GetErrorBeginPositionInFormulaText());
             Assert.AreEqual(1, result.GetErrorLengthPositionInFormulaText());
         }
@@ -66,18 +57,18 @@ namespace FlexRouterUnitTests
             // x == true ? y == true ? (ошибка, 2 условия подряд без установки значения)
             var calc = new Calculator();
             var result = calc.ComputeFormula("1 == 1 ? 2 == 2 ? 3");
-            Assert.AreEqual(false, result.IsCalculatedSuccessfully());
-            Assert.AreEqual(FormulaError.ThisFormulaPartMustBeMath, result.GetError());
+            Assert.AreEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
+            Assert.AreEqual(FormulaError.ThisFormulaPartMustBeMath, result.GetFormulaCheckResult());
         }
 
         [TestMethod]
-        public void CheckMathFormulaInsteadOfCondition()
+        public void CheckErrorMathFormulaInsteadOfCondition()
         {
             // 1+1 ? 11 - математическая формула вместо логической
             var calc = new Calculator();
             var result = calc.ComputeFormula("1+1 ? 11");
-            Assert.AreEqual(false, result.IsCalculatedSuccessfully());
-            Assert.AreEqual(FormulaError.ThisFormulaPartMustBeLogic, result.GetError());
+            Assert.AreEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
+            Assert.AreEqual(FormulaError.ThisFormulaPartMustBeLogic, result.GetFormulaCheckResult());
         }
 
         [TestMethod]
@@ -85,19 +76,19 @@ namespace FlexRouterUnitTests
         {
             var calc = new Calculator();
             var result = calc.ComputeFormula("1==1 ? 11");
-            Assert.AreEqual(true, result.IsCalculatedSuccessfully());
+            Assert.AreNotEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
             Assert.AreEqual(11, result.CalculatedDoubleValue);
 
             result = calc.ComputeFormula("1!=1 ? 11 ; 12");
-            Assert.AreEqual(true, result.IsCalculatedSuccessfully());
+            Assert.AreNotEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
             Assert.AreEqual(12, result.CalculatedDoubleValue);
 
             result = calc.ComputeFormula("1!=1 ? 11 ; 2 == 2 ? 14");
-            Assert.AreEqual(true, result.IsCalculatedSuccessfully());
+            Assert.AreNotEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
             Assert.AreEqual(14, result.CalculatedDoubleValue);
 
             result = calc.ComputeFormula("1==1 ? 11 ;");
-            Assert.AreEqual(true, result.IsCalculatedSuccessfully());
+            Assert.AreNotEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
             Assert.AreEqual(11, result.CalculatedDoubleValue);
         }
 
@@ -106,27 +97,27 @@ namespace FlexRouterUnitTests
         {
             var calc = new Calculator();
             var result = calc.ComputeFormula("1==1 ? ;");
-            Assert.AreEqual(FormulaError.FormulaIsEmpty, result.GetError());
+            Assert.AreEqual(FormulaError.FormulaIsEmpty, result.GetFormulaCheckResult());
             result = calc.ComputeFormula("1==1 ?");
-            Assert.AreEqual(FormulaError.FormulaIsEmpty, result.GetError());
+            Assert.AreEqual(FormulaError.FormulaIsEmpty, result.GetFormulaCheckResult());
             result = calc.ComputeFormula(string.Empty);
-            Assert.AreEqual(FormulaError.FormulaIsEmpty, result.GetError());
+            Assert.AreEqual(FormulaError.FormulaIsEmpty, result.GetFormulaCheckResult());
             result = calc.ComputeFormula(null);
-            Assert.AreEqual(FormulaError.FormulaIsEmpty, result.GetError());
+            Assert.AreEqual(FormulaError.FormulaIsEmpty, result.GetFormulaCheckResult());
         }
         [TestMethod]
         public void CheckOperationsPriority()
         {
             var calc = new Calculator();
             var result = calc.ComputeFormula("1+3>1");
-            Assert.AreEqual(true, result.IsCalculatedSuccessfully());
-            Assert.AreEqual(Calculator.ComputeResultType.BooleanResult, result.GetResultType());
-            Assert.AreEqual(true, result.CalculatedBoolValue);
+            Assert.AreNotEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
+            Assert.AreEqual(TypeOfComputeFormulaResult.BooleanResult, result.GetFormulaComputeResultType());
+            Assert.AreEqual(true, result.CalculatedBoolBoolValue);
 
             result = calc.ComputeFormula("1+3>=1");
-            Assert.AreEqual(true, result.IsCalculatedSuccessfully());
-            Assert.AreEqual(Calculator.ComputeResultType.BooleanResult, result.GetResultType());
-            Assert.AreEqual(true, result.CalculatedBoolValue);
+            Assert.AreNotEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
+            Assert.AreEqual(TypeOfComputeFormulaResult.BooleanResult, result.GetFormulaComputeResultType());
+            Assert.AreEqual(true, result.CalculatedBoolBoolValue);
         }
     }
 }

@@ -959,9 +959,6 @@ namespace FlexRouter
 
         private void CalculateTestFormula()
         {
-            //ToDO: определить тип формулы
-            //ToDO: Проверить её на корректность
-            //ToDO: Показать результат и ошибку
             var range = new TextRange(_formulaTextBox.Document.ContentStart, _formulaTextBox.Document.ContentEnd);
             var text = range.Text;
             if (text.EndsWith("\r\n"))
@@ -970,37 +967,44 @@ namespace FlexRouter
             var result = _calculator.ComputeFormula(text);
             _formulaTextBox.TextChanged -= FormulaTextBoxTextChanged;
             range.ClearAllProperties();
-            if(!result.IsCalculatedSuccessfully())
+            switch (result.GetFormulaComputeResultType())
             {
-                _formulaResultDec.Text = string.Empty;
-                _formulaResultHex.Text = string.Empty;
-                _formulaResultBool.Text = string.Empty;
-                var error = result.GetError();
-                if (error == FormulaError.FormulaIsEmpty)
-                    _formulaError.Text = string.Empty;
-                else
-                {
-                    _formulaError.Text = CalculatorErrorsLocalizer.TokenErrorToString(error);
-                    if (string.IsNullOrEmpty(_formulaError.Text))
-                        _formulaError.Text = error.ToString();
-                }
-                var keyword = text.Remove(0, result.GetErrorBeginPositionInFormulaText());
-                SelectText(keyword);
-             }
-            else
-            {
-                _formulaError.Text = string.Empty;
-                if (result.GetResultType() == Calculator.ComputeResultType.BooleanResult)
+                case TypeOfComputeFormulaResult.FormulaWasEmpty:
                 {
                     _formulaResultDec.Text = string.Empty;
                     _formulaResultHex.Text = string.Empty;
-                    _formulaResultBool.Text = result.CalculatedBoolValue.ToString();
+                    _formulaResultBool.Text = string.Empty;
+                    _formulaError.Text = string.Empty;
+                    break;
                 }
-                else
+                case TypeOfComputeFormulaResult.Error:
                 {
+                    _formulaResultDec.Text = string.Empty;
+                    _formulaResultHex.Text = string.Empty;
+                    _formulaResultBool.Text = string.Empty;
+                    var error = result.GetFormulaCheckResult();
+                    _formulaError.Text = CalculatorErrorsLocalizer.TokenErrorToString(error);
+                    if (string.IsNullOrEmpty(_formulaError.Text))
+                        _formulaError.Text = error.ToString();
+                    var keyword = text.Remove(0, result.GetErrorBeginPositionInFormulaText());
+                    SelectText(keyword);
+                    break;
+                }
+                case TypeOfComputeFormulaResult.BooleanResult:
+                {
+                    _formulaError.Text = string.Empty;
+                    _formulaResultDec.Text = string.Empty;
+                    _formulaResultHex.Text = string.Empty;
+                    _formulaResultBool.Text = result.CalculatedBoolBoolValue.ToString();
+                    break;
+                }
+                case TypeOfComputeFormulaResult.DoubleResult:
+                {
+                    _formulaError.Text = string.Empty;
                     _formulaResultDec.Text = result.CalculatedDoubleValue.ToString(CultureInfo.InvariantCulture);
                     _formulaResultHex.Text = (result.CalculatedDoubleValue % 1) == 0 ? ((int)result.CalculatedDoubleValue).ToString("X") : string.Empty;
                     _formulaResultBool.Text = string.Empty;
+                    break;
                 }
             }
             _formulaTextBox.TextChanged += FormulaTextBoxTextChanged;

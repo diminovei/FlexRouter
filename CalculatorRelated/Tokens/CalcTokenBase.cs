@@ -10,7 +10,7 @@
         {
             return Position + TokenText.Length;
         }
-        public int GetTokenTextLentgh()
+        public int GetTokenTextLength()
         {
             return TokenText.Length;
         }

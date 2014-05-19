@@ -5,7 +5,7 @@
         int Id { get; set; }
         int Position { get; set; }
         FormulaError Error { get; set; }
-        int GetTokenTextLentgh();
+        int GetTokenTextLength();
         int GetNextTokenPosition();
     }
 }

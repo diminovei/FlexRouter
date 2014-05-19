@@ -43,7 +43,9 @@ namespace FlexRouter.AccessDescriptors
             if (!IsPowerOn())
                 return string.Empty;
             var formulaResult = CalculatorE.ComputeFormula(GetFormula());
-            if (!formulaResult.CanUseDoubleValue())
+            if (formulaResult.GetFormulaComputeResultType() != TypeOfComputeFormulaResult.FormulaWasEmpty)
+                return string.Empty;
+            if (formulaResult.GetFormulaComputeResultType() != TypeOfComputeFormulaResult.DoubleResult)
                 return "Error";
             var mask = "{0:0.";
 

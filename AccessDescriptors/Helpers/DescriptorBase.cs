@@ -49,9 +49,9 @@ namespace FlexRouter.AccessDescriptors.Helpers
         public bool IsPowerOn()
         {
             var result = CalculatorE.ComputeFormula(_usePanelPowerFormula ? Profile.GetPanelById(_panelId).PowerFormula : GetPowerFormula());
-            if (!result.CanUseBooleanValue())
-                return false;
-            return result.CalculatedBoolValue;
+            if (result.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.FormulaWasEmpty)
+                return true;
+            return result.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.BooleanResult && result.CalculatedBoolBoolValue;
         }
 
         public void SetPowerFormula(string powerFormula)

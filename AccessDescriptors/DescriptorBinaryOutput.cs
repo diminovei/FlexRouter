@@ -11,20 +11,14 @@ namespace FlexRouter.AccessDescriptors
             return LanguageManager.GetPhrase(Phrases.EditorTypeMemoryBinaryOutput);
         }
 
-        public DescriptorBinaryOutput()
-        {
-//            CalculatorE.RegisterTokenizer(FormulaResultTokenizer);
-//            CalculatorE.RegisterPreprocessor(FormulaResultProcessor);
-        }
-
         public bool GetLineState()
         {
             if (!IsPowerOn())
                 return false;
             var calcResult = CalculatorE.ComputeFormula(GetFormula());
-            if (!calcResult.CanUseBooleanValue())
-                return false;
-            return calcResult.CalculatedBoolValue;
+            if (calcResult.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.FormulaWasEmpty)
+                return true;
+            return calcResult.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.BooleanResult && calcResult.CalculatedBoolBoolValue;
         }
   /*      // Как потом раздать результат в другие переменные? Ввести в формулы термин "[R]"?
         private ICalcToken FormulaResultProcessor(ICalcToken tokenToPreprocess)
