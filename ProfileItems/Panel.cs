@@ -2,6 +2,7 @@
 using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.Helpers;
+using FlexRouter.Localizers;
 
 namespace FlexRouter.ProfileItems
 {

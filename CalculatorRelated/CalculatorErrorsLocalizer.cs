@@ -1,4 +1,5 @@
 ﻿using FlexRouter.CalculatorRelated.Tokens;
+using FlexRouter.Localizers;
 
 namespace FlexRouter.CalculatorRelated
 {
@@ -45,6 +46,8 @@ namespace FlexRouter.CalculatorRelated
                     return LanguageManager.GetPhrase(Phrases.FormulaErrorThisFormulaPartMustBeMath);
                 case FormulaError.Exception:
                     return LanguageManager.GetPhrase(Phrases.FormulaErrorException);
+                case FormulaError.DivisionByZero:
+                    return LanguageManager.GetPhrase(Phrases.FormulaErrorDivisionByZero);
                 default:
                     return "Untranslated: " + formulaError;
             }

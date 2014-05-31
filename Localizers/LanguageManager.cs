@@ -6,7 +6,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.XPath;
 
-namespace FlexRouter
+namespace FlexRouter.Localizers
 {
     public enum Phrases
     {
@@ -63,7 +63,9 @@ namespace FlexRouter
         EditorAxisCalibrate,
         EditorVariableIsAlreadyExists,
         EditorDependentDescriptorsList,
-
+        EditorStartInitializeBinaryInputButtonsList,
+        EditorStopInitializeBinaryInputButtonsList,
+        
         EditorMessageAbsoluteOffsetIsOutOfModule,
         EditorMessageAbsoluteIsNotAhexNumber,
         EditorMessageDataIsIncorrect,
@@ -80,15 +82,16 @@ namespace FlexRouter
         EditorAccessDescriptorTypeIsNotSuitable,
         EditorAccessDescriptorIsAlreadyInList,
         EditorSelectAnItemFirst,
+        EditorDependentAssignmentWasRemoved,
 
         MainFormRemove,
-       
+
         EditorTypeMemoryMultistate,
         EditorTypeMemoryIndicator,
         EditorTypeMemoryBinaryOutput,
         EditorTypeMemoryRange,
         EditorTypeRangeUnion,
-        
+
         EditorHeaderMemoryPatch,
         EditorHeaderFsuipc,
         EditorHeaderPanel,
@@ -122,7 +125,17 @@ namespace FlexRouter
         FormulaErrorCantOperateMathAndLogicValues,
         FormulaErrorThisFormulaPartMustBeLogic,
         FormulaErrorThisFormulaPartMustBeMath,
-        FormulaErrorException
+        FormulaErrorException,
+        FormulaErrorDivisionByZero,
+
+        SettingsMessageNotLoadedControlProcrssorsCount,
+        SettingsMessageInputNewProfileName,
+        SettingsMessageProfileNameIsAlreadyExist,
+        SettingsMessageRemoveProfile,
+        SettingsExportProfileDialogHeader,
+        SettingsImportProfileDialogHeader,
+        SettingsImportProfileKeepAssignmentsDialogHeader,
+        SettingsMessageInputProfileNewName
     }
 
     static public class LanguageManager

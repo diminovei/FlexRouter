@@ -2,6 +2,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using FlexRouter.AccessDescriptors.Helpers;
+using FlexRouter.EditorsUI.Helpers;
+using FlexRouter.Localizers;
+using FlexRouter.ProfileItems;
 
 namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
 {
@@ -65,7 +68,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
         public void Save()
         {
 //            if(_assignedAccessDescriptor.GetId() == -1)
-                Profile.RegisterAccessDescriptor(_assignedAccessDescriptor, true);
+                Profile.RegisterAccessDescriptor(_assignedAccessDescriptor);
             _assignedAccessDescriptor.SetName(_accessDescriptorName.Text);
             _assignedAccessDescriptor.SetAssignedPanelId(Profile.GetPanelIdByName(_assignedPanel.Text));
             _assignedAccessDescriptor.SetUsePanelPowerFormulaFlag(_usePanelPowerFormula.IsChecked == true);

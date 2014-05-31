@@ -7,6 +7,7 @@ using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.CalculatorRelated;
 using FlexRouter.CalculatorRelated.Tokens;
+using FlexRouter.Localizers;
 using FlexRouter.VariableWorkerLayer;
 
 namespace FlexRouter.AccessDescriptors
@@ -50,7 +51,7 @@ namespace FlexRouter.AccessDescriptors
                 if (string.IsNullOrEmpty(formula))
                     return;
                 var formulaResult = CalculatorE.ComputeFormula(formula);
-                if (formulaResult.GetFormulaComputeResultType() != TypeOfComputeFormulaResult.DoubleResult)
+                if (formulaResult.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.DoubleResult)
                     VariableManager.WriteValue(varId, formulaResult.CalculatedDoubleValue);
             }
         }

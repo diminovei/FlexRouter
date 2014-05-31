@@ -7,6 +7,7 @@ using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.Hardware.HardwareEvents;
+using FlexRouter.Localizers;
 
 namespace FlexRouter.ControlProcessors
 {
@@ -79,7 +80,7 @@ namespace FlexRouter.ControlProcessors
         public override void LoadAdditionals(XPathNavigator reader)
         {
             _repeaterIsOn = bool.Parse(reader.GetAttribute("RepeaterIsOn", reader.NamespaceURI));
-            _assignedHardware.Clear();
+            AssignedHardware.Clear();
             var readerAdd = reader.Select("Connectors/Connector");
             while (readerAdd.MoveNext())
             {

@@ -6,9 +6,13 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.ControlProcessors;
+using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.EditorPanels;
+using FlexRouter.EditorsUI.ControlProcessorEditors;
+using FlexRouter.EditorsUI.Helpers;
 using FlexRouter.Hardware;
 using FlexRouter.Hardware.HardwareEvents;
+using FlexRouter.Localizers;
 
 namespace FlexRouter.ControlProcessorEditors
 {

@@ -1,9 +1,10 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using FlexRouter.ControlProcessors;
+using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.Hardware;
+using FlexRouter.Localizers;
 
-namespace FlexRouter.ControlProcessorEditors
+namespace FlexRouter.EditorsUI.ControlProcessorEditors
 {
     class AssignEditorHelper
     {
@@ -43,22 +44,6 @@ namespace FlexRouter.ControlProcessorEditors
             return _dataTable.AsDataView();
         }
 
-        //public void SaveAll()
-        //{
-        //    var index = 0;
-        //    foreach (var row in _dataTable.Rows)
-        //    {
-        //        var assignment = new Assignment();
-        //        assignment.StateId = int.Parse((string)((DataRow)row).ItemArray[0]);
-        //        assignment.StateName = (string)((DataRow)row).ItemArray[1];
-        //        if(_assignEditorHelperType == AssignEditorHelperType.StatesAndHardware)
-        //            assignment.AssignedItem = (string)((DataRow)row).ItemArray[2];
-        //        if (_assignEditorHelperType == AssignEditorHelperType.StatesAndHardwareAndInverse)
-        //            assignment.Inverse = (bool)((DataRow)row).ItemArray[3];
-        //        assignment.VisualOrder = index++;
-        //        _assignedControlProcessor.SetAssignment(assignment);
-        //    }
-        //}
         public void Save(int selectedRowIndex, string hardware)
         {
             foreach (var row in _dataTable.Rows)
@@ -93,16 +78,5 @@ namespace FlexRouter.ControlProcessorEditors
                 return LanguageManager.GetPhrase(Phrases.HardwareAxis);
             return string.Empty;
         }
-
- /*       public bool IsDataChanged()
-        {
-            return false;
-        }
-
-        public EditorFieldsErrors IsCorrectData()
-        {
-            return new EditorFieldsErrors(null);
-     //       throw new NotImplementedException();
-        }*/
     }
 }

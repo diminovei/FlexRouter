@@ -8,6 +8,36 @@ namespace FlexRouterUnitTests
     public class CalculatorUnitTest
     {
         [TestMethod]
+        public void CheckErrors()
+        {
+            var calc = new Calculator();
+            var result = calc.ComputeFormula("3()");
+            Assert.AreEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
+            Assert.AreEqual(FormulaError.TokenMustBeOperation, result.GetFormulaCheckResult());
+            Assert.AreEqual(1, result.GetErrorBeginPositionInFormulaText());
+
+            result = calc.ComputeFormula("(%1+2)");
+            Assert.AreEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
+            Assert.AreEqual(FormulaError.UnexpectedSymbols, result.GetFormulaCheckResult());
+            Assert.AreEqual(1, result.GetErrorBeginPositionInFormulaText());
+
+            result = calc.ComputeFormula("(11+2))");
+            Assert.AreEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
+            Assert.AreEqual(FormulaError.ClosingBracketNotOpened, result.GetFormulaCheckResult());
+            Assert.AreEqual(6, result.GetErrorBeginPositionInFormulaText());
+
+            result = calc.ComputeFormula("(11+2");
+            Assert.AreEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
+            Assert.AreEqual(FormulaError.OpeningBracketNotClosed, result.GetFormulaCheckResult());
+            Assert.AreEqual(0, result.GetErrorBeginPositionInFormulaText());
+
+            result = calc.ComputeFormula("3/0");
+            Assert.AreEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
+            Assert.AreEqual(FormulaError.DivisionByZero, result.GetFormulaCheckResult());
+            Assert.AreEqual(2, result.GetErrorBeginPositionInFormulaText());
+        }
+
+        [TestMethod]
         public void CheckUnaryMinusFormula()
         {
             var calc = new Calculator();

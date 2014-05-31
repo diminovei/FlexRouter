@@ -1,9 +1,8 @@
 ﻿using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.AccessDescriptors.Helpers;
-using FlexRouter.ControlProcessors.Helpers;
 
-namespace FlexRouter.ControlProcessors
+namespace FlexRouter.ControlProcessors.Helpers
 {
     abstract class ControlProcessorSingleAssignmentBaseWithInversion<T> : ControlProcessorSingleAssignmentBase<T> where T : class
     {

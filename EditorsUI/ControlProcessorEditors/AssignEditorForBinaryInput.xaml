@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="FlexRouter.ControlProcessorEditors.AssignEditorForBinaryInput"
+﻿<UserControl x:Class="FlexRouter.EditorsUI.ControlProcessorEditors.AssignEditorForBinaryInput"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -9,17 +9,17 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
-        <DataGrid x:Name="AssignmentGrid" Margin="10,35,10,238" VerticalAlignment="Top, Bottom" CanUserResizeRows ="False" CanUserAddRows="False" CanUserSortColumns="False" CanUserReorderColumns="False" Height="181" Width="Auto" AutoGenerateColumns="True" RenderTransformOrigin="-2.833,0.538" CanUserDeleteRows="False" GotFocus="StatesGrid_GotFocus" Loaded="AssignmentGrid_Loaded" MouseDoubleClick="OnDoubleClick">
+        <DataGrid x:Name="AssignmentGrid" Margin="10,35,10,238" VerticalAlignment="Top, Bottom" CanUserResizeRows ="False" CanUserAddRows="False" CanUserSortColumns="False" CanUserReorderColumns="False" Height="181" Width="Auto" AutoGenerateColumns="True" RenderTransformOrigin="-2.833,0.538" CanUserDeleteRows="False" GotFocus="StatesGridGotFocus" Loaded="AssignmentGridLoaded" MouseDoubleClick="OnDoubleClick">
             <DataGrid.Resources>
                 <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="DarkGray"/>
                 </DataGrid.Resources>
             </DataGrid>
         <Label x:Name="_hardwareTypeLabel" Content="Label" Margin="10,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" BorderThickness="1" BorderBrush="Black" Width="Auto"/>
-        <DataGrid x:Name="_allActiveButtons" Margin="10,0,10,38" VerticalAlignment="Bottom" CanUserResizeRows ="False" CanUserAddRows="False" CanUserSortColumns="False" CanUserReorderColumns="False" Height="195" Width="Auto" AutoGenerateColumns="True" MouseDoubleClick="OnDoubleClick" RenderTransformOrigin="-2.833,0.538" CanUserDeleteRows="False" GotFocus="StatesGrid_GotFocus" Loaded="AssignmentGrid_Loaded">
+        <DataGrid x:Name="_allActiveButtons" Margin="10,0,10,38" VerticalAlignment="Bottom" CanUserResizeRows ="False" CanUserAddRows="False" CanUserSortColumns="False" CanUserReorderColumns="False" Height="195" Width="Auto" AutoGenerateColumns="True" MouseDoubleClick="OnDoubleClick" RenderTransformOrigin="-2.833,0.538" CanUserDeleteRows="False" GotFocus="StatesGridGotFocus" Loaded="AssignmentGridLoaded">
             <DataGrid.Resources>
                 <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="DarkGray"/>
             </DataGrid.Resources>
         </DataGrid>
-        <ToggleButton x:Name="_initialize" Content="Initialize" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="75" Checked="_initialize_Checked"/>
+        <ToggleButton x:Name="_initialize" Content="Initialize" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="75" Checked="InitializeChecked" Unchecked="InitializeUnchecked"/>
     </Grid>
 </UserControl>

@@ -11,6 +11,7 @@ using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.Hardware;
 using FlexRouter.Hardware.HardwareEvents;
+using FlexRouter.Localizers;
 
 namespace FlexRouter.ControlProcessors
 {
@@ -39,7 +40,7 @@ namespace FlexRouter.ControlProcessors
             writer.WriteAttributeString("EmulateToggle", _emulateToggle.ToString());
             writer.WriteAttributeString("RepeaterIsOn", _repeaterIsOn.ToString());
             writer.WriteStartElement("Connectors");
-            foreach (var buttonInfo in _assignedHardware)
+            foreach (var buttonInfo in AssignedHardware)
             {
                 writer.WriteStartElement("Connector");
                 writer.WriteAttributeString("Id", buttonInfo.Id.ToString(CultureInfo.InvariantCulture));
@@ -57,7 +58,7 @@ namespace FlexRouter.ControlProcessors
         {
             _emulateToggle = bool.Parse(reader.GetAttribute("EmulateToggle", reader.NamespaceURI));
             _repeaterIsOn = bool.Parse(reader.GetAttribute("RepeaterIsOn", reader.NamespaceURI));
-            _assignedHardware.Clear();
+            AssignedHardware.Clear();
             var readerAdd = reader.Select("Connectors/Connector");
             while (readerAdd.MoveNext())
             {
@@ -70,7 +71,7 @@ namespace FlexRouter.ControlProcessors
                     AssignedHardware =
                         readerAdd.Current.GetAttribute("AssignedHardware", readerAdd.Current.NamespaceURI)
                 };
-                _assignedHardware.Add(item);
+                AssignedHardware.Add(item);
             }
         }
         public void SetEmulateToggleMode(bool on)
@@ -90,7 +91,7 @@ namespace FlexRouter.ControlProcessors
             // Проверить, существует ли всё ещё такой ID контрола в AccessDescriptor
             // Как получить все состояния при загрузке ControlProcessor? Вызвать функцию в AccessDescriptor?
             var hardwareId = controlEvent.Hardware.GetHardwareGuid();
-            var button = _assignedHardware.FirstOrDefault(hw => hw.AssignedHardware == hardwareId);
+            var button = AssignedHardware.FirstOrDefault(hw => hw.AssignedHardware == hardwareId);
             if (button == null)
                 return;
 
@@ -129,7 +130,7 @@ namespace FlexRouter.ControlProcessors
                     _lastStateId = -1;
                 }
             }
-            if (!_assignedHardware.Any(bi => bi.IsOn))
+            if (!AssignedHardware.Any(bi => bi.IsOn))
             {
                 _lastStateId = -1;
                 AccessDescriptor.SetDefaultState();

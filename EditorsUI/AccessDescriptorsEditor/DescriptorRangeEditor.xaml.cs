@@ -4,6 +4,8 @@ using System.Text.RegularExpressions;
 using System.Windows.Controls;
 using FlexRouter.AccessDescriptors;
 using FlexRouter.AccessDescriptors.Helpers;
+using FlexRouter.EditorsUI.Helpers;
+using FlexRouter.Localizers;
 
 namespace FlexRouter.EditorPanels
 {

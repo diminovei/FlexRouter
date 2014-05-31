@@ -3,6 +3,7 @@ using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.CalculatorRelated;
 using FlexRouter.Helpers;
+using FlexRouter.ProfileItems;
 
 namespace FlexRouter.AccessDescriptors.Helpers
 {
@@ -28,7 +29,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
         /// <summary>
         ///  -1 - значит ещё не зарегистрирован в профиле
         /// </summary>
-        private int _id = -1;
+        protected int Id = -1;
 
         private string _name;
         private int _panelId = -1;
@@ -39,9 +40,15 @@ namespace FlexRouter.AccessDescriptors.Helpers
 
         protected readonly Calculator CalculatorE = new Calculator();
 
+        public DescriptorBase Copy()
+        {
+            var descriptor = MemberwiseClone();
+            ((DescriptorBase)descriptor).Id = GlobalId.GetNew();
+            return (DescriptorBase)descriptor;
+        }
         protected DescriptorBase()
         {
-            _id = GlobalId.GetNew();
+            Id = GlobalId.GetNew();
             CalculatorE.RegisterTokenizer(CalculatorVariableAccessAddonE.VariableTokenizer);
             CalculatorE.RegisterPreprocessor(CalculatorVariableAccessAddonE.VariablePreprocessor);
         }
@@ -81,7 +88,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
         /// </summary>
         public int GetId()
         {
-            return _id;
+            return Id;
         }
 
 /*        public void SetId(int id)
@@ -118,9 +125,9 @@ namespace FlexRouter.AccessDescriptors.Helpers
         public void SaveHeader(XmlWriter writer)
         {
             writer.WriteAttributeString("Type", GetType().Name);
-            writer.WriteAttributeString("Id", _id.ToString(CultureInfo.InvariantCulture));
-            if (_id == 490)
-                _id = _id;
+            writer.WriteAttributeString("Id", Id.ToString(CultureInfo.InvariantCulture));
+            if (Id == 490)
+                Id = Id;
             writer.WriteAttributeString("PanelId", _panelId.ToString(CultureInfo.InvariantCulture));
             writer.WriteAttributeString("Name", _name);
             writer.WriteAttributeString("PowerFormula", GetPowerFormula());
@@ -140,8 +147,8 @@ namespace FlexRouter.AccessDescriptors.Helpers
 
         public void LoadHeader(XPathNavigator reader)
         {
-            _id = int.Parse(reader.GetAttribute("Id", reader.NamespaceURI));
-            GlobalId.RegisterExisting(_id);
+            Id = int.Parse(reader.GetAttribute("Id", reader.NamespaceURI));
+            GlobalId.RegisterExisting(Id);
             GlobalFormulaKeeper.Instance.Clear(GetId());
             _panelId = int.Parse(reader.GetAttribute("PanelId", reader.NamespaceURI));
             _name = reader.GetAttribute("Name", reader.NamespaceURI);

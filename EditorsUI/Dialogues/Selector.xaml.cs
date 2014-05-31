@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using FlexRouter.ProfileItems;
 
 namespace FlexRouter.EditorsUI.Dialogues
 {

@@ -10,9 +10,14 @@ namespace FlexRouter.ControlProcessors.Helpers
         {
         }
 
-        public void AssignHardware(string hardwareGuid)
+/*        public void AssignHardware(string hardwareGuid)
         {
             AssignedHardwareForSingle = hardwareGuid;
+        }*/
+
+        public override string[] GetUsedHardwareList()
+        {
+            return new[] {AssignedHardwareForSingle};
         }
 
         public override Assignment[] GetAssignments()

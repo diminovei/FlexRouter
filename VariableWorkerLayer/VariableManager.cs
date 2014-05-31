@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Xml;
+using FlexRouter.ProfileItems;
 using FlexRouter.VariableSynchronization;
 using FlexRouter.VariableWorkerLayer.MethodFakeVariable;
 using FlexRouter.VariableWorkerLayer.MethodFsuipc;
@@ -198,15 +199,15 @@ namespace FlexRouter.VariableWorkerLayer
                 {
                     if (_stopThread)
                         return;
-                    foreach (var v in Variables)
+                    for (var i = 0; i < Variables.Count; i++)
                     {
-                        SynchronizeMemoryPatchVariable(v.Key);
-                        SynchronizeFsuipcVariable(v.Key);
+                        SynchronizeMemoryPatchVariable(Variables.ElementAt(i).Key);
+                        SynchronizeFsuipcVariable(Variables.ElementAt(i).Key);
                     }
                     _fsuipcMethod.Process();
-                    foreach (var v in Variables)
+                    for (var i = 0; i < Variables.Count; i++)
                     {
-                        GetFsuipcVariableValue(v.Key);
+                        GetFsuipcVariableValue(Variables.ElementAt(i).Key);
                     }
                 }
                 Thread.Sleep(100);
@@ -269,6 +270,16 @@ namespace FlexRouter.VariableWorkerLayer
                     writer.WriteString("\n");
                 }
             }
+        }
+
+        public static void Clear()
+        {
+//            Stop();
+            lock (Variables)
+            {
+                Variables.Clear();
+            }
+//            Start();
         }
 /*
         public static ProcessVariableError PlayMacro(int varId, MacroToken[] macroToken)

@@ -31,6 +31,7 @@
                     <ComboBox x:Name="_accessDescriptorsToCreateList" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Bottom" Width="199" Grid.Column="2" DropDownOpened="AccessDescriptorToCreateDropDownOpened"/>
                     <TextBox Text="{Binding ElementName=__accessDescriptorsToCreateList, Path=Text}" TextChanged="OnAccessDescriptorsToCreateTextChanged" Visibility="Hidden" Grid.ColumnSpan="2"/>
                     <Button x:Name="_removeAccessDescriptor" Content="Remove access descriptor" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="75" Click="RemoveAccessDescriptorClick"/>
+                    <Button x:Name="_copyAccessDescriptor" Content="Copy" Grid.Column="1" HorizontalAlignment="Left" Margin="202,537,0,0" VerticalAlignment="Top" Width="75" Click="_copyAccessDescriptor_Click"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Variables" Name="tabVariables" HorizontalAlignment="Left" Width="66">
@@ -84,8 +85,8 @@
                     <TextBox x:Name="_formulaEditorInputValueDec" Grid.Column="2" HorizontalAlignment="Left" Height="23" Margin="124,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" PreviewTextInput="FormulaEditorInputValueDecPreviewTextInput" TextChanged="FormulaEditorInputValueDecTextChanged"/>
                     <Label x:Name="_error" Content="Error" Grid.Column="2" HorizontalAlignment="Left" Margin="10,439,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.342,-0.231"/>
                     <TextBox x:Name="_formulaError" Grid.Column="2" HorizontalAlignment="Left" Height="21" Margin="10,470,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="359"/>
-                    <Button x:Name="_copyFormulaToClipboard" HorizontalAlignment="Right" VerticalAlignment="Bottom" Content="Copy" Width="75" Grid.Column="2" Click="_copyFormulaToClipboard_Click" Margin="0,0,10,10"/>
-                    <Button x:Name="_addVarToFormula" Content="&gt;" Width="75" HorizontalAlignment="Right" VerticalAlignment="Bottom" Grid.Column="1" Click="_addVarToFormula_Click" Margin="0,0,10,10"/>
+                    <Button x:Name="_copyFormulaToClipboard" HorizontalAlignment="Right" VerticalAlignment="Bottom" Content="Copy" Width="75" Grid.Column="2" Click="CopyFormulaToClipboardClick" Margin="0,0,10,10"/>
+                    <Button x:Name="_addVarToFormula" Content="&gt;" Width="75" HorizontalAlignment="Right" VerticalAlignment="Bottom" Grid.Column="1" Click="AddVarToFormulaClick" Margin="0,0,10,10"/>
                     <TextBox x:Name="_formulaResultHex" Grid.Column="2" HorizontalAlignment="Left" Height="23" Margin="234,499,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="65" IsReadOnly="True"/>
                     <TextBox x:Name="_formulaResultDec" Grid.Column="2" HorizontalAlignment="Left" Height="23" Margin="164,499,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="65" IsReadOnly="True"/>
                     <TextBox x:Name="_formulaResultBool" Grid.Column="2" HorizontalAlignment="Left" Height="23" Margin="304,499,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="65" IsReadOnly="True"/>
@@ -97,8 +98,18 @@
                         <ColumnDefinition Width="5*"/>
                         <ColumnDefinition Width="753*"/>
                     </Grid.ColumnDefinitions>
-                    <ComboBox x:Name="_selectLanguage" Width="120" Grid.Column="1" Margin="623,10,10,520" DropDownOpened="SelectLanguageDropDownOpened" DropDownClosed="_selectLanguage_DropDownClosed"/>
-                    <Label x:Name="_selectLanguageLabel" Content="Label" Width="100" Grid.Column="1" Margin="10,10,643,520"/>
+                    <ComboBox x:Name="_selectLanguage" Grid.Column="1" HorizontalAlignment="Left" Margin="544,0,0,523" VerticalAlignment="Bottom" Width="199" DropDownOpened="SelectLanguageDropDownOpened" DropDownClosed="SelectLanguageDropDownClosed"/>
+                    <Label x:Name="_selectLanguageLabel" Content="Language" Width="100" Grid.Column="1" HorizontalAlignment="Left" Margin="5,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.15,-3.077" />
+                    <Button x:Name="_importProfileAndSaveMyAssignments" Content="Import profile and save my assignments" Grid.Column="1" Margin="10,313,496,216" Click="ImportProfileAndSaveMyAssignmentsClick"/>
+                    <Button x:Name="_exportProfile" Content="Export profile" Grid.Column="1" Margin="10,383,496,146" Click="ExportProfileClick"/>
+                    <Button x:Name="_importProfile" Content="Import profile" Grid.Column="1" Margin="10,348,496,181" Click="ImportProfileClick"/>
+                    <ComboBox x:Name="_selectProfile" Grid.Column="1" HorizontalAlignment="Left" Margin="544,0,0,492" VerticalAlignment="Bottom" Width="199" DropDownOpened="SelectProfileDropDownOpened" DropDownClosed="SelectProfileDropDownClosed"/>
+                    <Label x:Name="_selectProfileLabel" Content="Profile" Width="100" Grid.Column="1" HorizontalAlignment="Left" Margin="5,41,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.15,-3.077" />
+                    <Label x:Name="_selectProfileLabel_Copy" Content="Profile description" Width="187" Grid.Column="1" HorizontalAlignment="Left" Margin="5,72,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.15,-3.077" />
+                    <TextBox x:Name="_profileDescription" Grid.Column="1" HorizontalAlignment="Left" Margin="5,187,0,0" VerticalAlignment="Top" TextWrapping="Wrap" Text="TextBox" Height="121" Width="738"/>
+                    <Button x:Name="_createNewProfile" Content="Create" Grid.Column="1" Margin="662,313,10,216" Click="CreateNewProfileClick"/>
+                    <Button x:Name="_removeProfile" Content="Remove" Grid.Column="1" Margin="662,348,10,181" Click="RemoveProfileClick"/>
+                    <Button x:Name="_renameProfile" Content="Rename" Grid.Column="1" Margin="662,383,10,146" Click="RenameProfileClick"/>
                 </Grid>
             </TabItem>
         </TabControl>

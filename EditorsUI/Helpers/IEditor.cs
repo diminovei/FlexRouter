@@ -1,4 +1,4 @@
-﻿namespace FlexRouter.AccessDescriptors.Helpers
+﻿namespace FlexRouter.EditorsUI.Helpers
 {
     public class EditorFieldsErrors
     {

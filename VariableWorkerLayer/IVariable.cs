@@ -11,6 +11,10 @@ namespace FlexRouter.VariableWorkerLayer
         string Description { get; set; }
         void Save(XmlTextWriter writer);
         void Load(XPathNavigator reader);
+        /// <summary>
+        /// Получить тип переменной
+        /// </summary>
+        /// <returns></returns>
         string GetName();
     }
 }

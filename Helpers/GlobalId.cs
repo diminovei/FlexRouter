@@ -8,7 +8,6 @@ namespace FlexRouter.Helpers
         /// Список используемых глобальных идентификаторов
         /// </summary>
         static private readonly List<int> UsedIdList = new List<int>();
-
         /// <summary>
         /// Зарегистрировать имеющийся Id в списке (при загрузке профиля). id начинаются с единицы
         /// </summary>

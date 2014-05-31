@@ -4,6 +4,9 @@ using System.Windows.Controls;
 using FlexRouter.AccessDescriptors;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.EditorsUI.Dialogues;
+using FlexRouter.EditorsUI.Helpers;
+using FlexRouter.Localizers;
+using FlexRouter.ProfileItems;
 
 namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
 {
@@ -80,6 +83,13 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
                 var header = LanguageManager.GetPhrase(Phrases.MessageBoxErrorHeader);
                 MessageBox.Show(message, header, MessageBoxButton.OK, MessageBoxImage.Stop);
                 return;
+            }
+            if (Profile.GetAccessDesciptorById(ad.GetId())!=null)
+            {
+                var message = LanguageManager.GetPhrase(Phrases.EditorDependentAssignmentWasRemoved);
+                var header = LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader);
+                MessageBox.Show(message, header, MessageBoxButton.OK, MessageBoxImage.Information);
+                Profile.RemoveControlProcessor(ad.GetId());
             }
             AddDescriptorToList(ad);
         }

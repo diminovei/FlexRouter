@@ -2,6 +2,7 @@
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.CalculatorRelated;
 using FlexRouter.CalculatorRelated.Tokens;
+using FlexRouter.Localizers;
 using FlexRouter.VariableWorkerLayer;
 
 namespace FlexRouter.AccessDescriptors
@@ -17,13 +18,18 @@ namespace FlexRouter.AccessDescriptors
             return LanguageManager.GetPhrase(Phrases.EditorTypeMemoryRange);
         }
 
+        /// <summary>
+        /// Отдельный калькулятор не понимающий [R], для того, чтобы не зацикливаться на получении значения из переменной 
+        /// </summary>
+        private readonly Calculator _inputValueCalculator = new Calculator();
         public DescriptorRange()
         {
             StateDescriptors.Add(new AccessDescriptorState { Id = 0, Name = "*", Order = 0 });
             CalculatorE.RegisterTokenizer(FormulaResultTokenizer);
             CalculatorE.RegisterPreprocessor(FormulaResultProcessor);
+            _inputValueCalculator.RegisterTokenizer(CalculatorVariableAccessAddonE.VariableTokenizer);
+            _inputValueCalculator.RegisterPreprocessor(CalculatorVariableAccessAddonE.VariablePreprocessor);
         }
-
         private double CalculateNewValue(double value, double stepValue, bool nextState)
         {
             double min, max;
@@ -71,17 +77,15 @@ namespace FlexRouter.AccessDescriptors
             }
             return value;
         }
-
         public void SetNextState(int repeats)
         {
             ChangeState(repeats, true);
         }
-
         private void ChangeState(int repeats, bool nextState)
         {
             var stepValue = Step * repeats;
             var receivedValueFormula = GetReceiveValueFormula();
-            var formulaResult = CalculatorE.ComputeFormula(receivedValueFormula);
+            var formulaResult = _inputValueCalculator.ComputeFormula(receivedValueFormula);
             if (formulaResult.GetFormulaComputeResultType() != TypeOfComputeFormulaResult.DoubleResult)
                 return;
             _currentFormulaResultForTokenizer = CalculateNewValue(formulaResult.CalculatedDoubleValue, stepValue, nextState);
@@ -106,7 +110,7 @@ namespace FlexRouter.AccessDescriptors
             {
                 var formula = GlobalFormulaKeeper.Instance.GetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, GetId(), varId, 0);
                 var formulaForVar = CalculatorE.ComputeFormula(formula);
-                if (formulaForVar.GetFormulaComputeResultType() != TypeOfComputeFormulaResult.DoubleResult)
+                if (formulaForVar.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.DoubleResult)
                     VariableManager.WriteValue(varId, formulaForVar.CalculatedDoubleValue);
             }
         }

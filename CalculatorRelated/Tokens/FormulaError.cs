@@ -22,6 +22,7 @@
         CantOperateMathAndLogicValues,
         ThisFormulaPartMustBeLogic,
         ThisFormulaPartMustBeMath,
-        Exception
+        Exception,
+        DivisionByZero
     }
 }

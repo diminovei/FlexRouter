@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using FlexRouter.AccessDescriptors;
 using FlexRouter.AccessDescriptors.Helpers;
@@ -13,6 +17,7 @@ using FlexRouter.CalculatorRelated;
 using FlexRouter.CalculatorRelated.Tokens;
 using FlexRouter.ControlProcessorEditors;
 using FlexRouter.ControlProcessors;
+using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.EditorPanels;
 using FlexRouter.EditorsUI.AccessDescriptorsEditor;
 using FlexRouter.EditorsUI.ControlProcessorEditors;
@@ -50,26 +55,32 @@ using FlexRouter.Localizers;
 //      Bug: бага в тушке. Если включить ввод ЗК на ПН-5, а затем выключить стабилизацию крена будут гореть и Сброс программы и ввод ЗК
 
 //  ***************************** Сделать
-//      DescriptorRange - Minimum/Maximum/Step - формулы.
-//          Поддержка клавиатуры (через SlimDX)
-//      Проверка формул:    
-//          Кнопку "добавить переменную в формулу"
-//          Bug: формула корректна 3()
-//          Запретить использование [R] в получении значения в RangeDescriptor, используя отдельный инстанс калькулятора
-//          Обрабатывать деление на 0?
-//      Перенести Repeater в AccessDescriptor. Для PrevNext принудительно включен по-умолчанию.
+//      Профиль:
+//          Проверить корректность работы профиля после переделки калькулятора
+//          Сделать задатчик курса
+//      Контроль формул:
+//          Если в формуле ошибка, показывать AD, как не рабочий.
+//          Проверка формулы после добавления/изменения в FormulaKeeper, удалении переменной, пропаже модуля
+//          Если есть переменная, но её значение недоступно, то результат формулы - N/A (для этого в обработке переменных нужно проверять, что модули загружены)
+//          Если модули (dll) недоступны, в переменных показывать N/A и формулы не считать, показывать AD, как не рабочий
+//          Подсветка ошибок формул в редакторах AD
 //      Управление профилем
-//      Бэкап и ротация изменениё профилей
-//      Мёрдж нового профиля и старых назначений
-//      Если DefaultLanguage пустой роутер упадёт?
-//      Если модули недоступны, в переменных показывать N/A и формулы не считать, показывать AD, как не рабочий
-//      Если в формуле ошибка, формулу не считать, показывать AD, как не рабочий. Проверка формулы после добавления/изменения в FormulaKeeper, удалении переменной, пропаже модуля
+//          Бэкап и ротация изменениё профилей
+//          Если DefaultLanguage пустой роутер упадёт?
+//          Убрать ToDo: костыль для FS9 (сохранять в профиль)
+//      Доступ к формулам по паре "Выданный ID, ID родителя"
+//      DescriptorRange - Minimum/Maximum/Step - формулы.
+//      Поддержка клавиатуры (через SlimDX)
+//      Горячие клавиши Ctrl+, Ctrl-, Ctrl1...9 для тестирования работоспособности роутера
+//      Для тестирования роутера без железа в CP добавить контрол: «вывод на индикатор/лампу» со значением N/A, если самолёт не загружен или формула неверна
+//      Перенести Repeater в AccessDescriptor. Для PrevNext принудительно включен по-умолчанию.
 //      После загрузки роутера на 100 индикаторов и все лампы подключенных модулей послать "выключить"
 //      Калькулятор. X:1 = X-1 (НВУ.ЗПУ1)
-//      Подсветка ошибок формул в редакторах AD
 //      Вывод информации о проблемах и ошибках
-//      Добавить иконки
-//
+//      Добавить иконки (AccessDescriptor, Variable)
+//      При изменении имени переменной предупреждать, что нужно обновить данные в AD, если открытый AD использует эту переменную (узнать в FormulaKeeper)
+//      Обновлять все деревья при переименованиях Var, AD, CP
+
 //      Железо:
 //          Нужно сделать маски. Каждое железо говорит, что для индикаторов мне нужен только модуль, а номер контрола нет. И роутер сам удалит ненужные упраляющие элементы и будет укорачивать строку Arcc:xxx|Indicator|1
 //          Поддержка L2/F2
@@ -81,7 +92,7 @@ using FlexRouter.Localizers;
 //      Централизованная локализация (локализовать все надписи. Сделать переключение языка у размера переменных)
 //      Настройки
 //      Что делать, если при загрузке профиля будет исключение?
-//      Реализовать функции (FromBCD, ToBCD, получить дробную часть, минус перед скобками)
+//      Реализовать функции (FromBCD, ToBCD, получить дробную часть)
 //      Поправить выравнивание, чтобы не образовывались ScrollBar'ы по-умолчанию
 //      Refactoring: Вынести ускоряющийся Repeater из ButtonPlusMinisConrolProcessor и сделать его общим
 //      Refactoring: Использовать VariableSizeEditor во всех переменных
@@ -107,12 +118,21 @@ using FlexRouter.Localizers;
 //     или
 //          Double.TryParse(str_1, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo, out retNum);
 //
-
+using FlexRouter.ProfileItems;
 using FlexRouter.VariableWorkerLayer;
 using FlexRouter.VariableWorkerLayer.MethodFakeVariable;
 using FlexRouter.VariableWorkerLayer.MethodFsuipc;
 using FlexRouter.VariableWorkerLayer.MethodMemoryPatch;
+using Microsoft.Win32;
+using SlimDX.Direct2D;
+using Clipboard = System.Windows.Clipboard;
+using ComboBox = System.Windows.Controls.ComboBox;
+using MessageBox = System.Windows.MessageBox;
 using Panel = FlexRouter.ProfileItems.Panel;
+using SolidColorBrush = System.Windows.Media.SolidColorBrush;
+using TextBox = System.Windows.Controls.TextBox;
+using TreeView = System.Windows.Controls.TreeView;
+using UserControl = System.Windows.Controls.UserControl;
 
 namespace FlexRouter
 {
@@ -130,6 +150,31 @@ namespace FlexRouter
         public string FullName;
         public object Object;
     }
+    public class WPFBitmapConverter : IValueConverter
+    {
+        #region IValueConverter Members
+
+        public object Convert(object value, Type targetType, object parameter,
+            System.Globalization.CultureInfo culture)
+        {
+            MemoryStream ms = new MemoryStream();
+            ((System.Drawing.Bitmap)value).Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+            BitmapImage image = new BitmapImage();
+            image.BeginInit();
+            ms.Seek(0, SeekOrigin.Begin);
+            image.StreamSource = ms;
+            image.EndInit();
+
+            return image;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter,
+            System.Globalization.CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+        #endregion
+    }
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -140,30 +185,38 @@ namespace FlexRouter
         private readonly Core _routerCore = new Core();
         readonly DispatcherTimer _timer;
         private readonly Calculator _calculator = new Calculator();
+
         public MainWindow()
         {
             InitializeComponent();
+//            SetTitle();
+            LanguageManager.Initialize();
             ApplicationSettings.LoadSettings();
+            InitializeCalculator();
             FillSelectLanguageCombobox();
+            if (!string.IsNullOrEmpty(ApplicationSettings.DefaultLanguage))
+                LanguageManager.LoadLanguage(ApplicationSettings.DefaultLanguage);
+            VariableSizeLocalizer.Initialize();
+            ControlProcessorListLocalizer.Initialize();
+            Localize();
+            FillSelectProfileCombobox();
+            LoadProfile(ApplicationSettings.DefaultProfile);
 //            CheckFSUIPC();
             _createVariable.IsEnabled = false;
             _timer = new DispatcherTimer();
             _timer.Tick += OnTimedEvent;
             _timer.Interval = new TimeSpan(0, 0, 0, 0, 100);
             _timer.Start();
-            Profile.Load();
-            VariableManager.Start();
-            LanguageManager.Initialize();
-            if (!string.IsNullOrEmpty(ApplicationSettings.DefaultLanguage))
-                LanguageManager.LoadLanguage(ApplicationSettings.DefaultLanguage);
-            VariableSizeLocalizer.Initialize();
-            ControlProcessorListLocalizer.Initialize();
-            Localize();
-            RenewTrees();
-            _routerCore.Start();
-            InitializeCalculator();
+//            Profile.Load();
+//            VariableManager.Start();
+//            RenewTrees();
+//            _routerCore.Start();
         }
 
+        private void SetTitle(string profileName = null)
+        {
+            Title = "Flex Router v" + Assembly.GetExecutingAssembly().GetName().Version + (string.IsNullOrEmpty(profileName) ? "" : " - " + profileName);
+        }
         private void Localize()
         {
             _removeAccessDescriptor.Content = LanguageManager.GetPhrase(Phrases.MainFormRemove);
@@ -196,7 +249,7 @@ namespace FlexRouter
         private void WindowClosing1(object sender, System.ComponentModel.CancelEventArgs e)
         {
             if (_routerCore.IsWorking())
-                _routerCore.Stop();
+                _routerCore.Stop(false);
             _timer.Stop();
             VariableManager.Stop();
         }
@@ -367,7 +420,7 @@ namespace FlexRouter
 
                 _accessDescriptorPanel.Children.Clear();
                 Profile.RemoveAccessDescriptor(((DescriptorBase)item.Object).GetId());
-                Profile.SaveProfile();
+                Profile.SaveCurrentProfile();
                 RenewTrees();
             }
         }
@@ -388,7 +441,7 @@ namespace FlexRouter
                 MessageBoxResult.Yes)
             {
                 Profile.RemovePanel(panel.Id);
-                Profile.SaveProfile();
+                Profile.SaveCurrentProfile();
                 RenewTrees();
             }
         }
@@ -587,7 +640,7 @@ namespace FlexRouter
             {
                 _variablesPanel.Children.Clear();
                 Profile.RemoveVariable(((IVariable)item.Object).Id);
-                Profile.SaveProfile();
+                Profile.SaveCurrentProfile();
                 RenewTrees();
             }
         }
@@ -751,7 +804,7 @@ namespace FlexRouter
                         cp.RenewStatesInfo(states);
                 }
                 ShowControlProcessor(controlProcessor);
-                Profile.SaveProfile();
+                Profile.SaveCurrentProfile();
                 FillCreateControlProcessorList();
             }
         }
@@ -778,10 +831,45 @@ namespace FlexRouter
             {
                 _controlProcessorsPanel.Children.Clear();
                 Profile.RemoveControlProcessor(((DescriptorBase)item.Object).GetId());
-                Profile.SaveProfile();
+                Profile.SaveCurrentProfile();
                 RenewTrees();
             }
         }
+        private static TreeViewItem CreateTreeViewItem(string text, object connectedObject, TreeItemType treeItemType, System.Drawing.Bitmap iconBitmap)
+        {
+            var item = new TreeViewItem();
+
+            if (iconBitmap != null)
+            {
+                // create stack panel
+                var stack = new StackPanel {Orientation = Orientation.Horizontal};
+
+                // create Image
+                var image = new Image();
+                var bc = new WPFBitmapConverter();
+                var icon =
+                    (ImageSource) bc.Convert(iconBitmap, typeof (ImageSource), null, CultureInfo.InvariantCulture);
+
+                image.Source = icon;
+                image.Width = 16;
+                image.Height = 16;
+                // Label
+                var lbl = new Label {Content = text};
+
+                // Add into stack
+                stack.Children.Add(image);
+                stack.Children.Add(lbl);
+
+                // assign stack to header
+                item.Header = stack;
+            }
+            else
+                item.Header = text;
+            item.Name = treeItemType.ToString();
+            item.Tag = connectedObject;
+            return item;
+        }
+
         #endregion
         #region CommonEditorsMethods
         private bool IsNeedToChangeItemInEditor(TreeView tree, StackPanel panel, RoutedPropertyChangedEventArgs<object> e, TreeViewHelper treeHelper)
@@ -824,7 +912,7 @@ namespace FlexRouter
             foreach (var child in panel.Children)
                 ((IEditor)child).Save();
             RenewTrees();
-            Profile.SaveProfile();
+            Profile.SaveCurrentProfile();
             _routerCore.Unlock();
         }
         private bool IsPanelDataChanged(StackPanel panel)
@@ -854,15 +942,33 @@ namespace FlexRouter
             if (!found)
                 return null;
             item.Object = ((TreeViewItem)tree.SelectedItem).Tag;
-            item.Name = (string)((TreeViewItem)tree.SelectedItem).Header;
+//           item.Name = (string)((TreeViewItem)tree.SelectedItem).Header;
+            item.Name = GetTreeItemText(tree.SelectedItem as TreeViewItem);
             if (item.Type != TreeItemType.Panel)
             {
                 var parentItem = ((TreeViewItem)((TreeViewItem)tree.SelectedItem).Parent);
-                item.FullName = (string)parentItem.Header + "." + item.Name;
+                var parentText = GetTreeItemText(parentItem as TreeViewItem);
+//                item.FullName = (string)parentItem.Header + "." + item.Name;
+                item.FullName = parentText + "." + item.Name;
             }
             else
                 item.FullName = item.Name;
             return item;
+        }
+
+        private string GetTreeItemText(TreeViewItem tvi)
+        {
+            if (tvi.Header is StackPanel)
+            {
+                if ((tvi.Header as StackPanel).Children.Count < 2)
+                    return null;
+                var item = ((StackPanel)tvi.Header).Children[1] as Label;
+                if(item == null)
+                return null;
+                return (string)item.Content;
+            }
+            return (string) tvi.Header;
+
         }
         /// <summary>
         /// Получить из Combobox объект, который предстоит создать
@@ -904,7 +1010,17 @@ namespace FlexRouter
                 {
                     if (adesc.IsDependent())
                         continue;
-                    var treeAdItem = new TreeViewItem { Tag = adesc, Name = tit.ToString(), Header = adesc.GetName() };
+                    var icon = GetIcon(tit, adesc.GetId());
+                    var treeAdItem = CreateTreeViewItem(adesc.GetName(), adesc, tit, icon);
+//                    var treeAdItem = new TreeViewItem { Tag = adesc, Name = tit.ToString(), Header = adesc.GetName()};
+//                    var treeAdItem = GetTreeView(adesc.GetName(), "Connected.bmp");
+//                    var treeAdItem = new TreeViewItem();
+//                    ImageSourceConverter c = new ImageSourceConverter();
+//                    treeAdItem.Source = (ImageSource)c.ConvertFrom(Properties.Resources.Connected);
+                    treeAdItem.Tag = adesc;
+                    treeAdItem.Name = tit.ToString();
+//                    treeAdItem.Header = adesc.GetName();
+
                     treeRootItem.Items.Add(treeAdItem);
                     if(tit == TreeItemType.ControlProcessor)
                         continue;
@@ -914,13 +1030,33 @@ namespace FlexRouter
                             continue;
                         if(a.GetDependency().GetId() != adesc.GetId())
                             continue;
-                        var treeDependentItem = new TreeViewItem { Tag = a, Name = tit.ToString(), Header = Profile.GetPanelById(a.GetAssignedPanelId()).Name + "." + a.GetName() };
+                        icon = GetIcon(tit, adesc.GetId());
+                        var treeDependentItem = CreateTreeViewItem(Profile.GetPanelById(a.GetAssignedPanelId()).Name + "." + a.GetName(), a, tit, icon);
+
+//                        var treeDependentItem = new TreeViewItem { Tag = a, Name = tit.ToString(), Header = Profile.GetPanelById(a.GetAssignedPanelId()).Name + "." + a.GetName() };
                         treeAdItem.Items.Add(treeDependentItem);
                     }
                 }
                 tree.Items.Add(treeRootItem);
             }
             vtk.RestoreState(ref tree);
+        }
+
+        private static System.Drawing.Bitmap GetIcon(TreeItemType tit, int itemId)
+        {
+            if (tit != TreeItemType.ControlProcessor)
+                return null;
+            var cp = Profile.GetControlProcessorByAccessDescriptorId(itemId);
+            if (cp == null)
+                return Properties.Resources.ConnectedNot;
+            var assignments = cp.GetAssignments();
+            bool foundUnassigned = false;
+            foreach (var assignment in assignments)
+            {
+                if (string.IsNullOrEmpty(assignment.AssignedItem))
+                    foundUnassigned = true;
+            }
+            return foundUnassigned ? Properties.Resources.ConnectedPartially : Properties.Resources.Connected;
         }
         #endregion
         #region Тестирование формул
@@ -944,7 +1080,7 @@ namespace FlexRouter
                 string textInRun = current.GetTextInRun(LogicalDirection.Forward);
                 if (!string.IsNullOrWhiteSpace(textInRun))
                 {
-                    int index = textInRun.IndexOf(keyword);
+                    var index = textInRun.IndexOf(keyword);
                     if (index != -1)
                     {
                         var selectionStart = current.GetPositionAtOffset(index, LogicalDirection.Forward);
@@ -1030,10 +1166,7 @@ namespace FlexRouter
             const string resultTokenText = "[R]";
             if (((CalcTokenNumber) tokenToPreprocess).TokenText == resultTokenText)
             {
-                if (string.IsNullOrEmpty(_formulaEditorInputValueDec.Text))
-                    ((CalcTokenNumber) tokenToPreprocess).Value = 0;
-                else
-                    ((CalcTokenNumber)tokenToPreprocess).Value = double.Parse(_formulaEditorInputValueDec.Text);
+                ((CalcTokenNumber) tokenToPreprocess).Value = string.IsNullOrEmpty(_formulaEditorInputValueDec.Text) ? 0 : double.Parse(_formulaEditorInputValueDec.Text);
             }
             return tokenToPreprocess;
         }
@@ -1084,7 +1217,7 @@ namespace FlexRouter
             CalculateTestFormula();
         }
         [STAThread]
-        private void _copyFormulaToClipboard_Click(object sender, RoutedEventArgs e)
+        private void CopyFormulaToClipboardClick(object sender, RoutedEventArgs e)
         {
             var range = new TextRange(_formulaTextBox.Document.ContentStart, _formulaTextBox.Document.ContentEnd);
             var text = range.Text;
@@ -1093,10 +1226,16 @@ namespace FlexRouter
             Clipboard.SetText(text);
         }
 
-        private void _addVarToFormula_Click(object sender, RoutedEventArgs e)
+        private void AddVarToFormulaClick(object sender, RoutedEventArgs e)
         {
-
-        }
+            var item = GetTreeSelectedItem(_variablesForFormulaTree);
+            if (item == null)
+                return;
+            if (item.Type == TreeItemType.Panel)
+                return;
+            var variableName = "[" + item.FullName + "]";
+            _formulaTextBox.CaretPosition.InsertTextInRun(variableName);
+       }
 
         #endregion
 
@@ -1108,12 +1247,26 @@ namespace FlexRouter
                 _selectLanguage.Items.Add(profile);
             if (!string.IsNullOrEmpty(ApplicationSettings.DefaultLanguage))
                 _selectLanguage.Text = ApplicationSettings.DefaultLanguage;
+            else
+                _selectLanguage.Text = string.Empty;
+        }
+        private void FillSelectProfileCombobox()
+        {
+            _selectProfile.Items.Clear();
+            var profiles = Profile.GetProfileList();
+            foreach (var profile in profiles)
+            {
+                var cbi = new ComboBoxItem {Content = profile.Key, Tag = profile.Value};
+                _selectProfile.Items.Add(cbi);
+            }
+            if (!string.IsNullOrEmpty(ApplicationSettings.DefaultProfile))
+                _selectProfile.Text = ApplicationSettings.DefaultProfile;
         }
         private void SelectLanguageDropDownOpened(object sender, EventArgs e)
         {
             FillSelectLanguageCombobox();
         }
-        private void _selectLanguage_DropDownClosed(object sender, EventArgs e)
+        private void SelectLanguageDropDownClosed(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(_selectLanguage.Text))
                 return;
@@ -1121,6 +1274,131 @@ namespace FlexRouter
             ApplicationSettings.SaveSettings();
             LanguageManager.LoadLanguage(_selectLanguage.Text);
             Localize();
+        }
+        #region Управление профилем
+        private void SelectProfileDropDownOpened(object sender, EventArgs e)
+        {
+            FillSelectProfileCombobox();
+        }
+
+        private void SelectProfileDropDownClosed(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(_selectProfile.Text))
+                return;
+//            LoadProfile((string)((ComboBoxItem)_selectProfile.SelectedItem).Tag);
+            LoadProfile(_selectProfile.Text);
+        }
+
+        private void LoadProfile(string profileName, string controlProcessorsProfile = null)
+        {
+            if (string.IsNullOrEmpty(profileName))
+                return;
+            var profileList = Profile.GetProfileList();
+            if (!profileList.ContainsKey(profileName))
+                return;
+            var profilePath = profileList[profileName];
+            PauseRouterOnChangeProfile();
+            if (controlProcessorsProfile == null)
+                Profile.LoadProfile(profilePath);
+            else
+                Profile.MergeAssignmentsWithProfile(profileName, controlProcessorsProfile);
+            ResumeRouterOnChangeProfile(profileName);
+        }
+
+        private void CreateNewProfileClick(object sender, RoutedEventArgs e)
+        {
+            PauseRouterOnChangeProfile();
+            var newProfileName = Profile.CreateNewProfile();
+            ResumeRouterOnChangeProfile(newProfileName);
+        }
+
+        private void RemoveProfileClick(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show(LanguageManager.GetPhrase(Phrases.SettingsMessageRemoveProfile),
+                LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader),
+                MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
+                return;
+            PauseRouterOnChangeProfile();
+            Profile.RemoveCurrentProfile();
+            ResumeRouterOnChangeProfile();
+        }
+
+        private void PauseRouterOnChangeProfile()
+        {
+            _routerCore.Stop(true);
+            VariableManager.Stop();
+        }
+
+        private void ResumeRouterOnChangeProfile(string currentProfileName = null)
+        {
+            SetTitle(currentProfileName ?? string.Empty);
+            ApplicationSettings.DefaultProfile = currentProfileName ?? string.Empty;
+            ApplicationSettings.SaveSettings();
+            FillSelectProfileCombobox();
+            VariableManager.Start();
+            _routerCore.Start();
+            RenewTrees();
+        }
+
+        private void ExportProfileClick(object sender, RoutedEventArgs e)
+        {
+            var of = new SaveFileDialog
+            {
+                Title = LanguageManager.GetPhrase(Phrases.SettingsExportProfileDialogHeader),
+                CheckPathExists = true,
+                Filter = @"Aircraft profile files (*.ap)|*.ap|All files (*.*)|*.*"
+            };
+            if (of.ShowDialog() != true)
+                return;
+            Profile.SaveProfileAs(of.FileName);
+        }
+
+        private void ImportProfileAndSaveMyAssignmentsClick(object sender, RoutedEventArgs e)
+        {
+            PauseRouterOnChangeProfile();
+            var of = new OpenFileDialog
+            {
+                Title = LanguageManager.GetPhrase(Phrases.SettingsImportProfileKeepAssignmentsDialogHeader),
+                Multiselect = false,
+                Filter = @"Aircraft profile files (*.ap)|*.ap|All files (*.*)|*.*"
+            };
+            if (of.ShowDialog() != true)
+                return;
+            var name = Profile.ImportAndSaveAssignments(of.FileName);
+            ResumeRouterOnChangeProfile(name);
+        }
+
+        private void ImportProfileClick(object sender, RoutedEventArgs e)
+        {
+            PauseRouterOnChangeProfile();
+            var of = new OpenFileDialog
+            {
+                Title = LanguageManager.GetPhrase(Phrases.SettingsImportProfileDialogHeader),
+                Multiselect = false,
+                Filter = @"Aircraft profile files (*.ap)|*.ap|All files (*.*)|*.*"
+            };
+            if (of.ShowDialog() != true)
+                return;
+            var name = Profile.Import(of.FileName);
+            ResumeRouterOnChangeProfile(name);
+        }
+        private void RenameProfileClick(object sender, RoutedEventArgs e)
+        {
+            Profile.RenameProfile();
+        }
+
+        #endregion
+
+        private void _copyAccessDescriptor_Click(object sender, RoutedEventArgs e)
+        {
+/*            var item = GetTreeSelectedItem(_accessDescriptorsTree);
+            if (item == null)
+                return;
+            if (item.Type != TreeItemType.AccessDescriptor)
+                return;
+            var descriptor = ((DescriptorBase) item.Object).Copy();
+            Profile.RegisterAccessDescriptor(descriptor);
+            RenewTrees();*/
         }
     }
 }

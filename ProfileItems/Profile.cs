@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.Linq;
-using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
+using System.Windows;
+using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
@@ -12,21 +13,23 @@ using FlexRouter.AccessDescriptors;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.ControlProcessors;
 using FlexRouter.ControlProcessors.Helpers;
+using FlexRouter.EditorPanels;
 using FlexRouter.Hardware;
 using FlexRouter.Hardware.HardwareEvents;
+using FlexRouter.Hardware.Helpers;
 using FlexRouter.Helpers;
-using FlexRouter.ProfileItems;
-using FlexRouter.VariableSynchronization;
+using FlexRouter.Localizers;
 using FlexRouter.VariableWorkerLayer;
 using FlexRouter.VariableWorkerLayer.MethodFakeVariable;
 using FlexRouter.VariableWorkerLayer.MethodFsuipc;
 using FlexRouter.VariableWorkerLayer.MethodMemoryPatch;
-using SlimDX.Direct3D11;
+using MessageBox = System.Windows.Forms.MessageBox;
 
-namespace FlexRouter
+namespace FlexRouter.ProfileItems
 {
     internal static class Profile
     {
+//        public AccessDescriptors = new AccessDescriptors();
         private static readonly Dictionary<int, Panel> PanelsStorage = new Dictionary<int, Panel>();
 
         private static readonly Dictionary<int, IControlProcessor> ControlProcessorsStorage =
@@ -132,20 +135,8 @@ namespace FlexRouter
             return vars.Where(ad => ad.PanelId == panelId).OrderBy(ad => ad.Name);
         }
 
-        public static int RegisterAccessDescriptor(DescriptorBase ad, bool isNew)
+        public static int RegisterAccessDescriptor(DescriptorBase ad)
         {
- /*           int id;
-            if (isNew)
-            {
-                id = GlobalId.GetNew();
-                ad.SetId(id);
-            }
-            else
-                id = ad.GetId();
-                        AccessDescriptorsStorage.Add(id, ad);
-            return id;*/
-
-
             AccessDescriptorsStorage[ad.GetId()] = ad;
             return ad.GetId();
         }
@@ -159,10 +150,7 @@ namespace FlexRouter
 
         public static IOrderedEnumerable<DescriptorBase> GetSortedAccessDesciptorListByPanelId(int panelId)
         {
-//            return (from item in _storageItems where item.Value.AccessDescriptor.GetAssignedPanelId() == panelId select item.Value.AccessDescriptor).OrderBy(ad => ad.GetId());
-            return
-                AccessDescriptorsStorage.Values.Where(ad => ad.GetAssignedPanelId() == panelId)
-                                        .OrderBy(ad => ad.GetName());
+            return AccessDescriptorsStorage.Values.Where(ad => ad.GetAssignedPanelId() == panelId).OrderBy(ad => ad.GetName());
         }
         public static IOrderedEnumerable<DescriptorBase> GetSortedAccessDesciptorList()
         {
@@ -262,17 +250,16 @@ namespace FlexRouter
             }
         }
 
-        public static void Load()
+ /*       public static void Load()
         {
             _moduleExtensionFilter = ".gau";
             _mainSimulatorProcess = "fs9";
 
             var location = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             var folder = Path.Combine(location, @"Profiles\profile001.ap");
-
-            LoadProfile(folder);
-//            TestInit();
-        }
+//            if(!string.IsNullOrEmpty(ApplicationSettings.DefaultProfile))
+                LoadProfile(folder);
+        }*/
 
         private static string GenerateProfileFileName()
         {
@@ -282,15 +269,16 @@ namespace FlexRouter
             {
                 var fileName = "profile" + index.ToString("000") + ".ap";
                 fileName = Path.Combine(folder, fileName);
-                if (_profileList.All(pair => pair.Value.ToLower() != fileName.ToLower()))
+                if (!File.Exists(fileName))
+//                if (_profileList.All(pair => pair.Value.ToLower() != fileName.ToLower()))
                     return fileName;
                 index++;
             }
         }
 
-        private static Dictionary<string, string> _profileList = new Dictionary<string, string>();
+//        private static Dictionary<string, string> _profileList = new Dictionary<string, string>();
         //ToDo: временно
-        private const string ProfileName = "First";
+//        private static string ProfileName = "First";
         private const string ProfileHeader = "FlexRouterProfile";
         private const string ProfileExtensionMask = "*.ap";
         private const string ProfileType = "Aircraft";
@@ -302,12 +290,14 @@ namespace FlexRouter
             var modules = new List<ControlProcessorHardware>();
             foreach (var controlProcessor in ControlProcessorsStorage.Values)
             {
-                var a = controlProcessor.GetAssignments();
+                var a = controlProcessor.GetUsedHardwareList();
                 foreach (var assignment in a)
                 {
-                    if(string.IsNullOrEmpty(assignment.AssignedItem))
+                    if(string.IsNullOrEmpty(assignment))
                         continue;
-                    var cph = ControlProcessorHardware.GenerateByGuid(assignment.AssignedItem);
+                    var cph = ControlProcessorHardware.GenerateByGuid(assignment);
+                    if(cph == null)
+                        continue;
                     if (cph.ModuleType == HardwareModuleType.Button)
                     {
                         var module = cph.MotherBoardId + "|" + cph.ModuleType + "|" + cph.ModuleId;
@@ -321,47 +311,36 @@ namespace FlexRouter
             }
             return modules.ToArray();
         }
-        public static string[] GetProfileList()
+        public static Dictionary<string, string> GetProfileList()
         {
-            _profileList = Utils.GetXmlList(ProfileFolder, ProfileExtensionMask, ProfileHeader, ProfileType);
-            return _profileList.Keys.ToArray();
+            return Utils.GetXmlList(ProfileFolder, ProfileExtensionMask, ProfileHeader, ProfileType);
         }
 
-/*        private static void SaveSerialized()
-        {
-        
-            using (var x = new XmlSerializer(typeof (YourClass)))
-            {
-                var fs = new FileStream(@"C:\YourFile.xml"), FileMode.OpenOrCreate);
-                x.Serialize(fs, yourInstance);
-                fs.Close();
-            }
+        private static string _currentProfileName;
+        private static string _currentProfilePath;
 
-        private static void LoadSerialized()
+        public static void SaveCurrentProfile()
         {
-
-            var x = new XmlSerializer(typeof(YourClass));
-            var fs = new FileStream(@"C:\YourFile.xml"), FileMode.Open);
-            var fromFile = x.Deserialize(fs) as YourClass;
-            fs.Close();
-        }*/
-        public static void SaveProfile()
+            SaveProfile(_currentProfileName, _currentProfilePath);
+        }
+        public static void SaveProfileAs(string path)
+        {
+            SaveProfile(_currentProfileName, path);
+        }
+        private static void SaveProfile(string profileName, string profilePath)
         {
             try
             {
-                if (!_profileList.ContainsKey(ProfileName))
-                    _profileList.Add(ProfileName, GenerateProfileFileName());
- 
                 using (var sw = new StringWriter())
                 {
-                    using (var writer = new XmlTextWriter(sw /*ProfileList[profileName], Encoding.Unicode*/))
+                    using (var writer = new XmlTextWriter(sw))
                     {
                         writer.Formatting = Formatting.Indented;
                         writer.Indentation = 4;
                         writer.WriteStartDocument();
                             writer.WriteStartElement(ProfileHeader);
                             writer.WriteAttributeString("Type", ProfileType);
-                            writer.WriteAttributeString("Name", ProfileName);
+                            writer.WriteAttributeString("Name", profileName);
 //                            writer.WriteString("\n");
                                 writer.WriteStartElement(ProfileType);
 
@@ -413,9 +392,9 @@ namespace FlexRouter
                         writer.WriteEndElement();
                         writer.WriteEndDocument();
                     }
-                    if (File.Exists(_profileList[ProfileName]))
-                        File.Copy(_profileList[ProfileName], _profileList[ProfileName] + ".bak", true);
-                    using (var swToDisk = new StreamWriter(_profileList[ProfileName], false, Encoding.Unicode))
+                    if (File.Exists(profilePath))
+                        File.Copy(profilePath, profilePath + ".bak", true);
+                    using (var swToDisk = new StreamWriter(profilePath, false, Encoding.Unicode))
                     {
                         var parsedXml = XDocument.Parse(sw.ToString());
                         swToDisk.Write(parsedXml.ToString());
@@ -427,19 +406,85 @@ namespace FlexRouter
                 
             }
         }
+
+/*        public static string GenerateProfileFileName()
+        {
+            var profileList = GetProfileList();
+            var folder = Utils.GetFullSubfolderPath("Profiles");
+            var index = 1;
+            while (true)
+            {
+                var fileName = "profile" + index.ToString("000") + ".ap";
+                fileName = Path.Combine(folder, fileName);
+                if (profileList.All(pair => pair.Value.ToLower() != fileName.ToLower()))
+                    return fileName;
+                index++;
+            }
+        }*/
+
+        private static string CheckAndCorrectProfileFileName(string name)
+        {
+            var profileList = GetProfileList();
+            if (!profileList.Keys.Contains(name))
+                return name;
+            var index = 1;
+            while (true)
+            {
+                if (!profileList.Keys.Contains(name + index))
+                    return name+index;
+                index++;
+            }
+        }
         /// <summary>
         /// Загрузка профиля
         /// </summary>
-        /// <param name="profileName">Имя профиля, прописанное в теге ArccRouterProfile, аттрибут Name</param>
+        /// <param name="profilePath">Путь к профилю</param>
         /// <returns>Успешно ли прошла загрузка</returns>
-        public static bool LoadProfile(string profileName)
+        public static bool LoadProfile(string profilePath)
         {
+            return LoadOrMergeProfile(profilePath, profilePath);
+        }
+        /// <summary>
+        /// Слияние профилей
+        /// </summary>
+        /// <param name="profileName">Путь к профилю, из которого будет браться всё, кроме ControlProcrssor</param>
+        /// <param name="controlProcessorsProfile">Путь к профилю, из которого будут браться ControlProcrssor'ы</param>
+        /// <returns>Успешно ли прошла загрузка</returns>
+        public static bool MergeAssignmentsWithProfile(string profileName, string controlProcessorsProfile)
+        {
+            return LoadOrMergeProfile(profileName, controlProcessorsProfile);
+        }
+
+        public static string GetProfileName(string path)
+        {
+            var folder = Path.GetDirectoryName(path);
+            var name = Path.GetFileName(path);
+            return Utils.GetXmlList(folder, name, ProfileHeader, ProfileType).Keys.FirstOrDefault();
+        }
+        /// <summary>
+        /// Загрузка профиля или слияние профилей
+        /// При загрузке оба параметра одинаковы, при слиянии указываются различны профили
+        /// </summary>
+        /// <param name="profilePath">Путь к профилю, из которого будет браться всё, кроме ControlProcrssor</param>
+        /// <param name="controlProcessorsProfilePath">Путь к профилю, из которого будут браться ControlProcrssor'ы</param>
+        /// <returns>Успешно ли прошла загрузка</returns>
+        private static bool LoadOrMergeProfile(string profilePath, string controlProcessorsProfilePath)
+        {
+            Clear();
+            //ToDo: костыль для FS9
+            _moduleExtensionFilter = ".gau";
+            _mainSimulatorProcess = "fs9";
+
             ControlProcessorsStorage.Clear();
             AccessDescriptorsStorage.Clear();
             // Очистить VariableStorage
-            var xp = new XPathDocument(profileName);
+            var xp = new XPathDocument(profilePath);
             var nav = xp.CreateNavigator();
-            var navPointer = nav.Select("/FlexRouterProfile/Aircraft/Panels/Panel");
+            var navPointer = nav.Select("/FlexRouterProfile");
+            navPointer.MoveNext();
+            _currentProfileName = navPointer.Current.GetAttribute("Name", navPointer.Current.NamespaceURI);
+            _currentProfilePath = controlProcessorsProfilePath ?? profilePath;
+            navPointer = nav.Select("/FlexRouterProfile/Aircraft/Panels/Panel");
 
             while (navPointer.MoveNext())
             {
@@ -491,15 +536,23 @@ namespace FlexRouter
                 if (ad != null)
                 {
                     ad.Load(navPointer.Current);
-                    RegisterAccessDescriptor(ad, false);
+                    RegisterAccessDescriptor(ad);
                 }
             }
 
+            xp = new XPathDocument(controlProcessorsProfilePath);
+            nav = xp.CreateNavigator();
             navPointer = nav.Select("/FlexRouterProfile/Aircraft/ControlProcessors/ControlProcessor");
+            var cpLoadErrorsCounter = 0;
             while (navPointer.MoveNext())
             {
                 var type = navPointer.Current.GetAttribute("Type", navPointer.Current.NamespaceURI);
                 var id = int.Parse(navPointer.Current.GetAttribute("AssignedAccessDescriptorId", navPointer.Current.NamespaceURI));
+                if (!AccessDescriptorsStorage.ContainsKey(id))
+                {
+                    cpLoadErrorsCounter++;
+                    continue;
+                }
                 var accessDescriptor = GetAccessDesciptorById(id);
                 IControlProcessor cp = null;
                 if (type == "AxisRangeProcessor")
@@ -529,31 +582,18 @@ namespace FlexRouter
                             controlProcessor.RenewStatesInfo(states);
                     }
                 }
-            }
-/*            lock (ControlProcessorsStorage)
-            {
-                lock (AccessDescriptorsStorage)
+                // Если был импорт профиля
+                if (profilePath != controlProcessorsProfilePath)
                 {
-                    for (int i = AccessDescriptorsStorage.Count-1; i >= 0; i--)
+                    if (cpLoadErrorsCounter!=0)
                     {
-                        var newId = GlobalId.GetNew();
-                        for (int j = ControlProcessorsStorage.Count - 1; j >= 0; j--)
-                        {
-                            if (ControlProcessorsStorage.ElementAt(j).Value.GetAssignedAccessDescriptor() != AccessDescriptorsStorage.ElementAt(i).Value.GetId())
-                                continue;
-                            var cp = ControlProcessorsStorage.ElementAt(j);
-                            ControlProcessorsStorage.Remove(ControlProcessorsStorage.ElementAt(j).Key);
-                            ControlProcessorsStorage.Add(newId, cp.Value);
-                            ControlProcessorsStorage[newId].SetId(newId);
-
-                        }
-                        var add2 = AccessDescriptorsStorage.ElementAt(i);
-                        AccessDescriptorsStorage.Remove(AccessDescriptorsStorage.ElementAt(i).Key);
-                        AccessDescriptorsStorage.Add(newId, add2.Value);
-                        AccessDescriptorsStorage[newId].SetId(newId);
+                        var message = LanguageManager.GetPhrase(Phrases.SettingsMessageNotLoadedControlProcrssorsCount) + ": " + cpLoadErrorsCounter;
+                        MessageBox.Show(message, LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader), MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
+                    SaveCurrentProfile();
                 }
-            }*/
+                    
+            }
             foreach (var descriptorBase in AccessDescriptorsStorage)
                 descriptorBase.Value.Initialize();
             return true;
@@ -574,6 +614,90 @@ namespace FlexRouter
         {
             return AccessDescriptorsStorage.Any(descriptorBase => descriptorBase.Value.GetAssignedPanelId() == panelId) ||
                 VariableManager.GetVariablesList().Any(variable => variable.PanelId == panelId);
+        }
+
+        public static void Clear()
+        {
+            ControlProcessorsStorage.Clear();
+            AccessDescriptorsStorage.Clear();
+            VariableManager.Clear();
+            PanelsStorage.Clear();
+            _mainSimulatorProcess = string.Empty;
+            _moduleExtensionFilter = string.Empty;
+        }
+
+        public static string CreateNewProfile()
+        {
+            var profileList = GetProfileList();
+        loop:
+            var it = new InputString(LanguageManager.GetPhrase(Phrases.SettingsMessageInputNewProfileName));
+            if (it.ShowDialog() != true)
+                return null;
+            var profileName = it.GetText();
+            if(profileList.ContainsKey(profileName))
+            {
+                System.Windows.MessageBox.Show(LanguageManager.GetPhrase(Phrases.SettingsMessageProfileNameIsAlreadyExist),
+                                LanguageManager.GetPhrase(Phrases.MessageBoxErrorHeader),
+                                MessageBoxButton.OK, MessageBoxImage.Error);
+                goto loop;
+            }
+            Clear();
+            _currentProfileName = profileName;
+            _currentProfilePath = GenerateProfileFileName();
+            SaveCurrentProfile();
+            return profileName;
+        }
+        
+        public static string RenameProfile()
+        {
+            var profileList = GetProfileList();
+        loop:
+            var it = new InputString(LanguageManager.GetPhrase(Phrases.SettingsMessageInputProfileNewName));
+            if (it.ShowDialog() != true)
+                return null;
+            var profileName = it.GetText();
+            if (profileList.ContainsKey(profileName))
+            {
+                System.Windows.MessageBox.Show(LanguageManager.GetPhrase(Phrases.SettingsMessageProfileNameIsAlreadyExist),
+                                LanguageManager.GetPhrase(Phrases.MessageBoxErrorHeader),
+                                MessageBoxButton.OK, MessageBoxImage.Error);
+                goto loop;
+            }
+            Clear();
+            _currentProfileName = profileName;
+            _currentProfilePath = GenerateProfileFileName();
+            SaveCurrentProfile();
+            return profileName;
+        }
+        public static void RemoveCurrentProfile()
+        {
+            Clear();
+            if (File.Exists(_currentProfilePath))
+                File.Delete(_currentProfilePath);
+
+        }
+
+        public static string Import(string path)
+        {
+            return ImportProfile(false, path);
+        }
+
+        public static string ImportAndSaveAssignments(string path)
+        {
+            return ImportProfile(true, path);
+        }
+
+        private static string ImportProfile(bool andSaveAssignments, string pathToProfileToImport)
+        {
+            var profileName = GetProfileName(pathToProfileToImport);
+            var importedProfileName = CheckAndCorrectProfileFileName(profileName);
+            var importedProfilePath = GenerateProfileFileName();
+            if(andSaveAssignments)
+                MergeAssignmentsWithProfile(pathToProfileToImport, _currentProfilePath);
+            else
+                LoadProfile(pathToProfileToImport);
+            SaveProfile(importedProfileName, importedProfilePath);
+            return importedProfileName;
         }
     }
 }

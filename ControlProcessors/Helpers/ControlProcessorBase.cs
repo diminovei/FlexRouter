@@ -26,6 +26,8 @@ namespace FlexRouter.ControlProcessors.Helpers
         }
 
         public abstract string GetName();
+        
+        public abstract string[] GetUsedHardwareList();
 
         public abstract Assignment[] GetAssignments();
 

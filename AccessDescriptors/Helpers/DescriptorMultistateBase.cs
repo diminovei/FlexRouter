@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Xml;
 using System.Xml.XPath;
+using FlexRouter.ProfileItems;
 
 namespace FlexRouter.AccessDescriptors.Helpers
 {

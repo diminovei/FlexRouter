@@ -56,6 +56,9 @@
   <Phrase Name="EditorAxisReset" Value = "Reset"/>
   <Phrase Name="EditorAxisCalibrate" Value = "Calibrate"/>
   <Phrase Name="EditorVariableIsAlreadyExists" Value = "Selected variable is already exists in access descriptor"/>
+  <Phrase Name="EditorDependentAssignmentWasRemoved" Value = "Assignment of dependent control processor was removed"/>
+  <Phrase Name="EditorStartInitializeBinaryInputButtonsList" Value = "Initialize"/>
+  <Phrase Name="EditorStopInitializeBinaryInputButtonsList" Value = "Stop"/>
 
   <Phrase Name="EditorTypeMemoryMultistate" Value = "Memory access (values set)"/>
   <Phrase Name="EditorTypeMemoryIndicator" Value = "Memory access (indicator)"/>
@@ -113,5 +116,15 @@
   <Phrase Name="FormulaErrorCantOperateMathAndLogicValues" Value = "Can't operate logic and math tokens together"/>
   <Phrase Name="FormulaErrorThisFormulaPartMustBeLogic" Value = "This formula part must be logic"/>
   <Phrase Name="FormulaErrorThisFormulaPartMustBeMath" Value = "This formula part must be math"/>
+  <Phrase Name="FormulaErrorDivisionByZero" Value = "Division by zero"/>
   <Phrase Name="FormulaErrorException" Value = "Exception. Send this formula to router author"/>
+
+  <Phrase Name="SettingsMessageNotLoadedControlProcrssorsCount" Value = "Number of control procrssors that was not imported"/>
+  <Phrase Name="SettingsMessageInputNewProfileName" Value = "Input name for new profile"/>
+  <Phrase Name="SettingsMessageProfileNameIsAlreadyExist" Value = "Profile name you've input is already exist"/>
+  <Phrase Name="SettingsMessageRemoveProfile" Value = "Remove profile?"/>
+  <Phrase Name="SettingsExportProfileDialogHeader" Value = "Export profile"/>
+  <Phrase Name="SettingsImportProfileDialogHeader" Value = "Import profile"/>
+  <Phrase Name="SettingsImportProfileKeepAssignmentsDialogHeader" Value = "Import new profile version and keep my assignments"/>
+  <Phrase Name="SettingsMessageInputProfileNewName" Value = "Select profile name"/>
 </FlexRouterProfile>

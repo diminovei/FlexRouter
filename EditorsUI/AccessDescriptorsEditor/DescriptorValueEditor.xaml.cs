@@ -7,6 +7,9 @@ using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.EditorPanels;
 using FlexRouter.EditorsUI.Dialogues;
+using FlexRouter.EditorsUI.Helpers;
+using FlexRouter.Localizers;
+using FlexRouter.ProfileItems;
 
 namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
 {

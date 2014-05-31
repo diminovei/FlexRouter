@@ -2,6 +2,7 @@
 using System.Linq;
 using FlexRouter.AccessDescriptors;
 using FlexRouter.AccessDescriptors.Helpers;
+using FlexRouter.ProfileItems;
 
 namespace FlexRouter.ControlProcessors.Helpers
 {
@@ -10,17 +11,17 @@ namespace FlexRouter.ControlProcessors.Helpers
         protected ControlProcessorMuitistateBase(DescriptorBase accessDescriptor) : base(accessDescriptor)
         {
         }
-        protected readonly List<ButtonInfo> _assignedHardware = new List<ButtonInfo>();
-        public List<ButtonInfo> GetAssignedHardware()
+        protected readonly List<ButtonInfo> AssignedHardware = new List<ButtonInfo>();
+        public override string[] GetUsedHardwareList()
         {
-            return _assignedHardware;
+            return AssignedHardware.Select(ah => ah.AssignedHardware).ToArray();
         }
 
         public override Assignment[] GetAssignments()
         {
             var assignment = new List<Assignment>();
             var descriptor = Profile.GetAccessDesciptorById(AssignedAccessDescriptorId);
-            foreach (var ah in _assignedHardware)
+            foreach (var ah in AssignedHardware)
             {
                 if (descriptor is DescriptorValue)
                 {
@@ -40,7 +41,7 @@ namespace FlexRouter.ControlProcessors.Helpers
         }
         public override void SetAssignment(Assignment assignment)
         {
-            foreach (var ah in _assignedHardware)
+            foreach (var ah in AssignedHardware)
             {
                 if (ah.Id != assignment.StateId)
                     continue;
@@ -50,7 +51,7 @@ namespace FlexRouter.ControlProcessors.Helpers
         }
         public void SetInvertMode(int stateId, bool on)
         {
-            foreach (var ah in _assignedHardware)
+            foreach (var ah in AssignedHardware)
             {
                 if (ah.Id != stateId)
                     continue;
@@ -60,7 +61,7 @@ namespace FlexRouter.ControlProcessors.Helpers
         }
         public void AssignHardware(int stateId, string hardwareGuid)
         {
-            var hw = _assignedHardware.FirstOrDefault(ah => ah.Id == stateId);
+            var hw = AssignedHardware.FirstOrDefault(ah => ah.Id == stateId);
             if (hw != null)
                 hw.AssignedHardware = hardwareGuid;
         }
@@ -74,7 +75,7 @@ namespace FlexRouter.ControlProcessors.Helpers
             foreach (var s in states)
             {
                 var found = false;
-                foreach (var ah in _assignedHardware)
+                foreach (var ah in AssignedHardware)
                 {
                     if (!ah.CompareState(s))
                         continue;
@@ -86,14 +87,14 @@ namespace FlexRouter.ControlProcessors.Helpers
                 if (found)
                     continue;
                 var bi = new ButtonInfo {Id = s.Id, Name = s.Name, Order = s.Order, AssignedHardware = string.Empty};
-                _assignedHardware.Add(bi);
+                AssignedHardware.Add(bi);
             }
             // Ищем лишние назначения (State удалён) и удаляем их.
             // ToDo: не забыть сохранить из AccessDescriptor
-            for (var i = _assignedHardware.Count - 1; i >= 0; i--)
+            for (var i = AssignedHardware.Count - 1; i >= 0; i--)
             {
-                if (!states.Any(s => _assignedHardware[i].Id == s.Id))
-                    _assignedHardware.RemoveAt(i);
+                if (!states.Any(s => AssignedHardware[i].Id == s.Id))
+                    AssignedHardware.RemoveAt(i);
             }
         }
     }

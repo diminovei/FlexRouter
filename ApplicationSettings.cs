@@ -21,7 +21,7 @@ namespace FlexRouter
             SettingsLocation = Assembly.GetEntryAssembly().Location + ".ini";
         }
 
-//        public static string DefaultProfile { get; set; }
+        public static string DefaultProfile { get; set; }
         public static string DefaultLanguage { get; set; }
         //public static bool MinimizeToTrayOnStart { get; set; }
         //public static uint RepeaterFirstPause { get; set; }
@@ -51,7 +51,7 @@ namespace FlexRouter
                 var settingsNav = headerNav.Current.SelectChildren("Settings", headerNav.Current.NamespaceURI);
                 settingsNav.MoveNext();
 
-                //DefaultProfile = settingsNav.Current.GetAttribute("DefaultProfile", settingsNav.Current.NamespaceURI);
+                DefaultProfile = settingsNav.Current.GetAttribute("DefaultProfile", settingsNav.Current.NamespaceURI);
                 DefaultLanguage = settingsNav.Current.GetAttribute("DefaultLanguage", settingsNav.Current.NamespaceURI);
                 //MinimizeToTrayOnStart =
                 //    settingsNav.Current.GetAttribute("MinimizeToTrayOnStart", settingsNav.Current.NamespaceURI)
@@ -95,7 +95,7 @@ namespace FlexRouter
             writer.WriteAttributeString("Name", "Settings");
             writer.WriteString("\n");
             writer.WriteStartElement("Settings");
-//            writer.WriteAttributeString("DefaultProfile", DefaultProfile);
+            writer.WriteAttributeString("DefaultProfile", DefaultProfile);
             writer.WriteAttributeString("DefaultLanguage", DefaultLanguage);
             //writer.WriteAttributeString("MinimizeToTrayOnStart", MinimizeToTrayOnStart.ToString());
             //writer.WriteAttributeString("JoystickBindingType", MinimizeToTrayOnStart.ToString());

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FlexRouter.Hardware
+namespace FlexRouter.Hardware.Helpers
 {
     public class ElectricDevice
     {
@@ -23,6 +23,10 @@ namespace FlexRouter.Hardware
         }
         public static bool operator ==(ControlProcessorHardware x, ControlProcessorHardware y)
         {
+            if ((object)x == null && (object)y == null)
+                return true;
+            if (((object)x == null && (object)y != null) || ((object)x != null && (object)y == null))
+                return false;
             return x.MotherBoardId == y.MotherBoardId && x.ModuleType == y.ModuleType && x.ModuleId == y.ModuleId && x.ControlId == y.ControlId;
         }
         public static bool operator !=(ControlProcessorHardware x, ControlProcessorHardware y)
@@ -60,6 +64,8 @@ namespace FlexRouter.Hardware
         {
             var cph = new ControlProcessorHardware();
             var s = guid.Split('|');
+            if (s.Length != 4)
+                return null;
             cph.MotherBoardId = s[0];
             cph.ModuleType = GetHardwareModuleTypeByName(s[1]);
             cph.ModuleId = uint.Parse(s[2]);

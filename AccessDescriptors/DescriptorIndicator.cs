@@ -4,6 +4,7 @@ using System.Xml.XPath;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.CalculatorRelated;
+using FlexRouter.Localizers;
 
 namespace FlexRouter.AccessDescriptors
 {
@@ -43,7 +44,7 @@ namespace FlexRouter.AccessDescriptors
             if (!IsPowerOn())
                 return string.Empty;
             var formulaResult = CalculatorE.ComputeFormula(GetFormula());
-            if (formulaResult.GetFormulaComputeResultType() != TypeOfComputeFormulaResult.FormulaWasEmpty)
+            if (formulaResult.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.FormulaWasEmpty)
                 return string.Empty;
             if (formulaResult.GetFormulaComputeResultType() != TypeOfComputeFormulaResult.DoubleResult)
                 return "Error";

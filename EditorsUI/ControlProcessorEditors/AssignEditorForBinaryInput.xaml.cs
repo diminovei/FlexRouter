@@ -1,15 +1,19 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.ControlProcessors;
+using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.EditorPanels;
+using FlexRouter.EditorsUI.Helpers;
 using FlexRouter.Hardware;
 using FlexRouter.Hardware.HardwareEvents;
+using FlexRouter.Localizers;
 
-namespace FlexRouter.ControlProcessorEditors
+namespace FlexRouter.EditorsUI.ControlProcessorEditors
 {
     /// <summary>
     /// Interaction logic for DescriptorValueEditor.xaml
@@ -19,9 +23,11 @@ namespace FlexRouter.ControlProcessorEditors
         private readonly HardwareModuleType _hardwareSupported;
         private readonly SelecedRowAndColumn _selecedRowAndColumn = new SelecedRowAndColumn();
         private readonly AssignEditorHelper _assignEditorHelper;
+        private readonly ButtonBinaryInputProcessor _assignedControlProcessor;
         private DataTable _dataTable = new DataTable();
 
-        ObservableCollection<ActiveButtonItem> activeButtonsList = new ObservableCollection<ActiveButtonItem>();
+//        readonly ObservableCollection<ActiveButtonItem> _activeButtonsList = new ObservableCollection<ActiveButtonItem>();
+        private readonly SortedDictionary<string, bool> _activeButtonsList = new SortedDictionary<string, bool>();
         
         private bool _initializationModeOn;
         internal class ActiveButtonItem
@@ -36,18 +42,25 @@ namespace FlexRouter.ControlProcessorEditors
         public DataView FillActiveButtonGrid()
         {
             _dataTable = new DataTable();
-            var dc = _dataTable.Columns.Add("Button"/*LanguageManager.GetPhrase(Phrases.EditorHardware)*/);
+            var dc = _dataTable.Columns.Add(LanguageManager.GetPhrase(Phrases.EditorHardware));
             dc.ReadOnly = true;
-            dc = _dataTable.Columns.Add(/*new DataColumn(LanguageManager.GetPhrase(Phrases.EditorInvert), typeof(bool))*/"State");
+            dc = _dataTable.Columns.Add(LanguageManager.GetPhrase(Phrases.EditorState));
             dc.ReadOnly = true;
 
-            foreach (var bl in activeButtonsList)
-                _dataTable.Rows.Add(bl.Button, bl.State ? "1" : "0");
+            foreach (var bl in _activeButtonsList)
+                //_dataTable.Rows.Add(bl.Button, bl.State ? "1" : "0");
+                _dataTable.Rows.Add(bl.Key, bl.Value ? "1" : "0");
             return _dataTable.AsDataView();
         }
         public AssignEditorForBinaryInput(IControlProcessor processor, bool enableInverse, HardwareModuleType hardwareSupported)
         {
             _hardwareSupported = hardwareSupported;
+            _assignedControlProcessor = (ButtonBinaryInputProcessor)processor;
+            var usedHardware = _assignedControlProcessor.GetUsedHardwareWithStates();
+            foreach (var b in usedHardware)
+            {
+                _activeButtonsList.Add(b.Key, b.Value);
+            }
             _assignEditorHelper = new AssignEditorHelper(processor, enableInverse);
 
             InitializeComponent();
@@ -64,7 +77,8 @@ namespace FlexRouter.ControlProcessorEditors
         }
         private string GetCurrentControlsCode()
         {
-            return activeButtonsList.Aggregate(string.Empty, (current, bl) => current + (bl.State ? "1" : "0"));
+            //return _activeButtonsList.Aggregate(string.Empty, (current, bl) => current + (bl.State ? "1" : "0"));
+            return _activeButtonsList.Aggregate(string.Empty, (current, bl) => current + (bl.Value ? "1" : "0"));
         }
 
         public void Save()
@@ -72,7 +86,7 @@ namespace FlexRouter.ControlProcessorEditors
             var selectedRowIndex = _selecedRowAndColumn.GetSelectedRowIndex();
             if (selectedRowIndex == -1 || AssignmentGrid.Columns.Count == 0) 
                 return;
-            //ToDo: не сохраняет код
+            _assignedControlProcessor.SetUsedHardwareWithStates(_activeButtonsList);
             _assignEditorHelper.Save(selectedRowIndex, GetCurrentControlsCode());
             ShowData();
         }
@@ -80,8 +94,9 @@ namespace FlexRouter.ControlProcessorEditors
         public void Localize()
         {
             ShowData();
-//            _hardwareLabel.Content = LanguageManager.GetPhrase(Phrases.EditorHardware);
+            _initialize.Content = LanguageManager.GetPhrase(_initializationModeOn ? Phrases.EditorStopInitializeBinaryInputButtonsList : Phrases.EditorStartInitializeBinaryInputButtonsList);
             _hardwareTypeLabel.Content = _assignEditorHelper.LocalizeHardwareLabel(_hardwareSupported);
+            _allActiveButtons.ItemsSource = FillActiveButtonGrid();
         }
 
         public bool IsDataChanged()
@@ -92,9 +107,7 @@ namespace FlexRouter.ControlProcessorEditors
 
         public EditorFieldsErrors IsCorrectData()
         {
-            //ToDO
             return new EditorFieldsErrors(null);
-     //       throw new NotImplementedException();
         }
 
         //
@@ -105,7 +118,7 @@ namespace FlexRouter.ControlProcessorEditors
             _selecedRowAndColumn.OnMouseDoubleClick((DependencyObject)e.OriginalSource);
         }
 
-        private void StatesGrid_GotFocus(object sender, RoutedEventArgs e)
+        private void StatesGridGotFocus(object sender, RoutedEventArgs e)
         {
             _selecedRowAndColumn.OnMouseDoubleClick((DependencyObject)e.OriginalSource);
         }
@@ -122,38 +135,50 @@ namespace FlexRouter.ControlProcessorEditors
             var ev = controlEvent as ButtonEvent;
             if (ev == null)
                 return;
-            if (_initializationModeOn)
+            var found = false;
+            foreach (var item in _activeButtonsList)
             {
-                var found = false;
-                foreach (var item in activeButtonsList)
-                {
-                    if (item.Button != controlEvent.Hardware.GetHardwareGuid())
-                        continue;
-                    item.State = ev.IsPressed;
-                    found = true;
-                    break;
-                }
-                if (!found)
-                {
-                    activeButtonsList.Add(new ActiveButtonItem {Button = controlEvent.Hardware.GetHardwareGuid(), State = ev.IsPressed});
-                }
-                _allActiveButtons.ItemsSource = FillActiveButtonGrid();
+                //if (item.Button != controlEvent.Hardware.GetHardwareGuid())
+                if (item.Key != controlEvent.Hardware.GetHardwareGuid())
+                    continue;
+                //item.State = ev.IsPressed;
+                _activeButtonsList[item.Key] = ev.IsPressed;
+//                item.Value = ev.IsPressed;
+                found = true;
+                break;
             }
+            if (!found && _initializationModeOn)
+            {
+                //_activeButtonsList.Add(new ActiveButtonItem {Button = controlEvent.Hardware.GetHardwareGuid(), State = ev.IsPressed});
+                _activeButtonsList.Add(controlEvent.Hardware.GetHardwareGuid(), ev.IsPressed);
+            }
+            _allActiveButtons.ItemsSource = FillActiveButtonGrid();
         }
 
-        private void AssignmentGrid_Loaded(object sender, RoutedEventArgs e)
+        private void AssignmentGridLoaded(object sender, RoutedEventArgs e)
         {
             AssignmentGrid.Columns[0].Visibility = Visibility.Hidden;
         }
 
-        private void _initialize_Checked(object sender, RoutedEventArgs e)
+        private void InitializeChecked(object sender, RoutedEventArgs e)
+        {
+            ChangeInitializationMode();
+        }
+
+        private void InitializeUnchecked(object sender, RoutedEventArgs e)
+        {
+            ChangeInitializationMode();
+        }
+
+        private void ChangeInitializationMode()
         {
             _initializationModeOn = _initialize.IsChecked == true;
             if (_initializationModeOn)
             {
-                activeButtonsList.Clear();
-                FillActiveButtonGrid();
+                _activeButtonsList.Clear();
+                _allActiveButtons.ItemsSource = FillActiveButtonGrid();
             }
+            Localize();
         }
     }
 }

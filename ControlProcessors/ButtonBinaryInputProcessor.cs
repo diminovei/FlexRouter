@@ -1,18 +1,23 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Xml;
+using System.Xml.XPath;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.Hardware.HardwareEvents;
+using FlexRouter.Localizers;
 
 namespace FlexRouter.ControlProcessors
 {
     class ButtonBinaryInputProcessor : ControlProcessorBase<IDescriptorMultistate>, ICollector, IControlProcessorMultistate
     {
+       
         // ToDo: можно сделать Dictionary
         private class AccessDescriptorStateAssignment
         {
-            internal AccessDescriptorState State;
+            internal AccessDescriptorState State = new AccessDescriptorState();
             internal string Assignment;
             public Assignment GetAsAssignment()
             {
@@ -26,10 +31,19 @@ namespace FlexRouter.ControlProcessors
                 return assignment;
             }
         }
-        /// <summary>
-        /// Флаг включения режима сбора назначенного железа (все кнопки, которые будут участвовать в формировании кода, включающего состояние в описателе доступа)
-        /// </summary>
-        private bool _collectingAssignedHardwareModeOn;
+
+        public void SetUsedHardwareWithStates(SortedDictionary<string, bool> usedHardwareWithStates)
+        {
+            _usedHardware.Clear();
+            foreach (var usedHardwareWithState in usedHardwareWithStates)
+            {
+                _usedHardware.Add(usedHardwareWithState.Key, usedHardwareWithState.Value);
+            }
+        }
+        public SortedDictionary<string, bool> GetUsedHardwareWithStates()
+        {
+            return _usedHardware;
+        }
         /// <summary>
         /// Сопоставление железа коду (ControlProcessorHardware - железо, bool - RotateDirection)
         /// Словарь [кнопка, состояние]. Все состояния дают код, на который срабатывает переключение
@@ -40,6 +54,7 @@ namespace FlexRouter.ControlProcessors
         /// </summary>
         private readonly List<AccessDescriptorStateAssignment> _stateAssignments = new List<AccessDescriptorStateAssignment>();
 
+        
         public ButtonBinaryInputProcessor(DescriptorBase accessDescriptor) : base(accessDescriptor)
         {
         }
@@ -60,6 +75,11 @@ namespace FlexRouter.ControlProcessors
             return activatedState == null ? -1 : activatedState.State.Id;
         }
 
+        public override string[] GetUsedHardwareList()
+        {
+            return _usedHardware.Keys.ToArray();
+        }
+
         public override Assignment[] GetAssignments()
         {
             return _stateAssignments.OrderBy(x => x.State.Order).Select(stateAssignment => stateAssignment.GetAsAssignment()).ToArray();
@@ -78,7 +98,8 @@ namespace FlexRouter.ControlProcessors
             // Обновляем изменившиеся состояния
             // Добавляем появившиеся состояния
             // ToDo: не забыть сохранить из AccessDescriptor
-            foreach (var s in states)
+            var accessDescriptorStates = states as AccessDescriptorState[] ?? states.ToArray();
+            foreach (var s in accessDescriptorStates)
             {
                 var found = false;
                 foreach (var ah in _stateAssignments)
@@ -99,16 +120,9 @@ namespace FlexRouter.ControlProcessors
             // ToDo: не забыть сохранить из AccessDescriptor
             for (var i = _stateAssignments.Count - 1; i >= 0; i--)
             {
-                if(!states.Any(s => _stateAssignments[i].State.Id == s.Id))
+                if(accessDescriptorStates.All(s => _stateAssignments[i].State.Id != s.Id))
                     _stateAssignments.RemoveAt(i);
             }
-        }
-
-        public void SetInitializeUsedHardwareModeOn(bool isOn)
-        {
-            if(isOn)
-                _usedHardware.Clear();
-            _collectingAssignedHardwareModeOn = isOn;
         }
 
         public void ProcessControlEvent(ControlEventBase controlEvent)
@@ -118,22 +132,6 @@ namespace FlexRouter.ControlProcessors
                 return;
             var hw = controlEvent.Hardware.GetHardwareGuid();
             
-            // Если режим сбора используемого железа - состояния не переключаем
-/*            if (_collectingAssignedHardwareModeOn)
-            {
-                if (_usedHardware.ContainsKey(hw))
-                    _usedHardware[hw] = ev.IsPressed;
-                else
-                    _usedHardware.Add(hw, ev.IsPressed);
-                return;
-            }*/
-            // Если режим сбора используемого железа - состояния не переключаем
-            if (_collectingAssignedHardwareModeOn)
-            {
-                _usedHardware[hw] = ev.IsPressed;
-                return;
-            }
-
             // Если такое железо не назначено - прекращаем обработку
             if (!_usedHardware.ContainsKey(hw))
                 return;
@@ -151,6 +149,55 @@ namespace FlexRouter.ControlProcessors
             else
             {
                 AccessDescriptor.SetDefaultState();
+            }
+        }
+
+        protected override void SaveAdditionals(XmlTextWriter writer)
+        {
+            writer.WriteStartElement("UsedHardware");
+            foreach (var b in _usedHardware)
+            {
+                writer.WriteStartElement("Hardware");
+                writer.WriteAttributeString("Id", b.Key);
+                writer.WriteEndElement();
+            }
+            writer.WriteEndElement();
+
+            writer.WriteStartElement("Connectors");
+            foreach (var buttonInfo in _stateAssignments)
+            {
+                writer.WriteStartElement("Connector");
+                writer.WriteAttributeString("Id", buttonInfo.State.Id.ToString(CultureInfo.InvariantCulture));
+                writer.WriteAttributeString("Order", buttonInfo.State.Order.ToString(CultureInfo.InvariantCulture));
+                writer.WriteAttributeString("Name", buttonInfo.State.Name);
+                writer.WriteAttributeString("AssignedCode", buttonInfo.Assignment);
+                writer.WriteEndElement();
+            }
+            writer.WriteEndElement();
+        }
+        public override void LoadAdditionals(XPathNavigator reader)
+        {
+            _usedHardware.Clear();
+            var readerAdd = reader.Select("UsedHardware/Hardware");
+            while (readerAdd.MoveNext())
+            {
+                var id = readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI);
+                _usedHardware.Add(id, false);
+            }
+            readerAdd = reader.Select("Connectors/Connector");
+            while (readerAdd.MoveNext())
+            {
+                var item = new AccessDescriptorStateAssignment
+                {
+                    State =
+                    {
+                        Id = int.Parse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI)),
+                        Order = int.Parse(readerAdd.Current.GetAttribute("Order", readerAdd.Current.NamespaceURI)),
+                        Name = readerAdd.Current.GetAttribute("Name", readerAdd.Current.NamespaceURI)
+                    },
+                    Assignment = readerAdd.Current.GetAttribute("AssignedCode", readerAdd.Current.NamespaceURI)
+                };
+                _stateAssignments.Add(item);
             }
         }
     }

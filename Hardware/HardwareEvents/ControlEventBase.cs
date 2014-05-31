@@ -1,4 +1,6 @@
-﻿namespace FlexRouter.Hardware.HardwareEvents
+﻿using FlexRouter.Hardware.Helpers;
+
+namespace FlexRouter.Hardware.HardwareEvents
 {
     public class ControlEventBase
     {

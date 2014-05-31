@@ -66,6 +66,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -95,7 +96,7 @@
     <Compile Include="AccessDescriptors\DescriptorValue.cs" />
     <Compile Include="AccessDescriptors\Helpers\GlobalFormulaKeeper.cs" />
     <Compile Include="AccessDescriptors\Helpers\IAccessDescriptor.cs" />
-    <Compile Include="AccessDescriptors\Helpers\IEditor.cs" />
+    <Compile Include="EditorsUI\Helpers\IEditor.cs" />
     <Compile Include="AccessDescriptors\Interfaces\IDefautValueAbility.cs" />
     <Compile Include="AccessDescriptors\Interfaces\IDescriptorMultistate.cs" />
     <Compile Include="AccessDescriptors\Interfaces\IDescriptorPrevNext.cs" />
@@ -116,7 +117,7 @@
     <Compile Include="CalculatorRelated\Tokens\CalcTokenMathOperation.cs" />
     <Compile Include="CalculatorRelated\CalculatorErrorsLocalizer.cs" />
     <Compile Include="CalculatorRelated\CalculatorVariableAccessAddon.cs" />
-    <Compile Include="AccessDescriptors\Helpers\IControlProcessorEditor.cs" />
+    <Compile Include="EditorsUI\Helpers\IControlProcessorEditor.cs" />
     <Compile Include="CalculatorRelated\Tokens\CalcTokenBase.cs" />
     <Compile Include="CalculatorRelated\Tokens\CalcTokenLogicOperation.cs" />
     <Compile Include="CalculatorRelated\Tokens\ICalcToken.cs" />
@@ -403,7 +404,18 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Resource Include="changes.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Connected.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\ConnectedNot.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\ConnectedPartially.bmp" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -308,12 +308,27 @@ namespace FlexRouter.CalculatorRelated
                     mathResult = n1 * n2;
                     break;
                 case CalcMathOperation.Divide:
+                    if (n2 == 0)
+                    {
+                        token2.Error = FormulaError.DivisionByZero;
+                        return token2;
+                    }
                     mathResult = n1 / n2;
                     break;
                 case CalcMathOperation.DivideModulo:
+                    if (n2 == 0)
+                    {
+                        token2.Error = FormulaError.DivisionByZero;
+                        return token2;
+                    }
                     mathResult = n1 % n2;
                     break;
                 case CalcMathOperation.DivideInteger:
+                    if (n2 == 0)
+                    {
+                        token2.Error = FormulaError.DivisionByZero;
+                        return token2;
+                    }
                     mathResult = (long)(n1 / n2);
                     break;
                 default:
@@ -413,17 +428,35 @@ namespace FlexRouter.CalculatorRelated
                 if (currentToken.Error != FormulaError.Ok)
                     return currentToken;
 
-                // Если закрывающих скобок стало больше, чем открывающих
-                if (currentToken is CalcTokenBracket)
+                // Проверка скобок
+                // ")" || "(1+3))" || "3()" || "1+3(" || "1+3)"
+                var bracketToken = currentToken as CalcTokenBracket;
+                if (bracketToken != null)
                 {
-                    if (((CalcTokenBracket)currentToken).Bracket == CalcBracket.Open)
+                    if (bracketToken.Bracket == CalcBracket.Open)
                     {
+                        // Перед открывающей скобкой не может быть числа. Только скобка, операция или разделитель
+                        if (prevToken is CalcTokenNumber)
+                        {
+                            currentToken.Error = FormulaError.TokenMustBeOperation;
+                            return currentToken;
+                        }
+                        // После открывающейся скобки может быть или открывающаяся скобка или число или унарный плюс/минус
+                        var nextMathToken = nextToken as CalcTokenMathOperation;
+                        var nextBracketToken = nextToken as CalcTokenBracket;
+                        if ((nextBracketToken!=null && nextBracketToken.Bracket == CalcBracket.Open) || (nextMathToken != null && nextMathToken.MathOperation != CalcMathOperation.UnaryMinus && nextMathToken.MathOperation != CalcMathOperation.UnaryPlus))
+                        {
+                            nextToken.Error = FormulaError.TokenMustBeValue;
+                            return nextToken;
+                        }
+
                         bracketCounter++;
                         lastOpenBracketIndex = i;
                     }
                     else
                     {
                         bracketCounter--;
+                        // Закрывающих скобок не может быть больше, чем открывающих
                         if (bracketCounter < 0)
                         {
                             currentToken.Error = FormulaError.ClosingBracketNotOpened;
@@ -506,10 +539,11 @@ namespace FlexRouter.CalculatorRelated
                             tokenRpn.Add(operationsStack.Pop());
                         }
                     }
+                    continue;
                 }
 
-                if (!(t is CalcTokenBracket))
-                    continue;
+//                if (!(t is CalcTokenBracket))
+//                    continue;
                 
                 // Если скобка открывающаяся, закидываем её в стэк
                 if (((CalcTokenBracket)t).Bracket == CalcBracket.Open)

@@ -56,6 +56,8 @@
   <Phrase Name="EditorAxisCalibrate" Value = "Калибровка"/>
   <Phrase Name="EditorVariableIsAlreadyExists" Value = "Выбранная переменная уже добавлена"/>
   <Phrase Name="EditorDependentDescriptorsList" Value = "Список зависимых описателей"/>
+  <Phrase Name="EditorStartInitializeBinaryInputButtonsList" Value = "Инициализировать"/>
+  <Phrase Name="EditorStopInitializeBinaryInputButtonsList" Value = "Готово"/>
 
   <Phrase Name="EditorTypeMemoryMultistate" Value = "Доступ к памяти (набор значений)"/>
   <Phrase Name="EditorTypeMemoryIndicator" Value = "Доступ к памяти (управление индикатором)"/>
@@ -79,6 +81,7 @@
   <Phrase Name="EditorAccessDescriptorTypeIsNotSuitable" Value = "Неподходящий тип описателя доступа"/>
   <Phrase Name="EditorAccessDescriptorIsAlreadyInList" Value = "Это описатель уже есть в списке"/>
   <Phrase Name="EditorSelectAnItemFirst" Value = "Сначала выберите один из пунктов"/>
+  <Phrase Name="EditorDependentAssignmentWasRemoved" Value = "Назначение на зависимый узел удалено"/>
 
   <Phrase Name="MessageBoxErrorHeader" Value = "Ошибка"/>
   <Phrase Name="MessageBoxWarningHeader" Value = "Предупреждение"/>
@@ -112,6 +115,15 @@
   <Phrase Name="FormulaErrorCantOperateMathAndLogicValues" Value = "Нельзя обработать операцию между математическим и логическим токеном"/>
   <Phrase Name="FormulaErrorThisFormulaPartMustBeLogic" Value = "Эта часть формулы должна быть логической"/>
   <Phrase Name="FormulaErrorThisFormulaPartMustBeMath" Value = "Эта часть формулы должна быть математической"/>
+  <Phrase Name="FormulaErrorDivisionByZero" Value = "Деление на ноль"/>
   <Phrase Name="FormulaErrorException" Value = "Исключение. Пошлите формулу автору роутера"/>
 
+  <Phrase Name="SettingsMessageNotLoadedControlProcrssorsCount" Value = "Число назначений, которые не удалось импортировать из-за отсутствия описателей доступа"/>
+  <Phrase Name="SettingsMessageInputNewProfileName" Value = "Введите имя для нового профиля"/>
+  <Phrase Name="SettingsMessageProfileNameIsAlreadyExist" Value = "Такое имя профиля уже существует"/>
+  <Phrase Name="SettingsMessageRemoveProfile" Value = "Удалить профиль?"/>
+  <Phrase Name="SettingsExportProfileDialogHeader" Value = "Экспортировать профиль"/>
+  <Phrase Name="SettingsImportProfileDialogHeader" Value = "Импортировать профиль"/>
+  <Phrase Name="SettingsImportProfileKeepAssignmentsDialogHeader" Value = "Импортировать новую версию профиля и сохранить мои назначения"/>
+  <Phrase Name="SettingsMessageInputProfileNewName" Value = "Выберете имя профиля"/>
 </FlexRouterProfile>

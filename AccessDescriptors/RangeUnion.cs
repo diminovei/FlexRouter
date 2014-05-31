@@ -5,7 +5,8 @@ using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
-using FlexRouter.ControlProcessors;
+using FlexRouter.Localizers;
+using FlexRouter.ProfileItems;
 
 namespace FlexRouter.AccessDescriptors
 {

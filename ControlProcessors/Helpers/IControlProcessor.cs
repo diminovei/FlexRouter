@@ -4,7 +4,7 @@ using System.Xml.XPath;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.Hardware.HardwareEvents;
 
-namespace FlexRouter.ControlProcessors
+namespace FlexRouter.ControlProcessors.Helpers
 {
     /// <summary>
     /// Интерфейс для ControlProcessor с многими состояниями
@@ -28,6 +28,11 @@ namespace FlexRouter.ControlProcessors
         /// Вернуть текстовое имя ControlProcessor
         /// </summary>
         string GetName();
+        /// <summary>
+        /// Нужно только для дампа отдельных модулей Arcc
+        /// </summary>
+        /// <returns></returns>
+        string[] GetUsedHardwareList();
         /// <summary>
         /// Используется для передачи назначений в редактор
         /// </summary>

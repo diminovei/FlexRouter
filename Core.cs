@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using FlexRouter.Hardware;
+using FlexRouter.Hardware.Arcc;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
-using SlimDX.Direct3D10;
+using FlexRouter.ProfileItems;
 
 namespace FlexRouter
 {
@@ -15,8 +16,8 @@ namespace FlexRouter
         
         private bool _routerCorePauseCommand;    // При установке флага в true работа потока должна прекратиться
         private bool _routerCoreIsPaused;
-        List<string> outputWasOn = new List<string>();
-        
+        readonly List<string> _outputWasOn = new List<string>();
+        private bool _isPaused;
         public bool IsWorking()
         {
             return _routerCoreThread != null && _routerCoreThread.IsAlive;
@@ -53,10 +54,13 @@ namespace FlexRouter
             if(IsWorking())
                 return false;
             Messenger.AddMessage(MessageToMainForm.ClearConnectedDevicesList);
-            HardwareManager.Connect();
-            var devices = HardwareManager.GetConnectedDevices();
-            foreach (var device in devices)
-                Messenger.AddMessage(MessageToMainForm.AddConnectedDevice, device);
+            if (!_isPaused)
+            {
+                HardwareManager.Connect();
+                var devices = HardwareManager.GetConnectedDevices();
+                foreach (var device in devices)
+                    Messenger.AddMessage(MessageToMainForm.AddConnectedDevice, device);
+            }
             Profile.InitializeAccessDescriptors();
             Dump();
             // Запускаем роутер после дампа, чтобы не получилось, что индикаторы и лампы не зажигаются, хотя фактически режимы включены
@@ -65,7 +69,7 @@ namespace FlexRouter
             Messenger.AddMessage(MessageToMainForm.RouterStarted);
             return true;
         }
-        public bool Stop()
+        public bool Stop(bool pause)
         {
             if (!IsWorking())
                 return false;
@@ -77,8 +81,11 @@ namespace FlexRouter
             _routerCoreThread.Join();
             _routerCoreStopCommand = false;
             ShutDownOutputHardware();
-            HardwareManager.Disconnect();
-            Messenger.AddMessage(MessageToMainForm.RouterStarted);
+            if (!pause)
+                HardwareManager.Disconnect();
+            else
+                _isPaused = true;
+            Messenger.AddMessage(MessageToMainForm.RouterStopped);
             return true;
         }
         private void ThreadLoop()
@@ -116,7 +123,8 @@ namespace FlexRouter
                 {
                     Profile.SendEventToControlProcessors(controlEvent);
                     //                Messenger.AddMessage(MessageToMainForm.ShowEvent, string.Format("{0}:{1}", controlEvent.Hardware.GetHardwareGuid(), controlEvent.RotateDirection ? ">>>" : "<<<"));
-                    Messenger.AddMessage(MessageToMainForm.NewHardwareEvent, controlEvent);
+                    if(controlEvent.Hardware.ModuleType != HardwareModuleType.Axis)
+                        Messenger.AddMessage(MessageToMainForm.NewHardwareEvent, controlEvent);
                     //                var a = controlEvent.Hardware.GetHardwareGuid();
                     //                SendEventInfoToMainForm(controlEvent);
                     //                ProcessControlEvent(controlEvent);
@@ -133,27 +141,21 @@ namespace FlexRouter
                     var isPowerOff = false;
                     var hwGuid = newOutgoingEvent.Hardware.GetHardwareGuid();
 
-                    if (newOutgoingEvent is IndicatorEvent)
-                    {
-                        if (((IndicatorEvent) newOutgoingEvent).IndicatorText == string.Empty)
-                            isPowerOff = true;
-                        if (hwGuid == "Arcc:9F2C6DD5|Indicator|14|0")
-                            System.Diagnostics.Debug.Print("Text:" + ((IndicatorEvent) newOutgoingEvent).IndicatorText);
-                    }
-                    if (newOutgoingEvent is LampEvent)
-                    {
-                        if (!((LampEvent) newOutgoingEvent).IsOn)
-                            isPowerOff = true;
-                    }
-                    if (isPowerOff && outputWasOn.Contains(hwGuid))
+                    var indicatorEvent = newOutgoingEvent as IndicatorEvent;
+                    if (indicatorEvent != null && indicatorEvent.IndicatorText == string.Empty) 
+                        isPowerOff = true;
+                    var lampEvent = newOutgoingEvent as LampEvent;
+                    if (lampEvent != null && !lampEvent.IsOn) 
+                        isPowerOff = true;
+                    if (isPowerOff && _outputWasOn.Contains(hwGuid))
                         continue;
 
-                    if(!isPowerOff && !outputWasOn.Contains(hwGuid))
-                        outputWasOn.Add(hwGuid);
+                    if(!isPowerOff && !_outputWasOn.Contains(hwGuid))
+                        _outputWasOn.Add(hwGuid);
                 }
                 HardwareManager.PostOutgoingEvent(newOutgoingEvent);
             }
-            outputWasOn.Clear();
+            _outputWasOn.Clear();
             Profile.TickControlProcessors();
         }
         /// <summary>
