@@ -69,7 +69,7 @@ namespace FlexRouter.AccessDescriptors
                 d.SetPositionInPercents(positionPercentage);
         }
         
-        public override string GetDescriptorName()
+        public override string GetDescriptorType()
         {
             return LanguageManager.GetPhrase(Phrases.EditorTypeRangeUnion);
         }

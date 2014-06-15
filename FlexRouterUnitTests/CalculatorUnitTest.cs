@@ -1,5 +1,15 @@
-﻿using FlexRouter.CalculatorRelated;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Runtime;
+using System.Threading;
+using FlexRouter.AccessDescriptors;
+using FlexRouter.CalculatorRelated;
 using FlexRouter.CalculatorRelated.Tokens;
+using FlexRouter.ProfileItems;
+using FlexRouter.VariableWorkerLayer;
+using FlexRouter.VariableWorkerLayer.MethodFakeVariable;
+using FlexRouter.VariableWorkerLayer.MethodMemoryPatch;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace FlexRouterUnitTests
@@ -7,6 +17,7 @@ namespace FlexRouterUnitTests
     [TestClass]
     public class CalculatorUnitTest
     {
+        #region Тесты калькулятора
         [TestMethod]
         public void CheckErrors()
         {
@@ -36,7 +47,6 @@ namespace FlexRouterUnitTests
             Assert.AreEqual(FormulaError.DivisionByZero, result.GetFormulaCheckResult());
             Assert.AreEqual(2, result.GetErrorBeginPositionInFormulaText());
         }
-
         [TestMethod]
         public void CheckUnaryMinusFormula()
         {
@@ -50,7 +60,6 @@ namespace FlexRouterUnitTests
             result = calc.ComputeFormula("(-(10+3))");
             Assert.AreEqual(-13, result.CalculatedDoubleValue);
         }
-
         [TestMethod]
         public void CheckFormulaTypeRecognition()
         {
@@ -60,7 +69,6 @@ namespace FlexRouterUnitTests
             result = calc.ComputeFormula("1!=1");
             Assert.AreEqual(TypeOfComputeFormulaResult.BooleanResult, result.GetFormulaComputeResultType());
         }
-
         [TestMethod]
         public void CheckComputeFormula()
         {
@@ -80,7 +88,6 @@ namespace FlexRouterUnitTests
             Assert.AreEqual(4, result.GetErrorBeginPositionInFormulaText());
             Assert.AreEqual(1, result.GetErrorLengthPositionInFormulaText());
         }
-
         [TestMethod]
         public void CheckDoubleConditionError()
         {
@@ -90,7 +97,6 @@ namespace FlexRouterUnitTests
             Assert.AreEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
             Assert.AreEqual(FormulaError.ThisFormulaPartMustBeMath, result.GetFormulaCheckResult());
         }
-
         [TestMethod]
         public void CheckErrorMathFormulaInsteadOfCondition()
         {
@@ -100,7 +106,6 @@ namespace FlexRouterUnitTests
             Assert.AreEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
             Assert.AreEqual(FormulaError.ThisFormulaPartMustBeLogic, result.GetFormulaCheckResult());
         }
-
         [TestMethod]
         public void CheckConditions()
         {
@@ -121,7 +126,6 @@ namespace FlexRouterUnitTests
             Assert.AreNotEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
             Assert.AreEqual(11, result.CalculatedDoubleValue);
         }
-
         [TestMethod]
         public void CheckFormulaIsEmpty()
         {
@@ -149,5 +153,253 @@ namespace FlexRouterUnitTests
             Assert.AreEqual(TypeOfComputeFormulaResult.BooleanResult, result.GetFormulaComputeResultType());
             Assert.AreEqual(true, result.CalculatedBoolBoolValue);
         }
+        #endregion
+        #region Тесты профиля
+
+/*        private void ClearProfile()
+        {
+            Profile.Clear();
+        }
+
+        private int[] CreateThreePanelsInProfile()
+        {
+            var panelIds = new List<int>();
+            var panelId1 = Profile.RegisterPanel(new Panel {Name = "Panel1"}, true);
+            panelIds.Add(panelId1);
+            var panelId2 = Profile.RegisterPanel(new Panel {Name = "Panel2"}, true);
+            panelIds.Add(panelId2);
+            var panelId3 = Profile.RegisterPanel(new Panel {Name = "Panel3"}, true);
+            panelIds.Add(panelId3);
+            return panelIds.ToArray();
+        }
+
+        private int[] CreateThreeVariablesInProfile(int[] threePanelIds)
+        {
+            var varibleIds = new List<int>();
+            var firstTestVariable = new FakeVariable
+            {
+                Size = MemoryVariableSize.Byte,
+                Name = "Var1",
+                PanelId = threePanelIds[0],
+                Description = "Тестовая переменная 1\nНовая строка"
+            };
+            var firstTestVariableId = Profile.RegisterVariable(firstTestVariable, true);
+            varibleIds.Add(firstTestVariableId);
+            var secondTestVariable = new FakeVariable
+            {
+                Size = MemoryVariableSize.EightByteFloat,
+                Name = "Var2",
+                PanelId = threePanelIds[1],
+                Description = "Тестовая переменная 2\nНовая строка"
+            };
+            var secondTestVariableId = Profile.RegisterVariable(secondTestVariable, true);
+            varibleIds.Add(secondTestVariableId);
+            var thirdTestVariable = new FakeVariable
+            {
+                Size = MemoryVariableSize.FourBytesSigned,
+                Name = "Var3",
+                PanelId = threePanelIds[2],
+                Description = "Тестовая переменная 3\nНовая строка"
+            };
+            var thirdTestVariableId = Profile.RegisterVariable(thirdTestVariable, true);
+            varibleIds.Add(thirdTestVariableId);
+            return varibleIds.ToArray();
+        }*/
+        [TestMethod]
+        public void PrepareProfile()
+        {
+            Profile.Clear();
+            // Создание трёх панелей
+            var panelId1 = Profile.RegisterPanel(new Panel { Name = "Panel1" }, true);
+            var panelId2 = Profile.RegisterPanel(new Panel { Name = "Panel2" }, true);
+            var panelId3 = Profile.RegisterPanel(new Panel { Name = "Panel3" }, true);
+
+            // Создание трёх переменных. Одна в первой панели, вторая и третья во второй
+            var firstTestVariable = new FakeVariable
+            {
+                Size = MemoryVariableSize.Byte,
+                Name = "Var1",
+                PanelId = panelId1,
+                Description = "Тестовая переменная 1\nНовая строка"
+            };
+            var firstTestVariableId = Profile.RegisterVariable(firstTestVariable, true);
+            
+            var secondTestVariable = new FakeVariable
+            {
+                Size = MemoryVariableSize.EightByteFloat,
+                Name = "Var2",
+                PanelId = panelId2,
+                Description = "Тестовая переменная 2\nНовая строка"
+            };
+            var secondTestVariableId = Profile.RegisterVariable(secondTestVariable, true);
+            
+            var thirdTestVariable = new FakeVariable
+            {
+                Size = MemoryVariableSize.FourBytesSigned,
+                Name = "Var3",
+                PanelId = panelId2,
+                Description = "Тестовая переменная 3\nНовая строка"
+            };
+            var thirdTestVariableId = Profile.RegisterVariable(thirdTestVariable, true);
+            
+            // Создание описателей доступа
+            
+            // Button
+            var valueAccessDescriptor = new DescriptorValue();
+
+            var powerFormula = "[" + Profile.GetPanelById(Profile.GetVariableById(firstTestVariableId).PanelId).Name + "." + Profile.GetVariableById(firstTestVariableId).Name + "]";
+            valueAccessDescriptor.SetPowerFormula(powerFormula);
+            valueAccessDescriptor.AssignDefaultStateId(0);
+            valueAccessDescriptor.AddState("Off");
+            valueAccessDescriptor.AddState("On");
+//            valueAccessDescriptor.AddVariable(firstTestVariableId);
+            valueAccessDescriptor.AddVariable(secondTestVariableId);
+            valueAccessDescriptor.AddVariable(thirdTestVariableId);
+//            valueAccessDescriptor.SetFormula(0, 0, "0");
+            valueAccessDescriptor.SetFormula(0, 0, "0");
+            valueAccessDescriptor.SetFormula(0, 1, "0");
+//            valueAccessDescriptor.SetFormula(1, 0, "1");
+            valueAccessDescriptor.SetFormula(1, 0, "2.58");
+            valueAccessDescriptor.SetFormula(1, 1, "-3");
+            valueAccessDescriptor.AssignDefaultStateId(0);
+            valueAccessDescriptor.SetAssignedPanelId(panelId3);
+            valueAccessDescriptor.SetName("AccessDescriptor1");
+            var valueAccessDescriptorId = Profile.RegisterAccessDescriptor(valueAccessDescriptor);
+
+
+            // Encoder
+            var rangeAccessDescriptor = new DescriptorRange();
+            rangeAccessDescriptor.SetReceiveValueFormula("[" + Profile.GetPanelById(panelId2).Name+"."+Profile.GetVariableById(secondTestVariableId).Name + "]");
+            rangeAccessDescriptor.AddVariable(secondTestVariableId);
+            rangeAccessDescriptor.AddVariable(firstTestVariableId);
+            rangeAccessDescriptor.SetAssignedPanelId(panelId3);
+            rangeAccessDescriptor.SetName("AccessDescriptorRange");
+            rangeAccessDescriptor.SetFormula(0, secondTestVariableId, "[R]");
+            rangeAccessDescriptor.SetFormula(1, thirdTestVariableId, "[R]:1");
+            rangeAccessDescriptor.MinimumValue = 0;
+            rangeAccessDescriptor.MaximumValue = 4;
+            rangeAccessDescriptor.SetStep(0.5);
+            rangeAccessDescriptor.IsLooped = true;
+            var rangeAccessDescriptorId = Profile.RegisterAccessDescriptor(rangeAccessDescriptor);
+            var tempFile = Path.GetTempFileName();
+
+            Profile.SaveProfileAs(tempFile);
+            Profile.Clear();
+            Profile.LoadProfile(tempFile);
+            VariableManager.Start();
+
+            var valueDescriptor = (DescriptorValue)Profile.GetAccessDesciptorById(valueAccessDescriptorId);
+            VariableManager.WriteValue(firstTestVariableId, 0);
+            VariableManager.WriteValue(secondTestVariableId, 0);
+            VariableManager.WriteValue(thirdTestVariableId, 0);
+            Thread.Sleep(200);
+            valueDescriptor.SetState(1);
+            Thread.Sleep(200);
+            Assert.AreEqual(0, VariableManager.ReadValue(firstTestVariableId).Value);
+            Assert.AreEqual(0, VariableManager.ReadValue(secondTestVariableId).Value);
+            Assert.AreEqual(0, VariableManager.ReadValue(thirdTestVariableId).Value);
+            VariableManager.WriteValue(firstTestVariableId, 1);
+            Thread.Sleep(200);
+            valueDescriptor.SetState(1);
+            Thread.Sleep(200);
+            Assert.AreEqual(1, VariableManager.ReadValue(firstTestVariableId).Value);
+            Assert.AreEqual(2.58, VariableManager.ReadValue(secondTestVariableId).Value);
+            Assert.AreEqual(-3, VariableManager.ReadValue(thirdTestVariableId).Value);
+            valueAccessDescriptor.SetDefaultState();
+            Thread.Sleep(200);
+            Assert.AreEqual(0, VariableManager.ReadValue(firstTestVariableId).Value);
+            Assert.AreEqual(0, VariableManager.ReadValue(secondTestVariableId).Value);
+            Assert.AreEqual(0, VariableManager.ReadValue(thirdTestVariableId).Value);
+            
+            
+            File.Delete(tempFile);
+            VariableManager.Stop();
+        }
+//    private static void TestInit()
+//    {
+//        // Button
+//        var ad = new DescriptorValue();
+//        ad.AddState("Off");
+//        ad.AddState("On");
+//        ad.AddVariable(/*var1Id*/0);
+//        ad.AddVariable(/*var2Id*/1);
+//        ad.SetFormula(0, 0, "0");
+//        ad.SetFormula(0, 1, "0");
+//        ad.SetFormula(1, 0, "1");
+//        ad.SetFormula(1, 1, "2");
+//        ad.AssignDefaultStateId(0);
+//        ad.SetAssignedPanelId(/*panelId3*/2);
+//        ad.SetName("TestAD");
+//        RegisterAccessDescriptor(ad, true);
+
+//        var cp = new ButtonProcessor(ad.GetId());
+//        var cpId = RegisterControlProcessor(cp, ad.GetId());
+//        //            ad.AssignControlProcessor(cpId);
+//        cp.AssignHardware(1, "Arcc:2905A4F9|Button|1|81");
+
+//        // BinaryInput
+//        var ad3 = new DescriptorValue();
+//        ad3.AddState("Off");
+//        ad3.AddState("On");
+//        ad3.AddVariable(/*var1Id*/0);
+//        ad3.AddVariable(/*var2Id*/1);
+//        ad3.SetFormula(0, 0, "0");
+//        ad3.SetFormula(0, 1, "0");
+//        ad3.SetFormula(1, 0, "1");
+//        ad3.SetFormula(1, 1, "2");
+//        //            ad3.AssignDefaultState(0);
+//        ad3.SetAssignedPanelId(/*panelId3*/2);
+//        ad3.SetName("TestADBI");
+//        RegisterAccessDescriptor(ad3, true);
+
+//        /*            var cp3 = new ButtonBinaryInputProcessor(ad3.GetId());
+//                    var cpId3 = RegisterControlProcessor(cp3);
+//                    ad3.AssignControlProcessor(cpId3);*/
+
+
+//        /////////// Encoder
+//        var ad1 = new DescriptorRange();
+//        ad1.SetFormulaToGetValues("[Оверхед.АРК1 (сотни)]");
+//        ad1.AddVariable(/*var5Id*/4);
+//        ad1.SetAssignedPanelId(/*panelId1*/0);
+//        ad1.SetName("Оверхед.АРК1 (сотни)");
+//        ad1.SetFormula(0, /*var5Id*/4, "[R]");
+//        ad1.SetFormula(1, /*var5Id*/4, "[R]");
+//        ad1.MinimumValue = 0;
+//        ad1.MaximumValue = 16;
+//        ad1.Step = 1;
+//        ad1.IsLooped = true;
+//        var encoderAdId = RegisterAccessDescriptor(ad1, true);
+
+//        var ecp = new EncoderProcessor(encoderAdId);
+//        ecp.AssignHardware("Arcc:2905A4F9|Encoder|1|4");
+//        var ecpId = RegisterControlProcessor(ecp, ad1.GetId());
+//        //            ad1.AssignControlProcessor(ecpId);
+//        ecp.SetInversion(true);
+//        /////////// Indicator
+//        var indicatorAd = new DescriptorIndicator();
+//        indicatorAd.SetName("Оверхед.АРК1 (сотни) индикатор");
+//        indicatorAd.SetAssignedPanelId(/*panelId1*/0);
+//        indicatorAd.SetFormula("[Оверхед.АРК1 (сотни)]");
+//        indicatorAd.SetNumberOfDigitsAfterPoint(3);
+//        var indicatorId = RegisterAccessDescriptor(indicatorAd, true);
+//        var icp = new IndicatorProcessor(indicatorId);
+//        icp.AssignHardware("Arcc:2905A4F9|Indicator|8|0");
+//        var icpId = RegisterControlProcessor(icp, indicatorAd.GetId());
+//        //            indicatorAd.AssignControlProcessor(icpId);
+//        /////////// BinaryOutput
+//        var boAd = new DescriptorBinaryOutput();
+//        boAd.SetFormula("[НВУ.Переключатель ДМЕ (3 позиции)]==1");
+//        boAd.SetName("НВУ.Переключатель ДМЕ");
+
+//        boAd.SetAssignedPanelId(/*panelId1*/0);
+//        var boId = RegisterAccessDescriptor(boAd, true);
+//        var lcp = new LampProcessor(boId);
+//        lcp.AssignHardware("Arcc:2905A4F9|BinaryOutput|1|7");
+//        var lcpId = RegisterControlProcessor(lcp, boAd.GetId());
+//        //           boAd.AssignControlProcessor(lcpId);
+//    }
+//*/
+        #endregion
     }
 }

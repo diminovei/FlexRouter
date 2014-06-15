@@ -100,7 +100,7 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
             _hardware.Text = controlEvent.Hardware.GetHardwareGuid();
         }
 
-        private void AssignmentGrid_Loaded(object sender, RoutedEventArgs e)
+        private void AssignmentGridLoaded(object sender, RoutedEventArgs e)
         {
             AssignmentGrid.Columns[0].Visibility = Visibility.Hidden;
         }

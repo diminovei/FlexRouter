@@ -7,7 +7,7 @@ namespace FlexRouter.AccessDescriptors
 {
     public class DescriptorBinaryOutput : DescriptorOutputBase, IBinaryOutputMethods
     {
-        public override string GetDescriptorName()
+        public override string GetDescriptorType()
         {
             return LanguageManager.GetPhrase(Phrases.EditorTypeMemoryBinaryOutput);
         }

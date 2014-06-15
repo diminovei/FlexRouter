@@ -51,7 +51,6 @@
   <Phrase Name="EditorAddVariable" Value = "Добавить переменную"/>
   <Phrase Name="EditorRemoveVariable" Value = "Удалить переменную"/>
   <Phrase Name="EditorDefaultStateColumnHeader" Value = "По-умолчанию"/>
-  <Phrase Name="MainFormRemove" Value = "Удалить"/>
   <Phrase Name="EditorAxisReset" Value = "Сброс"/>
   <Phrase Name="EditorAxisCalibrate" Value = "Калибровка"/>
   <Phrase Name="EditorVariableIsAlreadyExists" Value = "Выбранная переменная уже добавлена"/>
@@ -126,4 +125,25 @@
   <Phrase Name="SettingsImportProfileDialogHeader" Value = "Импортировать профиль"/>
   <Phrase Name="SettingsImportProfileKeepAssignmentsDialogHeader" Value = "Импортировать новую версию профиля и сохранить мои назначения"/>
   <Phrase Name="SettingsMessageInputProfileNewName" Value = "Выберете имя профиля"/>
+
+  <Phrase Name="TabInfo" Value = "Информация"/>
+  <Phrase Name="TabSettings" Value = "Настройки"/>
+  <Phrase Name="TabAccessDescriptors" Value = "Описатели доступа"/>
+  <Phrase Name="TabVariables" Value = "Переменные"/>
+  <Phrase Name="TabControlProcessors" Value = "Коммутация"/>
+  <Phrase Name="TabFormulaEditor" Value = "Редактор формул"/>
+
+  <Phrase Name="CommonButtonCreate" Value = "Создать"/>
+  <Phrase Name="CommonButtonSave" Value = "Сохранить"/>
+  <Phrase Name="CommonButtonRemove" Value = "Удалить"/>
+  <Phrase Name="CommonButtonRename" Value = "Переименовать"/>
+  <Phrase Name="CommonButtonImport" Value = "Импортировать"/>
+  <Phrase Name="CommonButtonExport" Value = "Экспортировать"/>
+  <Phrase Name="CommonButtonImportAndKeepAssignments" Value = "Импортировать и сохранить назначения"/>
+  <Phrase Name="CommonLabelLanguage" Value = "Язык (Language)"/>
+  <Phrase Name="CommonLabelProfile" Value = "Профиль"/>
+  <Phrase Name="CommonLabelFormulaResult" Value = "Результат"/>
+  <Phrase Name="CommonLabelCopyToClipboard" Value = "Формулу в буфер обмена"/>
+  <Phrase Name="CommonLabelCopyVariableToFormula" Value = "Вставить переменную в формулу"/>
+  <Phrase Name="CommonLabelProfileManagement" Value = "Управление профилем"/>
 </FlexRouterProfile>

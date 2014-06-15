@@ -87,7 +87,7 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
         private int _mainModuleProcessId;
         private string _moduleExtensionFilter;
         private DateTime _lastTimeTryToInitialize = DateTime.Now;
-        /// <summary>
+/*        /// <summary>
         /// Загружен ли модуль (для проверки загружен ли самолёт)
         /// </summary>
         /// <param name="mainModuleName"></param>
@@ -98,19 +98,33 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
             if (_modules.ContainsKey(moduleToCheckName))
                 return true;
             return Initialize(mainModuleName, _moduleExtensionFilter) && _modules.ContainsKey(moduleToCheckName);
-        }
+        }*/
 
+        public enum InitializationStatus
+        {
+            Ok,
+            AttemptToInitializeTooOften,
+            ModuleToPatchWasNotFound,
+            Exception
+        }
         /// <summary>
         /// Инициализация информации о модулях
         /// </summary>
         /// <param name="mainModuleName">главный модуль симулятора (fs9.exe)</param>
         /// <param name="moduleExtensionFilter">расширение, которое соответствует приборам</param>
         /// <returns>true - simulator was found</returns>
-        public bool Initialize(string mainModuleName, string moduleExtensionFilter)
+        public InitializationState Initialize(string mainModuleName, string moduleExtensionFilter)
         {
+            const string systemName = "MemoryPatcher";
             // Без этого процессор грузится на 50%, пока симулятор не загружен
             if (DateTime.Now < _lastTimeTryToInitialize + new TimeSpan(0, 0, 0, 2))
-                return false;
+                return new InitializationState
+                {
+                    System = systemName,
+                    ErrorCode = (int)InitializationStatus.AttemptToInitializeTooOften,
+                    ErrorMessage = "Attempted to initialize too often",
+                    IsOk = false
+                };
             _lastTimeTryToInitialize = DateTime.Now;
             try
             {
@@ -137,14 +151,32 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
                             _modules.Add(info.Name, info);
                         }
                         process.Close();
-                        return true;
+                        return new InitializationState
+                        {
+                            System = systemName,
+                            ErrorCode = (int)InitializationStatus.Ok,
+                            ErrorMessage = "",
+                            IsOk = true
+                        };
                     }
-                    return false;
+                    return new InitializationState
+                    {
+                        System = systemName,
+                        ErrorCode = (int)InitializationStatus.ModuleToPatchWasNotFound,
+                        ErrorMessage = "Module '" + mainModuleName + "' was not found in process list",
+                        IsOk = false
+                    };
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return false;                
+                return new InitializationState
+                {
+                    System = systemName,
+                    ErrorCode = (int)InitializationStatus.Exception,
+                    ErrorMessage = "An exception occuted: " + ex.Message,
+                    IsOk = false
+                };
             }
         }
         public string[] GetModulesList()

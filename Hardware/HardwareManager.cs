@@ -6,6 +6,7 @@ using FlexRouter.Hardware.Arcc;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
 using FlexRouter.Hardware.Joystick;
+using FlexRouter.Hardware.Keyboard;
 
 namespace FlexRouter.Hardware
 {
@@ -23,6 +24,7 @@ namespace FlexRouter.Hardware
             _timer = new Timer(_ => OnTimedEvent(null, null), null, 500, 500);
             AddHardwareClass(new ArccDevicesManager());
             AddHardwareClass(new JoystickDevicesManager());
+            AddHardwareClass(new KeyboardDevicesManager());
         }
         #region Поиск компонентов
         /// <summary>

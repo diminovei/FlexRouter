@@ -1,36 +1,75 @@
-﻿using System.Globalization;
-using System.Xml;
+﻿using System.Xml;
 using System.Xml.XPath;
 
 namespace FlexRouter.AccessDescriptors.Helpers
 {
     public abstract class DescriptorRangeBase : DescriptorMultistateBase
     {
-        public double MinimumValue;
-        public double MaximumValue;
-        public double Step;
+        private int _minimumValueFormulaId = -1;
+        private int _maximumValueFormulaId = -1;
+        private int _defaultValueFormulaId = -1;
+        private int _stepFormulaId = -1;
+        private int _receiveValueFormulaId = -1;
         public bool IsLooped;
         public bool EnableDefaultValue;
-        public double DefaultValue;
 
+        public string GetStepFormula()
+        {
+            return GlobalFormulaKeeper.Instance.GetFormulaText(_stepFormulaId);
+        }
+        public void SetStepFormula(string formula)
+        {
+            SetFormulaHelper(formula, ref _stepFormulaId);
+        }
+        public string GetMinimumValueFormula()
+        {
+            return GlobalFormulaKeeper.Instance.GetFormulaText(_minimumValueFormulaId);
+        }
+        public void SetMinimumValueFormula(string formula)
+        {
+            SetFormulaHelper(formula, ref _minimumValueFormulaId);
+        }
+        public string GetMaximumValueFormula()
+        {
+            return GlobalFormulaKeeper.Instance.GetFormulaText(_maximumValueFormulaId);
+        }
+        public void SetMaximumValueFormula(string formula)
+        {
+            SetFormulaHelper(formula, ref _maximumValueFormulaId);
+        }
+        public string GetDefaultValueFormula()
+        {
+            return GlobalFormulaKeeper.Instance.GetFormulaText(_defaultValueFormulaId);
+        }
+        public void SetDefaultValueFormula(string formula)
+        {
+            SetFormulaHelper(formula, ref _defaultValueFormulaId);
+        }
+        public void SetFormulaHelper(string formula, ref int id)
+        {
+            if (id == -1)
+                id = GlobalFormulaKeeper.Instance.StoreFormula(formula, GetId());
+            else
+                GlobalFormulaKeeper.Instance.ChangeFormulaText(id, formula);
+        }
         public string GetReceiveValueFormula()
         {
-            return GlobalFormulaKeeper.Instance.GetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.GetValue, GetId());
+            return GlobalFormulaKeeper.Instance.GetFormulaText(_receiveValueFormulaId);
         }
         public void SetReceiveValueFormula(string formula)
         {
-            GlobalFormulaKeeper.Instance.SetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.GetValue, GetId(), formula);
+            SetFormulaHelper(formula, ref _receiveValueFormulaId);
         }
 
         public override void SaveAdditionals(XmlWriter writer)
         {
             base.SaveAdditionals(writer);
             writer.WriteStartElement("RangeParameters");
-            writer.WriteAttributeString("MinimumValue", MinimumValue.ToString(CultureInfo.InvariantCulture));
-            writer.WriteAttributeString("MaximumValue", MaximumValue.ToString(CultureInfo.InvariantCulture));
+            writer.WriteAttributeString("MinimumValue", GetMinimumValueFormula());
+            writer.WriteAttributeString("MaximumValue", GetMaximumValueFormula());
             if (EnableDefaultValue)
-                writer.WriteAttributeString("DefaultValue", DefaultValue.ToString(CultureInfo.InvariantCulture));
-            writer.WriteAttributeString("Step", Step.ToString(CultureInfo.InvariantCulture));
+                writer.WriteAttributeString("DefaultValue", GetDefaultValueFormula());
+            writer.WriteAttributeString("Step", GetStepFormula());
             writer.WriteAttributeString("IsLooped", IsLooped.ToString());
             writer.WriteAttributeString("GetValueFormula", GetReceiveValueFormula());
             writer.WriteEndElement();
@@ -42,10 +81,15 @@ namespace FlexRouter.AccessDescriptors.Helpers
             var readerAdd = reader.SelectSingleNode("RangeParameters");
             if (readerAdd == null)
                 return;
-            MinimumValue = double.Parse(readerAdd.GetAttribute("MinimumValue", readerAdd.NamespaceURI), CultureInfo.InvariantCulture);
-            MaximumValue = double.Parse(readerAdd.GetAttribute("MaximumValue", readerAdd.NamespaceURI), CultureInfo.InvariantCulture);
-            Step = double.Parse(readerAdd.GetAttribute("Step", readerAdd.NamespaceURI),CultureInfo.InvariantCulture);
-            EnableDefaultValue = double.TryParse(readerAdd.GetAttribute("DefaultValue", readerAdd.NamespaceURI), NumberStyles.Number, CultureInfo.InvariantCulture, out DefaultValue);
+            var minimumValueFormula = readerAdd.GetAttribute("MinimumValue", readerAdd.NamespaceURI);
+            SetMinimumValueFormula(minimumValueFormula);
+            var maximumValueFormula = readerAdd.GetAttribute("MaximumValue", readerAdd.NamespaceURI);
+            SetMaximumValueFormula(maximumValueFormula);
+            var defaultValueFormula = readerAdd.GetAttribute("DefaultValue", readerAdd.NamespaceURI);
+            EnableDefaultValue = !string.IsNullOrEmpty(defaultValueFormula);
+            SetDefaultValueFormula(defaultValueFormula);
+            var stepFormula = readerAdd.GetAttribute("Step", readerAdd.NamespaceURI);
+            SetStepFormula(stepFormula);
             IsLooped = bool.Parse(readerAdd.GetAttribute("IsLooped", readerAdd.NamespaceURI));
             var getValueFormula = readerAdd.GetAttribute("GetValueFormula", readerAdd.NamespaceURI);
             SetReceiveValueFormula(getValueFormula);

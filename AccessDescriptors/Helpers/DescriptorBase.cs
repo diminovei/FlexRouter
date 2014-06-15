@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.CalculatorRelated;
@@ -27,25 +28,40 @@ namespace FlexRouter.AccessDescriptors.Helpers
             return _parentAccessDescriptorId;
         }
         /// <summary>
-        ///  -1 - значит ещё не зарегистрирован в профиле
+        /// Глобальный идентификатор -1 - значит ещё не зарегистрирован в профиле
         /// </summary>
         protected int Id = -1;
-
+        /// <summary>
+        /// Имя AccessDescriptor'а
+        /// </summary>
         private string _name;
+        /// <summary>
+        /// Идентификатор панели, к которой принадлежит AccessDescriptor
+        /// </summary>
         private int _panelId = -1;
+        /// <summary>
+        /// Использовать формулу питания панели или собственную?
+        /// </summary>
         private bool _usePanelPowerFormula;
-
-        protected readonly CalculatorVariableAccessAddon CalculatorVariableAccessAddonE =
-            new CalculatorVariableAccessAddon();
-
+        /// <summary>
+        /// Идентификатор формулы питания в GlobalFormulaKeeper
+        /// </summary>
+        private int _powerFormulaId = -1;
+        /// <summary>
+        /// Аддон к калькулятору, позволяющий парсить переменные в формулах
+        /// </summary>
+        protected readonly CalculatorVariableAccessAddon CalculatorVariableAccessAddonE = new CalculatorVariableAccessAddon();
+        /// <summary>
+        /// Калькулятор
+        /// </summary>
         protected readonly Calculator CalculatorE = new Calculator();
 
-        public DescriptorBase Copy()
+/*        public DescriptorBase Copy()
         {
             var descriptor = MemberwiseClone();
             ((DescriptorBase)descriptor).Id = GlobalId.GetNew();
             return (DescriptorBase)descriptor;
-        }
+        }*/
         protected DescriptorBase()
         {
             Id = GlobalId.GetNew();
@@ -55,7 +71,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
 
         public bool IsPowerOn()
         {
-            var result = CalculatorE.ComputeFormula(_usePanelPowerFormula ? Profile.GetPanelById(_panelId).PowerFormula : GetPowerFormula());
+            var result = CalculatorE.ComputeFormula(_usePanelPowerFormula ? Profile.GetPanelById(_panelId).GetPowerFormula() : GetPowerFormula());
             if (result.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.FormulaWasEmpty)
                 return true;
             return result.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.BooleanResult && result.CalculatedBoolBoolValue;
@@ -63,14 +79,17 @@ namespace FlexRouter.AccessDescriptors.Helpers
 
         public void SetPowerFormula(string powerFormula)
         {
-            GlobalFormulaKeeper.Instance.SetFormula(FormulaKeeperItemType.AccessDescriptor,
-                FormulaKeeperFormulaType.Power, GetId(), powerFormula);
+            if (_powerFormulaId == -1)
+                _powerFormulaId = GlobalFormulaKeeper.Instance.StoreFormula(powerFormula, GetId());
+            else
+                GlobalFormulaKeeper.Instance.ChangeFormulaText(_powerFormulaId, powerFormula);
+//               GlobalFormulaKeeper.Instance.SetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.Power, GetId(), powerFormula);
         }
 
         public string GetPowerFormula()
         {
-            return GlobalFormulaKeeper.Instance.GetFormula(FormulaKeeperItemType.AccessDescriptor,
-                FormulaKeeperFormulaType.Power, GetId());
+            return _powerFormulaId == -1 ? null : GlobalFormulaKeeper.Instance.GetFormulaText(_powerFormulaId);
+            //return GlobalFormulaKeeper.Instance.GetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.Power, GetId());        
         }
 
         public string GetName()
@@ -126,8 +145,6 @@ namespace FlexRouter.AccessDescriptors.Helpers
         {
             writer.WriteAttributeString("Type", GetType().Name);
             writer.WriteAttributeString("Id", Id.ToString(CultureInfo.InvariantCulture));
-            if (Id == 490)
-                Id = Id;
             writer.WriteAttributeString("PanelId", _panelId.ToString(CultureInfo.InvariantCulture));
             writer.WriteAttributeString("Name", _name);
             writer.WriteAttributeString("PowerFormula", GetPowerFormula());
@@ -149,7 +166,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
         {
             Id = int.Parse(reader.GetAttribute("Id", reader.NamespaceURI));
             GlobalId.RegisterExisting(Id);
-            GlobalFormulaKeeper.Instance.Clear(GetId());
+            GlobalFormulaKeeper.Instance.RemoveFormulasByOwnerId(GetId());
             _panelId = int.Parse(reader.GetAttribute("PanelId", reader.NamespaceURI));
             _name = reader.GetAttribute("Name", reader.NamespaceURI);
             var powerFormula = reader.GetAttribute("PowerFormula", reader.NamespaceURI);
@@ -164,6 +181,6 @@ namespace FlexRouter.AccessDescriptors.Helpers
         public virtual void Initialize()
         {
         }
-        public abstract string GetDescriptorName();
+        public abstract string GetDescriptorType();
     }
 }

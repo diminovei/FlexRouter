@@ -84,8 +84,6 @@ namespace FlexRouter.Localizers
         EditorSelectAnItemFirst,
         EditorDependentAssignmentWasRemoved,
 
-        MainFormRemove,
-
         EditorTypeMemoryMultistate,
         EditorTypeMemoryIndicator,
         EditorTypeMemoryBinaryOutput,
@@ -135,7 +133,28 @@ namespace FlexRouter.Localizers
         SettingsExportProfileDialogHeader,
         SettingsImportProfileDialogHeader,
         SettingsImportProfileKeepAssignmentsDialogHeader,
-        SettingsMessageInputProfileNewName
+        SettingsMessageInputProfileNewName,
+
+        TabInfo,
+        TabSettings,
+        TabAccessDescriptors,
+        TabVariables,
+        TabControlProcessors,
+        TabFormulaEditor,
+
+        CommonButtonCreate,
+        CommonButtonSave,
+        CommonButtonRemove,
+        CommonButtonRename,
+        CommonButtonImport,
+        CommonButtonExport,
+        CommonButtonImportAndKeepAssignments,
+        CommonLabelLanguage,
+        CommonLabelProfile,
+        CommonLabelFormulaResult,
+        CommonLabelCopyToClipboard,
+        CommonLabelCopyVariableToFormula,
+        CommonLabelProfileManagement,
     }
 
     static public class LanguageManager
@@ -204,5 +223,25 @@ namespace FlexRouter.Localizers
         {
             return LanguagePhrases.ContainsKey(phraseId.ToString()) ? LanguagePhrases[phraseId.ToString()] : string.Empty;
         }
+
+/*        static public Phrases? GetPhraseByText(string text)
+        {
+            foreach (var lp in LanguagePhrases)
+            {
+                if (lp.Value == text)
+                    return GetPhraseEnumItemByText(lp.Key);
+            }
+            return null;
+        }
+
+        static private Phrases GetPhraseEnumItemByText(string phrase)
+        {
+            foreach (Phrases p in Enum.GetValues(typeof(Phrases)))
+            {
+                if(p.ToString() != phrase)
+                    continue;
+                return p;
+            }            
+        }*/
     }
 }

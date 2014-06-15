@@ -3,7 +3,6 @@ using System.Globalization;
 using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.Localizers;
-using FlexRouter.VariableSynchronization;
 
 namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
 {

@@ -46,7 +46,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
                 foreach (var v in _usedVariables)
                 {
                     var formula = _assignedAccessDescriptor.GetFormula(v, s.Id);
-                    _localFormulaKeeper.SetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, _assignedAccessDescriptor.GetId(), v, s.Id, formula);
+                    _localFormulaKeeper.StoreVariableFormula(formula, _assignedAccessDescriptor.GetId(), v, s.Id);
                 }
             }
             InitializeComponent();
@@ -99,7 +99,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
                     formulaList.Add(_defaultState == s.Id);
                 formulaList.Add(s.Name);
                         
-                formulaList.AddRange(_usedVariables.Select(v => _localFormulaKeeper.GetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, _assignedAccessDescriptor.GetId(), v, s.Id)));
+                formulaList.AddRange(_usedVariables.Select(v => _localFormulaKeeper.GetVariableFormulaText(_assignedAccessDescriptor.GetId(), v, s.Id)));
                 _dataTable.Rows.Add(formulaList.ToArray());
             }
             StatesGrid.ItemsSource = _dataTable.AsDataView();
@@ -153,7 +153,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
                 arr.RemoveRange(0, _additionalColumnsCount);
                 for (var varIndex = 0; varIndex < arr.Count; varIndex++)
                 {
-                    var origFormula = _localFormulaKeeper.GetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, _assignedAccessDescriptor.GetId(), origUsedVariables[varIndex], origStateList.ElementAt(stateIndex).Id);
+                    var origFormula = _localFormulaKeeper.GetVariableFormulaText(_assignedAccessDescriptor.GetId(), origUsedVariables[varIndex], origStateList.ElementAt(stateIndex).Id);
                     var dataGridFormula = (string) arr[varIndex];
                     if (!Utils.AreStringsEqual(origFormula, dataGridFormula))
                         return true;
@@ -230,7 +230,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             {
                 _usedVariables.Remove(selectedVar.Id);
                 foreach (var state in _stateList)
-                    _localFormulaKeeper.Remove(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, _assignedAccessDescriptor.GetId(), selectedVar.Id, state.Id);
+                    _localFormulaKeeper.RemoveVariableFormula(_assignedAccessDescriptor.GetId(), selectedVar.Id, state.Id);
                 ShowData();
             }
         }
@@ -252,7 +252,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             {
                 _stateList.RemoveAll(x => x.Id == stateId);
                 foreach (var usedVariable in _usedVariables)
-                    _localFormulaKeeper.Remove(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, _assignedAccessDescriptor.GetId(), usedVariable, stateId);
+                    _localFormulaKeeper.RemoveVariableFormula(_assignedAccessDescriptor.GetId(), usedVariable, stateId);
                 ShowData();
             }
         }
@@ -346,7 +346,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
                 // Удаляем колонку State и DefaultState
                 arr.RemoveRange(0, _additionalColumnsCount);
                 for (var varIndex = 0; varIndex < arr.Count; varIndex++)
-                    _localFormulaKeeper.SetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, _assignedAccessDescriptor.GetId(), _usedVariables[varIndex], _stateList[stateIndex].Id, arr[varIndex] is string ? (string)arr[varIndex] : "");
+                    _localFormulaKeeper.StoreVariableFormula(arr[varIndex] is string ? (string)arr[varIndex] : "", _assignedAccessDescriptor.GetId(), _usedVariables[varIndex], _stateList[stateIndex].Id);
             }
         }
     }

@@ -15,7 +15,7 @@ namespace FlexRouter.EditorsUI.Dialogues
     public partial class Selector
     {
         private int _selectedItemId = -1;
-        private int _selectedPanelId = -1;
+        private readonly int _selectedPanelId = -1;
         private readonly SelectedType _selectedType;
         public Selector(SelectedType selectedType)
         {
@@ -144,6 +144,21 @@ namespace FlexRouter.EditorsUI.Dialogues
                 _description.Text = string.Empty;
                 _selectedItemId = selectedDescriptor.GetId();
             }
+        }
+
+        private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Return)
+            {
+                e.Handled = true;
+                OkClick(null, null);
+            }
+            if (e.Key == System.Windows.Input.Key.Escape)
+            {
+                e.Handled = true;
+                CancelClick(null, null);
+            }
+
         }
     }
 }

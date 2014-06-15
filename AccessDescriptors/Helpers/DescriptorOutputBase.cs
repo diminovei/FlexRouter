@@ -5,15 +5,14 @@ namespace FlexRouter.AccessDescriptors.Helpers
 {
     public abstract class DescriptorOutputBase: DescriptorBase
    {
-//        protected string Formula;
+        protected int _outputFormulaId = -1;
         /// <summary>
         /// Получить формулу для расчёта значения для вывода на индикатор
         /// </summary>
         /// <returns>Токинезированная формула</returns>
         public string GetFormula()
         {
-            //return Formula;
-            return GlobalFormulaKeeper.Instance.GetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, GetId());
+            return GlobalFormulaKeeper.Instance.GetFormulaText(_outputFormulaId);
         }
         /// <summary>
         /// Установить формулу для расчёта значения для вывода на индикатор
@@ -21,8 +20,10 @@ namespace FlexRouter.AccessDescriptors.Helpers
         /// <param name="formula">Токинезированная формула</param>
         public void SetFormula(string formula)
         {
-            GlobalFormulaKeeper.Instance.SetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, GetId(), formula);
-//            Formula = formula;
+            if (_outputFormulaId == -1)
+                _outputFormulaId = GlobalFormulaKeeper.Instance.StoreFormula(formula, GetId());
+            else
+                GlobalFormulaKeeper.Instance.ChangeFormulaText(_outputFormulaId, formula);
         }
         public override void SaveAdditionals(XmlWriter writer)
         {

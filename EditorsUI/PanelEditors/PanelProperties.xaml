@@ -7,7 +7,7 @@
              d:DesignHeight="194" d:DesignWidth="370">
     <Grid>
         <Label x:Name="_nameLabel" Content="Name" HorizontalAlignment="Left" Margin="10,33,0,0" VerticalAlignment="Top" Width="200"/>
-        <TextBox x:Name="_panelName" Height="23" Margin="0,33,10,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="175" HorizontalAlignment="Right" PreviewTextInput="_panelName_PreviewTextInput"/>
+        <TextBox x:Name="_panelName" Height="23" Margin="0,33,10,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="175" HorizontalAlignment="Right" PreviewTextInput="PanelNamePreviewTextInput"/>
         <Label x:Name="_powerFormulaLabel" Content="Power formula" HorizontalAlignment="Left" Margin="10,64,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.105,-0.346" Width="200"/>
         <TextBox x:Name="_powerFormula" Height="89" Margin="0,95,10,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="350" RenderTransformOrigin="0.426,4.13" HorizontalAlignment="Right"/>
         <Label x:Name="_editorTypeLabel" Content="Label" Margin="10,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" BorderThickness="1" BorderBrush="Black"/>

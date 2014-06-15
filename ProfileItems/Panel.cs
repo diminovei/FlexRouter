@@ -14,13 +14,22 @@ namespace FlexRouter.ProfileItems
         }
         public int Id;
         public string Name;
-        public string PowerFormula;
+        private string _powerFormula;
+
+        public string GetPowerFormula()
+        {
+            return _powerFormula;
+        }
+        public void SetPowerFormula(string powerFormula)
+        {
+            _powerFormula = powerFormula;
+        }
         public void Save(XmlTextWriter writer)
         {
             writer.WriteStartElement("Panel");
             writer.WriteAttributeString("Id", Id.ToString(CultureInfo.InvariantCulture));
             writer.WriteAttributeString("Name", Name);
-            writer.WriteAttributeString("PowerFormula", PowerFormula);
+            writer.WriteAttributeString("PowerFormula", GetPowerFormula());
             writer.WriteEndElement();
             writer.WriteString("\n");
         }
@@ -29,7 +38,8 @@ namespace FlexRouter.ProfileItems
             Id = int.Parse(reader.GetAttribute("Id", reader.NamespaceURI));
             GlobalId.RegisterExisting(Id);
             Name = reader.GetAttribute("Name", reader.NamespaceURI);
-            PowerFormula = reader.GetAttribute("PowerFormula", reader.NamespaceURI);
+            var powerFormula = reader.GetAttribute("PowerFormula", reader.NamespaceURI);
+            SetPowerFormula(powerFormula);
         }
     }
 }

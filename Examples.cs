@@ -312,7 +312,6 @@ namespace FlexRouter
                                     a.UnInitialize();
                                     break;
                                 }*/
-                fsuipc.Open();
                 v.ValueToSet = val[i];
                 fsuipc.AddVariableToWrite(v);
                 fsuipc.AddVariableToRead(v3);

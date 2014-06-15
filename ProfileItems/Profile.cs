@@ -14,6 +14,7 @@ using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.ControlProcessors;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.EditorPanels;
+using FlexRouter.EditorsUI.Dialogues;
 using FlexRouter.Hardware;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
@@ -23,11 +24,12 @@ using FlexRouter.VariableWorkerLayer;
 using FlexRouter.VariableWorkerLayer.MethodFakeVariable;
 using FlexRouter.VariableWorkerLayer.MethodFsuipc;
 using FlexRouter.VariableWorkerLayer.MethodMemoryPatch;
+using SlimDX.Direct3D10;
 using MessageBox = System.Windows.Forms.MessageBox;
 
 namespace FlexRouter.ProfileItems
 {
-    internal static class Profile
+    public static class Profile
     {
 //        public AccessDescriptors = new AccessDescriptors();
         private static readonly Dictionary<int, Panel> PanelsStorage = new Dictionary<int, Panel>();
@@ -474,10 +476,6 @@ namespace FlexRouter.ProfileItems
             //ToDo: костыль для FS9
             _moduleExtensionFilter = ".gau";
             _mainSimulatorProcess = "fs9";
-
-            ControlProcessorsStorage.Clear();
-            AccessDescriptorsStorage.Clear();
-            // Очистить VariableStorage
             var xp = new XPathDocument(profilePath);
             var nav = xp.CreateNavigator();
             var navPointer = nav.Select("/FlexRouterProfile");
@@ -485,14 +483,12 @@ namespace FlexRouter.ProfileItems
             _currentProfileName = navPointer.Current.GetAttribute("Name", navPointer.Current.NamespaceURI);
             _currentProfilePath = controlProcessorsProfilePath ?? profilePath;
             navPointer = nav.Select("/FlexRouterProfile/Aircraft/Panels/Panel");
-
             while (navPointer.MoveNext())
             {
                 var panel = new Panel();
                 panel.Load(navPointer.Current);
                 PanelsStorage.Add(panel.Id, panel);
             }
-
             
             navPointer = nav.Select("/FlexRouterProfile/Aircraft/Variables/Variable");
             while (navPointer.MoveNext())
@@ -517,7 +513,6 @@ namespace FlexRouter.ProfileItems
                     RegisterVariable(variable, false);
                 }
             }
-
             navPointer = nav.Select("/FlexRouterProfile/Aircraft/AccessDescriptors/AccessDescriptor");
             while (navPointer.MoveNext())
             {
@@ -539,7 +534,6 @@ namespace FlexRouter.ProfileItems
                     RegisterAccessDescriptor(ad);
                 }
             }
-
             xp = new XPathDocument(controlProcessorsProfilePath);
             nav = xp.CreateNavigator();
             navPointer = nav.Select("/FlexRouterProfile/Aircraft/ControlProcessors/ControlProcessor");
@@ -582,17 +576,16 @@ namespace FlexRouter.ProfileItems
                             controlProcessor.RenewStatesInfo(states);
                     }
                 }
-                // Если был импорт профиля
-                if (profilePath != controlProcessorsProfilePath)
+            }
+            // Если был импорт профиля
+            if (profilePath != controlProcessorsProfilePath)
+            {
+                if (cpLoadErrorsCounter != 0)
                 {
-                    if (cpLoadErrorsCounter!=0)
-                    {
-                        var message = LanguageManager.GetPhrase(Phrases.SettingsMessageNotLoadedControlProcrssorsCount) + ": " + cpLoadErrorsCounter;
-                        MessageBox.Show(message, LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader), MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
-                    SaveCurrentProfile();
+                    var message = LanguageManager.GetPhrase(Phrases.SettingsMessageNotLoadedControlProcrssorsCount) + ": " + cpLoadErrorsCounter;
+                    MessageBox.Show(message, LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader), MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
-                    
+                SaveCurrentProfile();
             }
             foreach (var descriptorBase in AccessDescriptorsStorage)
                 descriptorBase.Value.Initialize();
@@ -624,6 +617,18 @@ namespace FlexRouter.ProfileItems
             PanelsStorage.Clear();
             _mainSimulatorProcess = string.Empty;
             _moduleExtensionFilter = string.Empty;
+            _currentProfileName = null;
+            _currentProfilePath = null;
+        }
+
+        public static bool IsProfileLoaded()
+        {
+            return _currentProfileName != null;
+        }
+
+        public static string GetLoadedProfileName()
+        {
+            return _currentProfileName;
         }
 
         public static string CreateNewProfile()
@@ -652,7 +657,7 @@ namespace FlexRouter.ProfileItems
         {
             var profileList = GetProfileList();
         loop:
-            var it = new InputString(LanguageManager.GetPhrase(Phrases.SettingsMessageInputProfileNewName));
+            var it = new InputString(LanguageManager.GetPhrase(Phrases.SettingsMessageInputProfileNewName), _currentProfileName);
             if (it.ShowDialog() != true)
                 return null;
             var profileName = it.GetText();
@@ -663,9 +668,7 @@ namespace FlexRouter.ProfileItems
                                 MessageBoxButton.OK, MessageBoxImage.Error);
                 goto loop;
             }
-            Clear();
             _currentProfileName = profileName;
-            _currentProfilePath = GenerateProfileFileName();
             SaveCurrentProfile();
             return profileName;
         }
@@ -674,7 +677,6 @@ namespace FlexRouter.ProfileItems
             Clear();
             if (File.Exists(_currentProfilePath))
                 File.Delete(_currentProfilePath);
-
         }
 
         public static string Import(string path)

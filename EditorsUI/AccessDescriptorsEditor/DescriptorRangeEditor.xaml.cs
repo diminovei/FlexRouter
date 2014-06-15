@@ -22,11 +22,11 @@ namespace FlexRouter.EditorPanels
             InitializeComponent();
             _assignedAccessDescriptor = assignedAccessDescriptor;
             _getValueFormula.Text = _assignedAccessDescriptor.GetReceiveValueFormula();
-            _minimum.Text = _assignedAccessDescriptor.MinimumValue.ToString(CultureInfo.InvariantCulture);
-            _maximum.Text = _assignedAccessDescriptor.MaximumValue.ToString(CultureInfo.InvariantCulture);
+            _minimum.Text = _assignedAccessDescriptor.GetMinimumValueFormula();
+            _maximum.Text = _assignedAccessDescriptor.GetMaximumValueFormula();
             _enableDefaultValue.IsChecked = _assignedAccessDescriptor.EnableDefaultValue;
-            _defaultValue.Text = _assignedAccessDescriptor.EnableDefaultValue ? _assignedAccessDescriptor.DefaultValue.ToString(CultureInfo.InvariantCulture) : string.Empty;
-            _step.Text = _assignedAccessDescriptor.Step.ToString(CultureInfo.InvariantCulture);
+            _defaultValue.Text = _assignedAccessDescriptor.EnableDefaultValue ? _assignedAccessDescriptor.GetDefaultValueFormula() : string.Empty;
+            _step.Text = _assignedAccessDescriptor.GetStepFormula();
             _cyclic.IsChecked = _assignedAccessDescriptor.IsLooped;
             _defaultValue.IsReadOnly = !_assignedAccessDescriptor.EnableDefaultValue;
             Localize();
@@ -40,14 +40,14 @@ namespace FlexRouter.EditorPanels
             //Double.TryParse(_maximum.Text, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo, out _assignedAccessDescriptor.MaximumValue);
             //Double.TryParse(_step.Text, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo, out _assignedAccessDescriptor.Step);
 
-            _assignedAccessDescriptor.MinimumValue = double.Parse(_minimum.Text, CultureInfo.InvariantCulture);
-            _assignedAccessDescriptor.MaximumValue = double.Parse(_maximum.Text, CultureInfo.InvariantCulture);
-            _assignedAccessDescriptor.Step = double.Parse(_step.Text, CultureInfo.InvariantCulture);
+            _assignedAccessDescriptor.SetMinimumValueFormula(_minimum.Text);
+            _assignedAccessDescriptor.SetMaximumValueFormula(_maximum.Text);
+            _assignedAccessDescriptor.SetStepFormula(_step.Text);
             _assignedAccessDescriptor.IsLooped = _cyclic.IsChecked == true;
             _assignedAccessDescriptor.EnableDefaultValue = _enableDefaultValue.IsChecked == true;
             if (_enableDefaultValue.IsChecked == true)
                 //Double.TryParse(_defaultValue.Text, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo, out _assignedAccessDescriptor.DefaultValue);
-                _assignedAccessDescriptor.DefaultValue = double.Parse(_defaultValue.Text);
+                _assignedAccessDescriptor.SetDefaultValueFormula(_defaultValue.Text);
         }
 
         public void Localize()
@@ -69,14 +69,14 @@ namespace FlexRouter.EditorPanels
             {
                 if (!Utils.IsNumeric(_defaultValue.Text))
                     return true;
-                if (double.Parse(_defaultValue.Text, CultureInfo.InvariantCulture) != _assignedAccessDescriptor.DefaultValue)
+                if (_defaultValue.Text != _assignedAccessDescriptor.GetDefaultValueFormula())
                     return true;
             }
-            if (double.Parse(_minimum.Text, CultureInfo.InvariantCulture) != _assignedAccessDescriptor.MinimumValue)
+            if (_minimum.Text != _assignedAccessDescriptor.GetMinimumValueFormula())
                 return true;
-            if (double.Parse(_maximum.Text, CultureInfo.InvariantCulture) != _assignedAccessDescriptor.MaximumValue)
+            if (_maximum.Text != _assignedAccessDescriptor.GetMaximumValueFormula())
                 return true;
-            if (double.Parse(_step.Text, CultureInfo.InvariantCulture) != _assignedAccessDescriptor.Step)
+            if (_step.Text != _assignedAccessDescriptor.GetStepFormula())
                 return true;
             if (_cyclic.IsChecked != _assignedAccessDescriptor.IsLooped)
                 return true;
@@ -90,14 +90,14 @@ namespace FlexRouter.EditorPanels
             var emptyField = string.Empty;
             if (_enableDefaultValue.IsChecked == true)
             {
-                if (string.IsNullOrEmpty(_defaultValue.Text) || !Utils.IsNumeric(_defaultValue.Text))
+                if (string.IsNullOrEmpty(_defaultValue.Text))
                     emptyField += "\n" + LanguageManager.GetPhrase(Phrases.EditorRangeDefaultValue);
             }
-            if (string.IsNullOrEmpty(_minimum.Text) || !Utils.IsNumeric(_minimum.Text))
+            if (string.IsNullOrEmpty(_minimum.Text))
                 emptyField += "\n" + LanguageManager.GetPhrase(Phrases.EditorRangeMinimumValue);
-            if (string.IsNullOrEmpty(_maximum.Text) || !Utils.IsNumeric(_maximum.Text))
+            if (string.IsNullOrEmpty(_maximum.Text))
                 emptyField += "\n" + LanguageManager.GetPhrase(Phrases.EditorRangeMaximumValue);
-            if (string.IsNullOrEmpty(_step.Text) || !Utils.IsNumeric(_step.Text))
+            if (string.IsNullOrEmpty(_step.Text))
                 emptyField += "\n" + LanguageManager.GetPhrase(Phrases.EditorRangeStep);
             if (string.IsNullOrEmpty(_getValueFormula.Text))
                 emptyField += "\n" + LanguageManager.GetPhrase(Phrases.EditorRangeGetValueFormula);
@@ -115,17 +115,12 @@ namespace FlexRouter.EditorPanels
             _defaultValue.IsReadOnly = true;
         }
 
-        private void _minimum_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+/*        private void _minimum_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
         {
             e.Handled = !IsCharNumeric(e.Text);
         }
 
         private void _maximum_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
-        {
-            e.Handled = !IsCharNumeric(e.Text);
-        }
-
-        private void _step_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
         {
             e.Handled = !IsCharNumeric(e.Text);
         }
@@ -138,6 +133,6 @@ namespace FlexRouter.EditorPanels
         {
             string allowed = "-0123456789.";
             return allowed.Contains(text);
-        }
+        }*/
     }
 }

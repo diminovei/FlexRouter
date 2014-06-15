@@ -127,4 +127,25 @@
   <Phrase Name="SettingsImportProfileDialogHeader" Value = "Import profile"/>
   <Phrase Name="SettingsImportProfileKeepAssignmentsDialogHeader" Value = "Import new profile version and keep my assignments"/>
   <Phrase Name="SettingsMessageInputProfileNewName" Value = "Select profile name"/>
+
+  <Phrase Name="TabInfo" Value = "Information"/>
+  <Phrase Name="TabSettings" Value = "Settings"/>
+  <Phrase Name="TabAccessDescriptors" Value = "Access descriptors"/>
+  <Phrase Name="TabVariables" Value = "Variables"/>
+  <Phrase Name="TabControlProcessors" Value = "Control processors"/>
+  <Phrase Name="TabFormulaEditor" Value = "Formula editor"/>
+
+  <Phrase Name="CommonButtonCreate" Value = "Create"/>
+  <Phrase Name="CommonButtonSave" Value = "Save"/>
+  <Phrase Name="CommonButtonRemove" Value = "Remove"/>
+  <Phrase Name="CommonButtonRename" Value = "Rename"/>
+  <Phrase Name="CommonButtonImport" Value = "Import"/>
+  <Phrase Name="CommonButtonExport" Value = "Export"/>
+  <Phrase Name="CommonButtonImportAndKeepAssignments" Value = "Import and keep assignments"/>
+  <Phrase Name="CommonLabelLanguage" Value = "Language"/>
+  <Phrase Name="CommonLabelProfile" Value = "Profile"/>
+  <Phrase Name="CommonLabelFormulaResult" Value = "Result"/>
+  <Phrase Name="CommonLabelCopyToClipboard" Value = "Copy formula to clipboard"/>
+  <Phrase Name="CommonLabelCopyVariableToFormula" Value = "Paste variable to formula"/>
+  <Phrase Name="CommonLabelProfileManagement" Value = "Manage profile"/>
 </FlexRouterProfile>

@@ -77,7 +77,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
 
         public void Localize()
         {
-            _editorTypeLabel.Content = _assignedAccessDescriptor.GetDescriptorName();
+            _editorTypeLabel.Content = _assignedAccessDescriptor.GetDescriptorType();
             _nameLabel.Content = LanguageManager.GetPhrase(Phrases.EditorName);
             _panelLabel.Content = LanguageManager.GetPhrase(Phrases.EditorPanelName);
             _usePanelPowerFormulaLabel.Content = LanguageManager.GetPhrase(Phrases.EditorUsePanelPowerFormula);

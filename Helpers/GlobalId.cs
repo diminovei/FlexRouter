@@ -31,7 +31,7 @@ namespace FlexRouter.Helpers
         {
             lock (UsedIdList)
             {
-                var id = 1;
+                var id = UsedIdList.Count == 0 ? 1 : UsedIdList[UsedIdList.Count-1];
                 while (true)
                 {
                     if (!UsedIdList.Contains(id))

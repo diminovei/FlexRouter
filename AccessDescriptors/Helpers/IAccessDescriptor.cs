@@ -2,6 +2,6 @@
 {
     interface IAccessDescriptor
     {
-        string GetDescriptorName();
+        string GetDescriptorType();
     }
 }

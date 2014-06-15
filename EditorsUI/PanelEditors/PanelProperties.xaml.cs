@@ -1,5 +1,4 @@
-﻿using FlexRouter.AccessDescriptors.Helpers;
-using FlexRouter.EditorsUI.Helpers;
+﻿using FlexRouter.EditorsUI.Helpers;
 using FlexRouter.Localizers;
 using FlexRouter.ProfileItems;
 
@@ -24,7 +23,7 @@ namespace FlexRouter.EditorsUI.PanelEditors
             InitializeComponent();
             Localize();
             _panelName.Text = _editablePanel.Name;
-            _powerFormula.Text = _editablePanel.PowerFormula;
+            _powerFormula.Text = _editablePanel.GetPowerFormula();
         }
 
         public void Save()
@@ -33,7 +32,7 @@ namespace FlexRouter.EditorsUI.PanelEditors
             if (_editablePanel == null)
                 _editablePanel = new Panel();*/
             _editablePanel.Name = _panelName.Text;
-            _editablePanel.PowerFormula = _powerFormula.Text;
+            _editablePanel.SetPowerFormula(_powerFormula.Text);
             Profile.RegisterPanel(_editablePanel, _isNewPanel);
             _isNewPanel = false;
         }
@@ -64,10 +63,10 @@ namespace FlexRouter.EditorsUI.PanelEditors
             if (_editablePanel == null)
                 return true;
             return !Utils.AreStringsEqual(_panelName.Text, _editablePanel.Name) ||
-                   !Utils.AreStringsEqual(_powerFormula.Text, _editablePanel.PowerFormula);
+                   !Utils.AreStringsEqual(_powerFormula.Text, _editablePanel.GetPowerFormula());
         }
 
-        private void _panelName_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+        private void PanelNamePreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
         {
             e.Handled = e.Text == ".";
         }

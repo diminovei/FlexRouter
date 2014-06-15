@@ -14,7 +14,7 @@ namespace FlexRouter.AccessDescriptors
 {
     public class DescriptorValue : DescriptorMultistateBase, IDescriptorMultistate, IDefautValueAbility
     {
-        public override string GetDescriptorName()
+        public override string GetDescriptorType()
         {
             return LanguageManager.GetPhrase(Phrases.EditorTypeMemoryMultistate);
         }
@@ -47,7 +47,7 @@ namespace FlexRouter.AccessDescriptors
                 return;
             foreach (var varId in UsedVariables)
             {
-                var formula = GlobalFormulaKeeper.Instance.GetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, GetId(), varId, stateId);
+                var formula = GlobalFormulaKeeper.Instance.GetVariableFormulaText(GetId(), varId, stateId);
                 if (string.IsNullOrEmpty(formula))
                     return;
                 var formulaResult = CalculatorE.ComputeFormula(formula);

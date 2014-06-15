@@ -185,6 +185,8 @@
     <Compile Include="Hardware\Helpers\DeviceManagerBase.cs" />
     <Compile Include="Hardware\Helpers\DumpMode.cs" />
     <Compile Include="Hardware\Helpers\IHardwareDevice.cs" />
+    <Compile Include="Hardware\Keyboard\KeyboardDevice.cs" />
+    <Compile Include="Hardware\Keyboard\KeyboardDevicesManager.cs" />
     <Compile Include="Helpers\GlobalId.cs" />
     <Compile Include="Hardware\HardwareEvents\AxisEvent.cs" />
     <Compile Include="Hardware\HardwareEvents\ButtonEvent.cs" />
@@ -194,6 +196,7 @@
     <Compile Include="Hardware\HardwareEvents\LampEvent.cs" />
     <Compile Include="Hardware\Joystick\JoystickDevice.cs" />
     <Compile Include="Hardware\Joystick\JoystickDevicesManager.cs" />
+    <Compile Include="Helpers\WpfBitmapConverter.cs" />
     <Compile Include="Localizers\ControlProcessorListLocalizer.cs" />
     <Compile Include="ProfileItems\Panel.cs" />
     <Compile Include="EditorsUI\AccessDescriptorsEditor\DescriptorFormulaEditor.xaml.cs">
@@ -373,14 +376,14 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="app.config" />
-    <None Include="Profile\profile001.ap" />
+    <None Include="Profiles\english.lng" />
+    <None Include="Profiles\profile001.ap" />
+    <None Include="Profiles\russian.lng" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
-    <None Include="Translations\english.lng" />
-    <None Include="Translations\russian.lng" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0,Profile=Client">
@@ -416,6 +419,34 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\ConnectedPartially.bmp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\FsuipcVariable.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\FS9.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\MemoryVariable.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\FakeVariable.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\FakeVariable.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Button.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Indicator.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\led1.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Indicator.bmp" />
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

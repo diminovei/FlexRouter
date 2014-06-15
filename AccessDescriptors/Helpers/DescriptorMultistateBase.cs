@@ -26,7 +26,8 @@ namespace FlexRouter.AccessDescriptors.Helpers
         /// <param name="formulaKeeper"></param>
         public void OverwriteFormulaKeeper(FormulaKeeper formulaKeeper)
         {
-//            GlobalFormulaKeeper.Instance.Clear(GetId());
+            // ToDo: оставить или удалить?
+//            GlobalFormulaKeeper.Instance.RemoveFormulasByOwnerId(GetId());
             GlobalFormulaKeeper.Instance.Import(formulaKeeper);
         }
         public void OverwriteUsedVariables(List<int> variables)
@@ -68,7 +69,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
                 var stateId = int.Parse(readerAdd.Current.GetAttribute("StateId", readerAdd.Current.NamespaceURI));
                 var variableId = int.Parse(readerAdd.Current.GetAttribute("VariableId", readerAdd.Current.NamespaceURI));
                 var formula = readerAdd.Current.GetAttribute("Formula", readerAdd.Current.NamespaceURI);
-                GlobalFormulaKeeper.Instance.SetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, GetId(), variableId, stateId, formula);
+                SetFormula(stateId, variableId, formula);
             }
         }
 
@@ -105,7 +106,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
             {
                 foreach (var v in UsedVariables)
                 {
-                    var formula = GlobalFormulaKeeper.Instance.GetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, GetId(), v, s.Id);
+                    var formula = GetFormula(v, s.Id);
                     if (formula == null) 
                         continue;
                     writer.WriteStartElement("Formula");
@@ -179,7 +180,15 @@ namespace FlexRouter.AccessDescriptors.Helpers
                 return;
             UsedVariables.Remove(id);
             foreach (var s in StateDescriptors)
-                GlobalFormulaKeeper.Instance.Remove(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, GetId(), id, s.Id);
+                GlobalFormulaKeeper.Instance.RemoveVariableFormula(GetId(), id, s.Id);
+        }
+        /// <summary>
+        /// Получить все состояния
+        /// </summary>
+        /// <returns></returns>
+        public AccessDescriptorState[] GetStateDescriptors()
+        {
+            return StateDescriptors.ToArray();
         }
         /// <summary>
         /// Установить формулу для переменной в определённом состоянии
@@ -191,21 +200,14 @@ namespace FlexRouter.AccessDescriptors.Helpers
         {
             if (!StateDescriptors.Select(i => i.Id).Contains(stateId) || !UsedVariables.Contains(variableId))
                 return false;
-            GlobalFormulaKeeper.Instance.SetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, GetId(), variableId, stateId, variableFormula);
+            GlobalFormulaKeeper.Instance.StoreVariableFormula(variableFormula, GetId(), variableId, stateId);
             return true;
-        }
-        /// <summary>
-        /// Получить все состояния
-        /// </summary>
-        /// <returns></returns>
-        public AccessDescriptorState[] GetStateDescriptors()
-        {
-            return StateDescriptors.ToArray();
         }
         public string GetFormula(int variableId, int stateId)
         {
-            return GlobalFormulaKeeper.Instance.GetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.SetValue, GetId(), variableId, stateId);
+            return GlobalFormulaKeeper.Instance.GetVariableFormulaText(GetId(), variableId, stateId);
         }
+
 /*        private bool _repeaterIsOn;
 
         public bool IsRepeaterOn()

@@ -10,7 +10,7 @@ namespace FlexRouter.AccessDescriptors
 {
     public class DescriptorIndicator : DescriptorOutputBase, IIndicatorMethods
     {
-        public override string GetDescriptorName()
+        public override string GetDescriptorType()
         {
             return LanguageManager.GetPhrase(Phrases.EditorTypeMemoryIndicator);
         }

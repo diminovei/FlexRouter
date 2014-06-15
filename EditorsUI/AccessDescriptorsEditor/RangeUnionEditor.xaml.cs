@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms.VisualStyles;
 using FlexRouter.AccessDescriptors;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.EditorsUI.Dialogues;
@@ -49,9 +50,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             if (_assignedAccessDescriptor.GetDependentDescriptorsList().Length != _dependendDescriptorList.Items.Count)
                 return true;
             var savedList = _assignedAccessDescriptor.GetDependentDescriptorsList();
-            if (_dependendDescriptorList.Items.Cast<object>().Any(d => savedList.Any(x => x.GetId() != ((DescriptorRange) ((ListBoxItem) d).Tag).GetId())))
-                return false;
-            return savedList.Select(s => _dependendDescriptorList.Items.Cast<ListBoxItem>().Any(i => s.GetId() == ((DescriptorRange) (i.Tag)).GetId())).All(found => found);
+            return savedList.Select(sl => _dependendDescriptorList.Items.Cast<object>().Any(item => ((DescriptorRange) ((ListBoxItem) item).Tag).GetId() == sl.GetId())).Any(found => !found);
         }
         /// <summary>
         /// Корректно ли заполнены поля
@@ -84,7 +83,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
                 MessageBox.Show(message, header, MessageBoxButton.OK, MessageBoxImage.Stop);
                 return;
             }
-            if (Profile.GetAccessDesciptorById(ad.GetId())!=null)
+            if (Profile.GetControlProcessorByAccessDescriptorId(ad.GetId())!=null)
             {
                 var message = LanguageManager.GetPhrase(Phrases.EditorDependentAssignmentWasRemoved);
                 var header = LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader);

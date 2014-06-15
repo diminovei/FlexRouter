@@ -1,65 +1,9 @@
 ﻿using System.Collections.Generic;
-using FlexRouter.VariableWorkerLayer.MethodFsuipc;
+using FlexRouter.VariableSynchronization;
 using FsuipcSdk;
 
-namespace FlexRouter.VariableSynchronization
+namespace FlexRouter.VariableWorkerLayer.MethodFsuipc
 {
-/*    public class FsuipcMethod
-    {
-        readonly Dictionary<int, FsuipcVariable> _fsuipcVariablesForRead = new Dictionary<int, FsuipcVariable>();
-        readonly Dictionary<int, FsuipcVariable> _fsuipcVariablesForWrite = new Dictionary<int, FsuipcVariable>();
-        private readonly Fsuipc _fsuipc = new Fsuipc();	// Our main fsuipc object!
-        private int _dwResult = -1;				// Variable to hold returned results
-        public bool Initialize()
-        {
-            const int dwFsReq = 0;				// Any version of FS is OK
-            _fsuipc.FSUIPC_Initialization();
-            return _fsuipc.FSUIPC_Open(dwFsReq, ref _dwResult);
-            // dwResult - результат вызова
-        }
-        public void UnInitialize()
-        {
-            _fsuipc.FSUIPC_Close();
-        }
-        
-        public void Open()
-        {
-            _fsuipcVariablesForRead.Clear();
-            _fsuipcVariablesForWrite.Clear();
-        }
-        public bool AddVariableToRead(FsuipcVariable variable)
-        {
-            var varConverter = new VariableConverter();
-            var convertedVariableSize = varConverter.ConvertSize(variable.Size);
-            _fsuipcVariablesForRead.Add(variable.Id, variable);
-
-            return _fsuipc.FSUIPC_Read(variable.Offset, convertedVariableSize, ref _fsuipcVariablesForRead[variable.Id].Id, ref _dwResult);
-            // что делать с dwResult. Куда-то возвращать?
-        }
-        public void AddVariableToWrite(FsuipcVariable variable)
-        {
-            var varConverter = new VariableConverter();
-            var convertedVariableSize = varConverter.ConvertSize(variable.Size);
-            _fsuipcVariablesForWrite.Add(variable.Id, variable);
-
-            _fsuipcVariablesForWrite[variable.Id].Buffer = varConverter.ValueToArray(variable.ValueToSet, variable.Size);
-            _fsuipc.FSUIPC_Write(variable.Offset, convertedVariableSize, ref _fsuipcVariablesForWrite[variable.Id].Buffer, ref _fsuipcVariablesForWrite[variable.Id].Id, ref _dwResult);
-            // что делать с dwResult. Куда-то возвращать?
-        }
-        public void Process()
-        {
-            var res = _fsuipc.FSUIPC_Process(ref _dwResult);
-            foreach (var variable in _fsuipcVariablesForRead)
-            {
-                var varConverter = new VariableConverter();
-                var convertedVariableSize = varConverter.ConvertSize(variable.Value.Size);
-                _fsuipc.FSUIPC_Get(ref variable.Value.Id, convertedVariableSize, ref variable.Value.Buffer);
-            }
-        }
-        public Dictionary<int, FsuipcVariable> GetVariables()
-        {
-            return _fsuipcVariablesForRead;
-        }*/
     public class FsuipcMethod
     {
         internal class InternalVariableDesc
@@ -79,23 +23,82 @@ namespace FlexRouter.VariableSynchronization
         readonly Dictionary<int, InternalVariableDesc> _fsuipcVariablesForWrite = new Dictionary<int, InternalVariableDesc>();
         private readonly Fsuipc _fsuipc = new Fsuipc();	// Our main fsuipc object!
         private int _dwResult = -1;				// Variable to hold returned results
-        public bool Initialize()
+        public InitializationState Initialize()
         {
+            _fsuipcVariablesForRead.Clear();
+            _fsuipcVariablesForWrite.Clear();
             const int dwFsReq = 0;				// Any version of FS is OK
             _fsuipc.FSUIPC_Initialization();
-            return _fsuipc.FSUIPC_Open(dwFsReq, ref _dwResult);
-            // dwResult - результат вызова
+            var initStatus = _fsuipc.FSUIPC_Open(dwFsReq, ref _dwResult);
+            var fsuipcResult = new InitializationState();
+            fsuipcResult.IsOk = initStatus;
+            fsuipcResult.System = "FSUIPC";
+            fsuipcResult.ErrorCode = _dwResult;
+
+            switch (fsuipcResult.ErrorCode)
+            {
+                case 0:
+                    fsuipcResult.ErrorMessage = "";
+                    break;
+                case 1:
+                    fsuipcResult.ErrorMessage = "FSUIPC_ERR_OPEN: Attempt to Open when already Open";
+                    break;
+                case 2:
+                    fsuipcResult.ErrorMessage = "FSUIPC_ERR_NOFS: Cannot link to FSUIPC or WideClient";
+                    break;
+                case 3:
+                    fsuipcResult.ErrorMessage = "FSUIPC_ERR_REGMSG: Failed to Register common message with Windows";
+                    break;
+                case 4:
+                    fsuipcResult.ErrorMessage = "FSUIPC_ERR_ATOM: Failed to create Atom for mapping filename";
+                    break;
+                case 5:
+                    fsuipcResult.ErrorMessage = "FSUIPC_ERR_MAP: Failed to create a file mapping object";
+                    break;
+                case 6:
+                    fsuipcResult.ErrorMessage = "FSUIPC_ERR_VIEW: Failed to open a view to the file map";
+                    break;
+                case 7:
+                    fsuipcResult.ErrorMessage = "FSUIPC_ERR_VERSION: Incorrect version of FSUIPC, or not FSUIPC";
+                    break;
+                case 8:
+                    fsuipcResult.ErrorMessage = "FSUIPC_ERR_WRONGFS: Sim is not version requested";
+                    break;
+                case 9:
+                    fsuipcResult.ErrorMessage = "FSUIPC_ERR_NOTOPEN: Call cannot execute, link not Open";
+                    break;
+                case 10:
+                    fsuipcResult.ErrorMessage = "FSUIPC_ERR_NODATA: Call cannot execute: no requests accumulated";
+                    break;
+                case 11:
+                    fsuipcResult.ErrorMessage = "FSUIPC_ERR_TIMEOUT: IPC timed out all retries";
+                    break;
+                case 12:
+                    fsuipcResult.ErrorMessage = "FSUIPC_ERR_SENDMSG: IPC sendmessage failed all retries";
+                    break;
+                case 13:
+                    fsuipcResult.ErrorMessage = "FSUIPC_ERR_DATA: IPC request contains bad data";
+                    break;
+                case 14:
+                    fsuipcResult.ErrorMessage = "FSUIPC_ERR_RUNNING: Maybe running on WideClient, but FS not running on Server, or wrong FSUIPC";
+                    break;
+                case 15:
+                    fsuipcResult.ErrorMessage = "FSUIPC_ERR_SIZE";
+                    break;
+                case 16:
+                    fsuipcResult.ErrorMessage = "FSUIPC_ERR_BUFOVERFLOW";
+                    break;
+                default:
+                    fsuipcResult.ErrorMessage = "Unknown error";
+                    break;
+            }
+            return fsuipcResult;
         }
         public void UnInitialize()
         {
             _fsuipc.FSUIPC_Close();
         }
         
-        public void Open()
-        {
-            _fsuipcVariablesForRead.Clear();
-            _fsuipcVariablesForWrite.Clear();
-        }
         public bool AddVariableToRead(FsuipcVariable variable)
         {
             var varConverter = new VariableConverter();
