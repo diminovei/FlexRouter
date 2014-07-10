@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.EditorsUI.Helpers;
 using FlexRouter.Localizers;
 using FlexRouter.VariableWorkerLayer;
@@ -28,15 +27,13 @@ namespace FlexRouter.EditorsUI.VariableEditors
         private void GetDataFromVariable()
         {
             _offset.Text = _editableVariable.Offset.ToString("X");
-            _variableSize.Text = VariableSizeLocalizer.SizeBySizeType(_editableVariable.Size);
         }
 
         public bool IsDataChanged()
         {
             if (_editableVariable == null)
                 return true;
-            return !Utils.AreStringsEqual(_offset.Text, _editableVariable.Offset.ToString("X")) || 
-                    !Utils.AreStringsEqual(_variableSize.Text, VariableSizeLocalizer.SizeBySizeType(_editableVariable.Size));
+            return !Utils.AreStringsEqual(_offset.Text, _editableVariable.Offset.ToString("X"));
         }
 
         /// <summary>
@@ -48,23 +45,18 @@ namespace FlexRouter.EditorsUI.VariableEditors
             var emptyField = string.Empty;
             if (string.IsNullOrEmpty(_offset.Text) || !Utils.IsHexNumber(_offset.Text))
                 emptyField += "\n" + LanguageManager.GetPhrase(Phrases.EditorVariableRelativeOffset);
-            if (string.IsNullOrEmpty(_variableSize.Text))
-                emptyField += "\n" + LanguageManager.GetPhrase(Phrases.EditorVariableSize);
             return new EditorFieldsErrors(emptyField);
         }
 
         public void Save()
         {
             _editableVariable.Offset = int.Parse(_offset.Text, NumberStyles.HexNumber);
-            _editableVariable.Size = VariableSizeLocalizer.SizeTypeByText(_variableSize.Text);
             VariableManager.RegisterVariable(_editableVariable, false);
         }
 
         public void Localize()
         {
-            VariableSizeLocalizer.LocalizeSizes(ref _variableSize);
             _offsetLabel.Content = LanguageManager.GetPhrase(Phrases.EditorVariableRelativeOffset);
-            _variableSizeLabel.Content = LanguageManager.GetPhrase(Phrases.EditorVariableSize);
         }
     }
 }

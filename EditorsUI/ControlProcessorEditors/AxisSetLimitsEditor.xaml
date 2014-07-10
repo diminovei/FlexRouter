@@ -9,7 +9,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*"/>
         </Grid.ColumnDefinitions>
-        <Label x:Name="_minimumLabel" Content="Limits" HorizontalAlignment="Left" Margin="10,37,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="_limitsLabel" Content="Limits" HorizontalAlignment="Left" Margin="10,37,0,0" VerticalAlignment="Top"/>
         <Button x:Name="_resetLimits" Content="Reset" HorizontalAlignment="Left" Margin="167,65,0,0" VerticalAlignment="Top" Width="75" Click="ResetLimitsClick"/>
         <ToggleButton x:Name="_calibrate" Content="Calibrate" HorizontalAlignment="Left" Margin="285,65,0,0" VerticalAlignment="Top" Width="75" Checked="CalibrateChecked" Unchecked="CalibrateUnchecked"/>
         <Slider x:Name="_axisCurrentPosition" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="350"/>

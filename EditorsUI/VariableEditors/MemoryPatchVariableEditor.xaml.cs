@@ -2,8 +2,6 @@
 using System.Globalization;
 using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
-using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.EditorsUI.Helpers;
 using FlexRouter.Localizers;
 using FlexRouter.VariableWorkerLayer;
@@ -35,16 +33,14 @@ namespace FlexRouter.EditorsUI.VariableEditors
                 _moduleName.Items.Add(_editableVariable.ModuleName);
             _moduleName.Text = _editableVariable.ModuleName;
             _relativeOffset.Text = _editableVariable.Offset.ToString("X");
-            _variableSize.Text = VariableSizeLocalizer.SizeBySizeType(_editableVariable.Size);
         }
 
         public bool IsDataChanged()
         {
             if (_editableVariable == null)
                 return true;
-                    return !Utils.AreStringsEqual(_moduleName.Text, _editableVariable.ModuleName) ||
-                    !Utils.AreStringsEqual(_relativeOffset.Text, _editableVariable.Offset.ToString("X")) ||
-                    !Utils.AreStringsEqual(_variableSize.Text, VariableSizeLocalizer.SizeBySizeType(_editableVariable.Size));
+            return !Utils.AreStringsEqual(_moduleName.Text, _editableVariable.ModuleName) ||
+                   !Utils.AreStringsEqual(_relativeOffset.Text, _editableVariable.Offset.ToString("X"));
         }
 
         /// <summary>
@@ -58,8 +54,6 @@ namespace FlexRouter.EditorsUI.VariableEditors
                 emptyField += "\n" + LanguageManager.GetPhrase(Phrases.EditorVariableRelativeOffset);
             if (string.IsNullOrEmpty(_moduleName.Text))
                 emptyField += "\n" + LanguageManager.GetPhrase(Phrases.EditorVariableModule);
-            if (string.IsNullOrEmpty(_variableSize.Text))
-                emptyField += "\n" + LanguageManager.GetPhrase(Phrases.EditorVariableSize);
             return new EditorFieldsErrors(emptyField);
         }
 
@@ -67,18 +61,15 @@ namespace FlexRouter.EditorsUI.VariableEditors
         {
             _editableVariable.ModuleName = _moduleName.Text;
             _editableVariable.Offset = uint.Parse(_relativeOffset.Text, NumberStyles.HexNumber);
-            _editableVariable.Size = VariableSizeLocalizer.SizeTypeByText(_variableSize.Text);
             VariableManager.RegisterVariable(_editableVariable, false);
         }
 
         public void Localize()
         {
-            VariableSizeLocalizer.LocalizeSizes(ref _variableSize);
             _absoluteOffsetLabel.Content = LanguageManager.GetPhrase(Phrases.EditorAbsoluteOffset);
             _convertOffset.Content = LanguageManager.GetPhrase(Phrases.EditorConvertAbsoluteOffsetToRelative);
             _variableModuleLabel.Content = LanguageManager.GetPhrase(Phrases.EditorVariableModule);
             _offsetLabel.Content = LanguageManager.GetPhrase(Phrases.EditorVariableRelativeOffset);
-            _variableSizeLabel.Content = LanguageManager.GetPhrase(Phrases.EditorVariableSize);
         }
 
         private void ConvertOffsetClick(object sender, RoutedEventArgs e)

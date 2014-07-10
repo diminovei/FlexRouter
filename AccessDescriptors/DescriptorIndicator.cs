@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Drawing;
+using System.Globalization;
 using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.AccessDescriptors.Helpers;
@@ -13,6 +14,11 @@ namespace FlexRouter.AccessDescriptors
         public override string GetDescriptorType()
         {
             return LanguageManager.GetPhrase(Phrases.EditorTypeMemoryIndicator);
+        }
+
+        public override Bitmap GetIcon()
+        {
+            return Properties.Resources.Indicator;
         }
 
         /// <summary>

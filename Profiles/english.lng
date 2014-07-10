@@ -33,7 +33,6 @@
   <Phrase Name="EditorRangeMinimumValue" Value = "Minimum"/>
   <Phrase Name="EditorRangeMaximumValue" Value = "Maximum"/>
   <Phrase Name="EditorRangeDefaultValue" Value = "Default"/>
-  <Phrase Name="EditorRangeUseDefaultValue" Value = "Use default value"/>
   <Phrase Name="EditorRangeStep" Value = "Step"/>
   <Phrase Name="EditorRangeGetValueFormula" Value = "Get value formula"/>
   <Phrase Name="EditorLoopRange" Value = "Cyclic"/>
@@ -52,9 +51,11 @@
   <Phrase Name="EditorAddVariable" Value = "Add variable"/>
   <Phrase Name="EditorRemoveVariable" Value = "Remove variable"/>
   <Phrase Name="EditorDefaultStateColumnHeader" Value = "Default"/>
+  <Phrase Name="EditorSetDefaultState" Value = "Default"/>
   <Phrase Name="MainFormRemove" Value = "Remove"/>
   <Phrase Name="EditorAxisReset" Value = "Reset"/>
   <Phrase Name="EditorAxisCalibrate" Value = "Calibrate"/>
+  <Phrase Name="EditorAxisLimitsLabel" Value = "Limits"/>
   <Phrase Name="EditorVariableIsAlreadyExists" Value = "Selected variable is already exists in access descriptor"/>
   <Phrase Name="EditorDependentAssignmentWasRemoved" Value = "Assignment of dependent control processor was removed"/>
   <Phrase Name="EditorStartInitializeBinaryInputButtonsList" Value = "Initialize"/>
@@ -92,7 +93,11 @@
   <Phrase Name="EditorHeaderFsuipc" Value = "Fsuipc"/>
   <Phrase Name="EditorHeaderPanel" Value = "Panel"/>
   <Phrase Name="EditorHeaderFakeVariable" Value = "Commutator"/>
-                
+
+  <Phrase Name="EditorCreateProfile" Value = "Create new profile"/>
+  <Phrase Name="EditorProfileName" Value = "Profile name"/>
+  <Phrase Name="EditorMainProcessName" Value = "Process to patch"/>
+
   <Phrase Name="HardwareButton" Value = "Button"/>
   <Phrase Name="HardwareEncoder" Value = "Encoder"/>
   <Phrase Name="HardwareIndicator" Value = "Indicator"/>
@@ -127,6 +132,7 @@
   <Phrase Name="SettingsImportProfileDialogHeader" Value = "Import profile"/>
   <Phrase Name="SettingsImportProfileKeepAssignmentsDialogHeader" Value = "Import new profile version and keep my assignments"/>
   <Phrase Name="SettingsMessageInputProfileNewName" Value = "Select profile name"/>
+  <Phrase Name="SettingsTurnControlsSynchronizationOff" Value = "Turn regular real to virtual controls synchronization off"/>
 
   <Phrase Name="TabInfo" Value = "Information"/>
   <Phrase Name="TabSettings" Value = "Settings"/>
@@ -148,4 +154,13 @@
   <Phrase Name="CommonLabelCopyToClipboard" Value = "Copy formula to clipboard"/>
   <Phrase Name="CommonLabelCopyVariableToFormula" Value = "Paste variable to formula"/>
   <Phrase Name="CommonLabelProfileManagement" Value = "Manage profile"/>
+  <Phrase Name="CommonLabelError" Value = "Error"/>
+  <Phrase Name="CommonLabelRouterState" Value = "Router state"/>
+  <Phrase Name="CommonLabelConnectedHardwareList" Value = "Connected hardware"/>
+  <Phrase Name="CommonLabelProblemsList" Value = "Problems"/>
+  <Phrase Name="CommonLabelLastHardwareEvent" Value = "Last event"/>
+  <Phrase Name="CommonStateRunning" Value = "Running"/>
+  <Phrase Name="CommonStatePaused" Value = "Paused"/>
+  <Phrase Name="CommonStateStopped" Value = "Stopped"/>
+  <Phrase Name="CommonProfileManagement" Value = "Profile management"/>
 </FlexRouterProfile>

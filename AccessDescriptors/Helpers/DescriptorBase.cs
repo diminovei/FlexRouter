@@ -8,7 +8,7 @@ using FlexRouter.ProfileItems;
 
 namespace FlexRouter.AccessDescriptors.Helpers
 {
-    public abstract class DescriptorBase : IAccessDescriptor
+    public abstract class DescriptorBase : IAccessDescriptor, ITreeItem
     {
         private DescriptorBase _parentAccessDescriptorId;
         public void SetDependency(DescriptorBase parentAccessDescriptorId)
@@ -83,13 +83,11 @@ namespace FlexRouter.AccessDescriptors.Helpers
                 _powerFormulaId = GlobalFormulaKeeper.Instance.StoreFormula(powerFormula, GetId());
             else
                 GlobalFormulaKeeper.Instance.ChangeFormulaText(_powerFormulaId, powerFormula);
-//               GlobalFormulaKeeper.Instance.SetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.Power, GetId(), powerFormula);
         }
 
         public string GetPowerFormula()
         {
             return _powerFormulaId == -1 ? null : GlobalFormulaKeeper.Instance.GetFormulaText(_powerFormulaId);
-            //return GlobalFormulaKeeper.Instance.GetFormula(FormulaKeeperItemType.AccessDescriptor, FormulaKeeperFormulaType.Power, GetId());        
         }
 
         public string GetName()
@@ -182,5 +180,6 @@ namespace FlexRouter.AccessDescriptors.Helpers
         {
         }
         public abstract string GetDescriptorType();
+        public abstract System.Drawing.Bitmap GetIcon();
     }
 }

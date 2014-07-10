@@ -1,11 +1,13 @@
-﻿using System.Globalization;
+﻿using System.Drawing;
+using System.Globalization;
 using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.Helpers;
+using FlexRouter.ProfileItems;
 
 namespace FlexRouter.VariableWorkerLayer
 {
-    public abstract class VariableBase : IVariable
+    public abstract class VariableBase : IVariable, ITreeItem
     {
         public int Id { get; set; }
         public int PanelId { get; set; }
@@ -55,5 +57,6 @@ namespace FlexRouter.VariableWorkerLayer
         }
 
         public abstract string GetName();
+        public abstract Bitmap GetIcon();
     }
 }

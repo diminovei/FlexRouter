@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.Localizers;
@@ -12,6 +13,12 @@ namespace FlexRouter.VariableWorkerLayer.MethodFakeVariable
         {
             return LanguageManager.GetPhrase(Phrases.EditorHeaderFakeVariable);
         }
+
+        public override Bitmap GetIcon()
+        {
+            return Properties.Resources.FakeVariable;
+        }
+
         public MemoryVariableSize Size;
         public double ValueToSet;
         public double ValueInMemory;

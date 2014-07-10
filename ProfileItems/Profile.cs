@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -252,17 +253,6 @@ namespace FlexRouter.ProfileItems
             }
         }
 
- /*       public static void Load()
-        {
-            _moduleExtensionFilter = ".gau";
-            _mainSimulatorProcess = "fs9";
-
-            var location = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-            var folder = Path.Combine(location, @"Profiles\profile001.ap");
-//            if(!string.IsNullOrEmpty(ApplicationSettings.DefaultProfile))
-                LoadProfile(folder);
-        }*/
-
         private static string GenerateProfileFileName()
         {
             var folder = Utils.GetFullSubfolderPath("Profiles");
@@ -343,50 +333,39 @@ namespace FlexRouter.ProfileItems
                             writer.WriteStartElement(ProfileHeader);
                             writer.WriteAttributeString("Type", ProfileType);
                             writer.WriteAttributeString("Name", profileName);
-//                            writer.WriteString("\n");
                                 writer.WriteStartElement(ProfileType);
 
                                     // Panels
-                                    //writer.WriteString("\n");
                                     writer.WriteStartElement("Panels");
-                                    //writer.WriteString("\n");
                                     foreach (var panel in PanelsStorage)
                                         panel.Value.Save(writer);                            
                                     writer.WriteEndElement();
-                                    //writer.WriteString("\n");
                                     
                                     // Variables
                                     writer.WriteStartElement("Variables");
-                                    //writer.WriteString("\n");
+                                    writer.WriteAttributeString("ProcessToManage", _mainSimulatorProcess);
                                     VariableManager.Save(writer);
                                     writer.WriteEndElement();
-                                    //writer.WriteString("\n");
 
                                     // AccessDescriptors
                                     writer.WriteStartElement("AccessDescriptors");
-                                    //writer.WriteString("\n");
                                     foreach (var ads in AccessDescriptorsStorage)
                                     {
                                         writer.WriteStartElement("AccessDescriptor");
                                         ads.Value.Save(writer);
                                         writer.WriteEndElement();
-                                        //writer.WriteString("\n");
                                     }
                                     writer.WriteEndElement();
-                                    //writer.WriteString("\n");
 
                                     // ControlProcessors
                                     writer.WriteStartElement("ControlProcessors");
-                                    //writer.WriteString("\n");
                                     foreach (var cp in ControlProcessorsStorage)
                                     {
                                         writer.WriteStartElement("ControlProcessor");
                                         cp.Value.Save(writer);
                                         writer.WriteEndElement();
-                                        //writer.WriteString("\n");
                                     }
                                     writer.WriteEndElement();
-                                    //writer.WriteString("\n");
 
                                 writer.WriteEndElement();
 
@@ -473,9 +452,10 @@ namespace FlexRouter.ProfileItems
         private static bool LoadOrMergeProfile(string profilePath, string controlProcessorsProfilePath)
         {
             Clear();
-            //ToDo: костыль для FS9
-            _moduleExtensionFilter = ".gau";
-            _mainSimulatorProcess = "fs9";
+            // костыль для FS9
+            // _moduleExtensionFilter = ".gau";
+            _moduleExtensionFilter = "";
+
             var xp = new XPathDocument(profilePath);
             var nav = xp.CreateNavigator();
             var navPointer = nav.Select("/FlexRouterProfile");
@@ -489,6 +469,10 @@ namespace FlexRouter.ProfileItems
                 panel.Load(navPointer.Current);
                 PanelsStorage.Add(panel.Id, panel);
             }
+
+            navPointer = nav.Select("/FlexRouterProfile/Aircraft/Variables");
+            navPointer.MoveNext();
+            _mainSimulatorProcess = navPointer.Current.GetAttribute("ProcessToManage", navPointer.Current.NamespaceURI);
             
             navPointer = nav.Select("/FlexRouterProfile/Aircraft/Variables/Variable");
             while (navPointer.MoveNext())
@@ -635,10 +619,11 @@ namespace FlexRouter.ProfileItems
         {
             var profileList = GetProfileList();
         loop:
-            var it = new InputString(LanguageManager.GetPhrase(Phrases.SettingsMessageInputNewProfileName));
+            var it = new ProfileEditor();
             if (it.ShowDialog() != true)
                 return null;
-            var profileName = it.GetText();
+            var profileName = it.GetProfileName();
+            var mainProcessName = it.GetMainProcessName();
             if(profileList.ContainsKey(profileName))
             {
                 System.Windows.MessageBox.Show(LanguageManager.GetPhrase(Phrases.SettingsMessageProfileNameIsAlreadyExist),
@@ -648,6 +633,7 @@ namespace FlexRouter.ProfileItems
             }
             Clear();
             _currentProfileName = profileName;
+            _mainSimulatorProcess = mainProcessName;
             _currentProfilePath = GenerateProfileFileName();
             SaveCurrentProfile();
             return profileName;

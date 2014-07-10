@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="319" d:DesignWidth="300">
+             d:DesignHeight="263" d:DesignWidth="300">
     <Grid Height="309" VerticalAlignment="Top">
         <Label x:Name="_minimumLabel" Content="Minimum" HorizontalAlignment="Left" Margin="9,121,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="_minimum" HorizontalAlignment="Left" Height="23" Margin="169,121,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
@@ -16,9 +16,8 @@
         <CheckBox x:Name="_cyclic" Content="" HorizontalAlignment="Left" Margin="169,205,0,0" VerticalAlignment="Top" RenderTransformOrigin="6.235,0.188"/>
         <TextBox x:Name="_getValueFormula" HorizontalAlignment="Left" Height="78" Margin="9,38,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="280"/>
         <Label x:Name="_getValueFormulaLabel" Content="Get value formula" HorizontalAlignment="Left" Height="23" Margin="10,10,0,0" VerticalAlignment="Top" Width="279"/>
-        <Label x:Name="_enableDefaultValueLabel" Content="Use default value" HorizontalAlignment="Left" Margin="9,234,0,0" VerticalAlignment="Top"/>
-        <CheckBox x:Name="_enableDefaultValue" Content="" HorizontalAlignment="Left" Margin="169,234,0,0" VerticalAlignment="Top" RenderTransformOrigin="6.235,0.188" Checked="_enableDefaultValue_Checked" Unchecked="_enableDefaultValue_Unchecked"/>
-        <Label x:Name="_defaultValueLabel" Content="Default value" HorizontalAlignment="Left" Margin="9,265,0,0" VerticalAlignment="Top" Width="138"/>
-        <TextBox x:Name="_defaultValue" HorizontalAlignment="Left" Height="23" Margin="169,267,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
+        <CheckBox x:Name="_enableDefaultValue" Content="" HorizontalAlignment="Left" Margin="169,238,0,0" VerticalAlignment="Top" RenderTransformOrigin="6.235,0.188" Checked="_enableDefaultValue_Checked" Unchecked="_enableDefaultValue_Unchecked"/>
+        <Label x:Name="_defaultValueLabel" Content="Default value" HorizontalAlignment="Left" Margin="9,234,0,0" VerticalAlignment="Top" Width="138"/>
+        <TextBox x:Name="_defaultValue" HorizontalAlignment="Left" Height="23" Margin="194,234,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="96"/>
     </Grid>
 </UserControl>

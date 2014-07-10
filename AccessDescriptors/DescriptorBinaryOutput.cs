@@ -1,4 +1,5 @@
-﻿using FlexRouter.AccessDescriptors.Helpers;
+﻿using System.Drawing;
+using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.CalculatorRelated;
 using FlexRouter.Localizers;
@@ -12,6 +13,11 @@ namespace FlexRouter.AccessDescriptors
             return LanguageManager.GetPhrase(Phrases.EditorTypeMemoryBinaryOutput);
         }
 
+        public override Bitmap GetIcon()
+        {
+            return Properties.Resources.BinaryOutput;
+        }
+
         public bool GetLineState()
         {
             if (!IsPowerOn())
@@ -21,14 +27,5 @@ namespace FlexRouter.AccessDescriptors
                 return true;
             return calcResult.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.BooleanResult && calcResult.CalculatedBoolBoolValue;
         }
-  /*      // Как потом раздать результат в другие переменные? Ввести в формулы термин "[R]"?
-        private ICalcToken FormulaResultProcessor(ICalcToken tokenToPreprocess)
-        {
-            var sourceToken = tokenToPreprocess as CalcTokenNumber;
-            if (sourceToken == null)
-                return tokenToPreprocess;
-            var destToken = new CalcTokenBoolean {Value = sourceToken.Value != 0};
-            return destToken;
-        }*/
     }
 }

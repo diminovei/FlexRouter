@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Controls;
+using System.Windows.Media.Media3D;
 using FlexRouter.VariableWorkerLayer;
 
 namespace FlexRouter.Localizers
@@ -31,17 +32,18 @@ namespace FlexRouter.Localizers
 
         static public void LocalizeSizes(ref ComboBox control)
         {
+            var controlText = control.Text;
             control.Items.Clear();
             foreach (var size in Sizes)
                 control.Items.Add(size.Value);
 
-            control.Text = LocalizeSizeString(control.Text);
+            control.Text = LocalizeSizeString(controlText);
         }
 
         static public string LocalizeSizeString(string text)
         {
-            if (string.IsNullOrEmpty(text))
-                return string.Empty;
+//            if (string.IsNullOrEmpty(text))
+//                return string.Empty;
 
             var currentSizeKey = OldSizeTypeByText(text);
             if (currentSizeKey == null)

@@ -1,5 +1,6 @@
 ﻿using System.Xml;
 using System.Xml.XPath;
+using SlimDX.DXGI;
 
 namespace FlexRouter.AccessDescriptors.Helpers
 {

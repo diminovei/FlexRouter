@@ -107,6 +107,8 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
             ModuleToPatchWasNotFound,
             Exception
         }
+
+        private InitializationState _lastInitStatus = null;
         /// <summary>
         /// Инициализация информации о модулях
         /// </summary>
@@ -118,6 +120,9 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
             const string systemName = "MemoryPatcher";
             // Без этого процессор грузится на 50%, пока симулятор не загружен
             if (DateTime.Now < _lastTimeTryToInitialize + new TimeSpan(0, 0, 0, 2))
+            {
+                if (_lastInitStatus != null)
+                    return _lastInitStatus;
                 return new InitializationState
                 {
                     System = systemName,
@@ -125,6 +130,8 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
                     ErrorMessage = "Attempted to initialize too often",
                     IsOk = false
                 };
+
+            }
             _lastTimeTryToInitialize = DateTime.Now;
             try
             {
@@ -151,32 +158,36 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
                             _modules.Add(info.Name, info);
                         }
                         process.Close();
-                        return new InitializationState
+                        
+                        _lastInitStatus = new InitializationState
                         {
                             System = systemName,
                             ErrorCode = (int)InitializationStatus.Ok,
                             ErrorMessage = "",
                             IsOk = true
                         };
+                        return _lastInitStatus;
                     }
-                    return new InitializationState
+                    _lastInitStatus = new InitializationState
                     {
                         System = systemName,
                         ErrorCode = (int)InitializationStatus.ModuleToPatchWasNotFound,
                         ErrorMessage = "Module '" + mainModuleName + "' was not found in process list",
                         IsOk = false
                     };
+                    return _lastInitStatus;
                 }
             }
             catch (Exception ex)
             {
-                return new InitializationState
+                _lastInitStatus = new InitializationState
                 {
                     System = systemName,
                     ErrorCode = (int)InitializationStatus.Exception,
                     ErrorMessage = "An exception occuted: " + ex.Message,
                     IsOk = false
                 };
+                return _lastInitStatus;
             }
         }
         public string[] GetModulesList()
@@ -243,6 +254,14 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
                         OpenProcess(
                             ProcessAccessFlags.VmOperation | ProcessAccessFlags.QueryInformation | ProcessAccessFlags.VmRead |
                             ProcessAccessFlags.VmWrite, false, _mainModuleProcessId);
+                    if (hProcess == IntPtr.Zero)
+                    {
+                        return new ManageMemoryVariableResult
+                        {
+                            Code = MemoryVariableGetSetErrorCode.ModuleNotFound,
+                            Value = 0
+                        };
+                    }
 
                     var varConverter = new VariableConverter();
                     var buffer = varConverter.ValueToArray(valueToSet, variableSize);
@@ -293,11 +312,27 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
                 {
                     var baseOffset = (IntPtr)((int)_modules[moduleName].BaseAddress + moduleOffset);
                     var hProcess = OpenProcess(ProcessAccessFlags.QueryInformation | ProcessAccessFlags.VmRead | ProcessAccessFlags.VmWrite, false, _mainModuleProcessId);
+                    if (hProcess == IntPtr.Zero)
+                    {
+                        return new ManageMemoryVariableResult
+                        {
+                            Code = MemoryVariableGetSetErrorCode.ModuleNotFound,
+                            Value = 0
+                        };
+                    }
                     var varConverter = new VariableConverter();
                     var buffer = new byte[varConverter.ConvertSize(variableSize)];
                     uint bytesRead = 0;
-                    ReadProcessMemory(hProcess, baseOffset, buffer, (uint)buffer.Length, ref bytesRead);
+                    var readResult = ReadProcessMemory(hProcess, baseOffset, buffer, (uint)buffer.Length, ref bytesRead);
                     CloseHandle(hProcess);
+                    if (!readResult)
+                    {
+                        return new ManageMemoryVariableResult
+                        {
+                            Code = MemoryVariableGetSetErrorCode.ModuleNotFound,
+                            Value = 0
+                        };
+                    }
                     var result = varConverter.ArrayToValue(buffer, variableSize);
                     return new ManageMemoryVariableResult
                     {

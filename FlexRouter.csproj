@@ -96,6 +96,9 @@
     <Compile Include="AccessDescriptors\DescriptorValue.cs" />
     <Compile Include="AccessDescriptors\Helpers\GlobalFormulaKeeper.cs" />
     <Compile Include="AccessDescriptors\Helpers\IAccessDescriptor.cs" />
+    <Compile Include="EditorsUI\Dialogues\ProfileEditor.xaml.cs">
+      <DependentUpon>ProfileEditor.xaml</DependentUpon>
+    </Compile>
     <Compile Include="EditorsUI\Helpers\IEditor.cs" />
     <Compile Include="AccessDescriptors\Interfaces\IDefautValueAbility.cs" />
     <Compile Include="AccessDescriptors\Interfaces\IDescriptorMultistate.cs" />
@@ -196,8 +199,10 @@
     <Compile Include="Hardware\HardwareEvents\LampEvent.cs" />
     <Compile Include="Hardware\Joystick\JoystickDevice.cs" />
     <Compile Include="Hardware\Joystick\JoystickDevicesManager.cs" />
+    <Compile Include="Helpers\Problems.cs" />
     <Compile Include="Helpers\WpfBitmapConverter.cs" />
     <Compile Include="Localizers\ControlProcessorListLocalizer.cs" />
+    <Compile Include="ProfileItems\ITreeItem.cs" />
     <Compile Include="ProfileItems\Panel.cs" />
     <Compile Include="EditorsUI\AccessDescriptorsEditor\DescriptorFormulaEditor.xaml.cs">
       <DependentUpon>DescriptorFormulaEditor.xaml</DependentUpon>
@@ -292,6 +297,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="EditorsUI\Dialogues\ProfileEditor.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="EditorsUI\Dialogues\Selector.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -373,7 +382,7 @@
     </Compile>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <LastGenOutput>Resources1.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="app.config" />
     <None Include="Profiles\english.lng" />
@@ -411,42 +420,20 @@
     <Resource Include="changes.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Resources\BinaryOutput.bmp" />
+    <Resource Include="Resources\Button.bmp" />
     <Resource Include="Resources\Connected.bmp" />
+    <Resource Include="Resources\ConnectedNot.bmp" />
+    <Resource Include="Resources\ConnectedPartially.bmp" />
+    <Resource Include="Resources\Encoder.bmp" />
+    <Resource Include="Resources\Fail.bmp" />
+    <Resource Include="Resources\FakeVariable.bmp" />
+    <Resource Include="Resources\FsuipcVariable.bmp" />
+    <Resource Include="Resources\Indicator.bmp" />
+    <Resource Include="Resources\MemoryVariable.bmp" />
+    <Resource Include="Resources\Ok.bmp" />
+    <Resource Include="Resources\RangeUnion.bmp" />
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\ConnectedNot.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\ConnectedPartially.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\FsuipcVariable.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\FS9.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\MemoryVariable.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\FakeVariable.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\FakeVariable.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Button.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Indicator.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\led1.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Indicator.bmp" />
-  </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

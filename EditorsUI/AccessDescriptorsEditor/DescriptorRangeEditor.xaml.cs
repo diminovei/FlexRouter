@@ -58,7 +58,6 @@ namespace FlexRouter.EditorPanels
             _stepLabel.Content = LanguageManager.GetPhrase(Phrases.EditorRangeStep);
             _cyclicLabel.Content = LanguageManager.GetPhrase(Phrases.EditorLoopRange);
             _defaultValueLabel.Content = LanguageManager.GetPhrase(Phrases.EditorRangeDefaultValue);
-            _enableDefaultValue.Content = LanguageManager.GetPhrase(Phrases.EditorRangeUseDefaultValue);
         }
 
         public bool IsDataChanged()

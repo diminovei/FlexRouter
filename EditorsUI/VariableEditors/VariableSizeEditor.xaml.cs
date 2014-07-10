@@ -54,6 +54,7 @@ namespace FlexRouter.EditorsUI.VariableEditors
 
         public void Localize()
         {
+            VariableSizeLocalizer.Initialize();
             VariableSizeLocalizer.LocalizeSizes(ref _variableSize);
             _variableSizeLabel.Content = LanguageManager.GetPhrase(Phrases.EditorVariableSize);
         }

@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Xml;
+using FlexRouter.Hardware;
+using FlexRouter.Helpers;
 using FlexRouter.ProfileItems;
 using FlexRouter.VariableSynchronization;
 using FlexRouter.VariableWorkerLayer.MethodFakeVariable;
@@ -59,76 +61,6 @@ namespace FlexRouter.VariableWorkerLayer
         CantProcessWithThisVarType
     }
 
-    /*    // Варианты оптимизации:
-        //  Устанавливаемые значения - устанавливаем последнее указанное (или копим. В зависимости от настройки)
-        //  Макросы только копим.
-        public enum VariableTypes
-        {
-            BitManager,         //  Управление битами   (SetBit, ResetBit) управление в одной переменной только одним битом?
-    //        BcdRange,         //  ВСD с диапазоном    Управление не получится. Нужна формула для Fsuipc
-            Range,              //  Указан диапазон значений
-            ValuesList,         //  Указан список значений
-            ValuesListMacro,    //  Указан список значений
-            NextPrevMacro,      //  Только с функциями следующий/предыдущий
-            Formula,            //  Управление через формулу (в формулах поддержка преобразования BCD)
-        }
-
-        enum ValueState
-        {
-            Ok,
-            Error
-        }
-
-        public enum VariableCapacity
-        {
-            SeparateAndPrevNextStates,  // Есть SetPositionInRange, SetDefaultState, SetNextState, SetPrevState
-            PrevNextStatesOnly,         //  SetNextState, SetPrevState
-        }
-        public class ClickState
-        {
-            public int Id;
-            public string Name;
-            public string TokenizedMacro;                   // Токенизированный макрос
-            public string TokenizedMacroInPolishNotation;   // Токенизированный макрос в польской нотации. Остаётся только заменить переменные значениями и считать
-        }
-        public class ClickVariableWithStates : VariableBase
-        {
-            public int Id;
-            public int WindowId;
-            private List<ClickState> ClickStates = new List<ClickState>();
-        
-            public void SetNextState() {}
-            public void SetPrevState() {}
-            public void SetDefaultState() {}
-            public void SetPositionInRange(int stateId) {}
-            public int DefaultStateId;              // Идентификатор состяния по-умолчанию
-            public int CurrentStateId;              // Идентификатор состяния по-умолчанию
-            public bool LoopStates;                 // При достижении последнего состояния и команде NextState переходить на нулевой?
-
-        }
-
-        public class ClickVariableWithNextPrevStates : VariableBase
-        {
-            public int Id;
-            public int WindowId;
-            private ClickState NextState;
-            private ClickState PrevState;
-        
-            public void SetNextState() {}
-            public void SetPrevState() {}
-            public void SetDefaultState() {}
-            public void SetPositionInRange(int stateId) {}
-            public int DefaultStateId;              // Идентификатор состяния по-умолчанию
-            public int CurrentStateId;              // Идентификатор состяния по-умолчанию
-            public bool LoopStates;                 // При достижении последнего состояния и команде NextState переходить на нулевой?
-
-        }
-
-        struct ClickerVariable
-        {
-            public string Name;
-        }*/
-
     public class InitializationState
     {
         public bool IsOk;
@@ -147,16 +79,26 @@ namespace FlexRouter.VariableWorkerLayer
         private static readonly object ThreadLocker = new object();
         private static ObservableCollection<InitializationState> _initializationStatus = new ObservableCollection<InitializationState>();
 
-        public static ObservableCollection<InitializationState> GetInitializationStatus()
+        public static InitializationState[] GetInitializationStatus()
         {
-            return _initializationStatus;
+            lock (ThreadLocker)
+            {
+                return _initializationStatus.ToArray();    
+            }
         }
         public static void Initialize()
         {
-            _initializationStatus.Clear();
-            _initializationStatus.Add(MemoryPatchMethodInstance.Initialize(Profile.GetMainManagedProcessName(), Profile.GetModuleExtensionFilter()));
-            _initializationStatus.Add(FsuipcMethodInstance.Initialize());
-            _initialized = true;
+            lock (ThreadLocker)
+            {
+                _initializationStatus.Clear();
+                var iStatus  = MemoryPatchMethodInstance.Initialize(Profile.GetMainManagedProcessName(), Profile.GetModuleExtensionFilter());
+                _initializationStatus.Add(iStatus);
+                Problems.AddOrUpdateProblem(iStatus.System, iStatus.ErrorMessage, ProblemHideOnFixOptions.HideDescription, iStatus.IsOk);
+                var fsuipcStatus = FsuipcMethodInstance.Initialize();
+                _initializationStatus.Add(fsuipcStatus);
+                Problems.AddOrUpdateProblem(fsuipcStatus.System, fsuipcStatus.ErrorMessage, ProblemHideOnFixOptions.HideDescription, fsuipcStatus.IsOk);
+                _initialized = true;
+            }
         }
 
 /*        static ~VariableManager()
@@ -205,6 +147,7 @@ namespace FlexRouter.VariableWorkerLayer
         {
             return MemoryPatchMethodInstance.ConvertAbsoleteToModuleOffset(absoluteOffset);
         }
+        private static readonly List<string> NotFoundModules = new List<string>();
         private static void SynchronizeVariables()
         {
             while (true)
@@ -213,6 +156,8 @@ namespace FlexRouter.VariableWorkerLayer
                 {
                     if (_stopThread)
                         return;
+
+                    NotFoundModules.Clear();
                     for (var i = 0; i < Variables.Count; i++)
                     {
                         SynchronizeMemoryPatchVariable(Variables.ElementAt(i).Key);
@@ -224,6 +169,15 @@ namespace FlexRouter.VariableWorkerLayer
                         GetFsuipcVariableValue(Variables.ElementAt(i).Key);
                     }
                 }
+                string modules = string.Empty;
+                foreach (var nfm in NotFoundModules)
+                {
+                    if (modules.Length != 0)
+                        modules += ", ";
+                    modules += nfm;
+                }
+
+                Problems.AddOrUpdateProblem("MemoryPatcherModules", "not found - " + modules, ProblemHideOnFixOptions.HideItemAndDescription, modules.Length == 0);
                 Thread.Sleep(100);
             }
         }
@@ -293,25 +247,13 @@ namespace FlexRouter.VariableWorkerLayer
                 Variables.Clear();
             }
         }
-/*
-        public static ProcessVariableError PlayMacro(int varId, MacroToken[] macroToken)
-        {
-            if (!_variables.ContainsKey(varId))
-                return ProcessVariableError.IdIsNotExist;
-//            if (!(_variables[varId].Variable is ClickVariable))
-//                return ProcessVariableError.CantProcessWithThisVarType;
-            // Добавление статуса в переменную, прочее
-            return ProcessVariableError.Ok;
-        }
-*/
+
         public static ProcessVariableError WriteValue(int varId, double value)
         {
             lock (ThreadLocker)
             {
                 if (!Variables.ContainsKey(varId))
                     return ProcessVariableError.IdIsNotExist;
-/*                if (_variables[varId].Variable is ClickVariable)
-                    return ProcessVariableError.CantProcessWithThisVarType;*/
 
                 if (Variables[varId].Variable is FsuipcVariable)
                 {
@@ -361,6 +303,68 @@ namespace FlexRouter.VariableWorkerLayer
                 return result;
             }
         }
+/*        private static void SynchronizeMemoryPatchVariable(int id)
+        {
+            lock (Variables)
+            {
+                if (!(Variables[id].Variable is MemoryPatchVariable))
+                    return;
+                var mpv = (MemoryPatchVariable)Variables[id].Variable;
+                var mpvExt = Variables[id];
+                // Последовательность состояний при записи: Write->Check->Read
+                if (mpvExt.GetState() == VariableState.Read || mpvExt.GetState() == VariableState.Check)
+                {
+                    var readVarResult = MemoryPatchMethodInstance.GetVariableValue(mpv.ModuleName, mpv.Offset, mpv.GetVariableSize());
+                    if (readVarResult.Code != MemoryVariableGetSetErrorCode.Ok)
+                    {
+                        mpvExt.LeaveCurrentState();
+                        // Если не удалось прочитать, то возможно, модуль ещё не загружен в память. Переинициализируем
+                        if (readVarResult.Code == MemoryVariableGetSetErrorCode.ModuleNotFound)
+                        {
+                            if (!NotFoundModules.Contains(mpv.ModuleName))
+                                NotFoundModules.Add(mpv.ModuleName);
+                            Initialize();
+                        }
+                    }
+                    else
+                    {
+                        // Если чтение прошло успешно
+                        // Если установлено состояние "проверка" и значение в памяти не соотоветствует, тому, что записывали, пробуем записать ещё раз
+                        if (mpvExt.GetState() == VariableState.Check && readVarResult.Value != ((MemoryPatchVariable)Variables[id].Variable).ValueToSet)
+                            mpvExt.SetState(VariableState.Write);
+                        else
+                        {
+                            // Устанавливает состояние в стандартное "чтение"
+                            mpvExt.SetState(VariableState.Read);
+                            ((MemoryPatchVariable)Variables[id].Variable).ValueInMemory = readVarResult.Value;
+                        }
+                    }
+                }
+                if (mpvExt.GetState() == VariableState.Write)
+                {
+                    var writeVarResult = MemoryPatchMethodInstance.SetVariableValue(mpv.ModuleName, mpv.Offset, mpv.GetVariableSize(), mpv.ValueToSet);
+
+                    if (writeVarResult.Code != MemoryVariableGetSetErrorCode.Ok)
+                    {
+                        mpvExt.LeaveCurrentState();
+                        // Если не удалось записать, то возможно, модуль ещё не загружен в память. Переинициализируем
+                        if (writeVarResult.Code == MemoryVariableGetSetErrorCode.ModuleNotFound)
+                        {
+                            if (!NotFoundModules.Contains(mpv.ModuleName))
+                                NotFoundModules.Add(mpv.ModuleName);
+                            Initialize();
+                        }
+
+                    }
+                    else
+                        // Если запись прошла успешно, устанавливаем состояние в "проверка"
+                        mpvExt.SetState(VariableState.Check);
+                }
+                //if (mpvExt.GetState() == VariableState.Check)
+                //if(!MemoryPatchVariablesOnCheckState.Contains(id))
+                //    MemoryPatchVariablesOnCheckState.Add(id);
+            }
+        }*/
         private static void SynchronizeMemoryPatchVariable(int id)
         {
             lock (Variables)
@@ -372,14 +376,18 @@ namespace FlexRouter.VariableWorkerLayer
                 // Последовательность состояний при записи: Write->Check->Read
                 if (mpvExt.GetState() == VariableState.Write)
                 {
-                    var writeVarResult = MemoryPatchMethodInstance.SetVariableValue(mpv.ModuleName, mpv.Offset, mpv.Size,
+                    var writeVarResult = MemoryPatchMethodInstance.SetVariableValue(mpv.ModuleName, mpv.Offset, mpv.GetVariableSize(),
                                                                              mpv.ValueToSet);
                     if (writeVarResult.Code != MemoryVariableGetSetErrorCode.Ok)
                     {
                         mpvExt.LeaveCurrentState();
                         // Если не удалось записать, то возможно, модуль ещё не загружен в память. Переинициализируем
                         if (writeVarResult.Code == MemoryVariableGetSetErrorCode.ModuleNotFound)
+                        {
+                            if (!NotFoundModules.Contains(mpv.ModuleName))
+                                NotFoundModules.Add(mpv.ModuleName);
                             Initialize();
+                        }
                     }
                     else
                         // Если запись прошла успешно, устанавливаем состояние в "проверка"
@@ -388,13 +396,17 @@ namespace FlexRouter.VariableWorkerLayer
                 }
                 if (mpvExt.GetState() == VariableState.Read || mpvExt.GetState() == VariableState.Check)
                 {
-                    var readVarResult = MemoryPatchMethodInstance.GetVariableValue(mpv.ModuleName, mpv.Offset, mpv.Size);
+                    var readVarResult = MemoryPatchMethodInstance.GetVariableValue(mpv.ModuleName, mpv.Offset, mpv.GetVariableSize());
                     if (readVarResult.Code != MemoryVariableGetSetErrorCode.Ok)
                     {
                         mpvExt.LeaveCurrentState();
                         // Если не удалось прочитать, то возможно, модуль ещё не загружен в память. Переинициализируем
                         if (readVarResult.Code == MemoryVariableGetSetErrorCode.ModuleNotFound)
+                        {
+                            if (!NotFoundModules.Contains(mpv.ModuleName))
+                                NotFoundModules.Add(mpv.ModuleName);
                             Initialize();
+                        }
                     }
                     else
                     {
@@ -413,6 +425,27 @@ namespace FlexRouter.VariableWorkerLayer
                 }
             }
         }
+
+/*        private static void SynchronizeFsuipcVariable(int id)
+        {
+            lock (Variables)
+            {
+                if (!(Variables[id].Variable is FsuipcVariable))
+                    return;
+                var mpv = (FsuipcVariable)Variables[id].Variable;
+                var mpvExt = Variables[id];
+
+                if (mpvExt.GetState() == VariableState.Read || mpvExt.GetState() == VariableState.Check)
+                    if (!FsuipcMethodInstance.AddVariableToRead(mpv))
+                        mpvExt.LeaveCurrentState();
+
+                if (mpvExt.GetState() == VariableState.Write)
+                    if (FsuipcMethodInstance.AddVariableToWrite(mpv))
+                        mpvExt.SetState(VariableState.Check);
+                    else
+                        mpvExt.LeaveCurrentState();
+            }
+        }*/
         private static void SynchronizeFsuipcVariable(int id)
         {
             lock (Variables)
@@ -432,6 +465,22 @@ namespace FlexRouter.VariableWorkerLayer
                         mpvExt.LeaveCurrentState();
             }
         }
+/*        private static void GetFsuipcVariableValue(int id)
+        {
+            lock (Variables)
+            {
+                if (!(Variables[id].Variable is FsuipcVariable))
+                    return;
+                var mpv = (FsuipcVariable)Variables[id].Variable;
+                var mpvExt = Variables[id];
+                if (mpvExt.GetState() != VariableState.Read && mpvExt.GetState() != VariableState.Check)
+                    return;
+                mpv.ValueInMemory = FsuipcMethodInstance.GetValue(id);
+
+                if (mpvExt.GetState() == VariableState.Check && mpv.ValueInMemory != mpv.ValueToSet)
+                    mpvExt.SetState(VariableState.Write);
+            }
+        }*/
         private static void GetFsuipcVariableValue(int id)
         {
             lock (Variables)
@@ -443,36 +492,6 @@ namespace FlexRouter.VariableWorkerLayer
                 if (mpvExt.GetState() == VariableState.Read)
                     mpv.ValueInMemory = FsuipcMethodInstance.GetValue(id);
             }
-            /*
-            // Последовательность состояний при записи: Write->Check->Read
-            if (mpvExt.GetState() == VariableState.Write)
-            {
-                if (!_fsuipcMethodInstance.AddVariableToWrite(mpv))
-                    mpvExt.LeaveCurrentState();
-                else
-                    // Если запись прошла успешно, устанавливаем состояние в "проверка"
-                    mpvExt.SetState(VariableState.Check);
-
-            }
-            if (mpvExt.GetState() == VariableState.Read || mpvExt.GetState() == VariableState.Check)
-            {
-                if (!_fsuipcMethodInstance.AddVariableToRead(mpv))
-                    mpvExt.LeaveCurrentState();
-                else
-                {
-                    // Если чтение прошло успешно
-                    // Если установлено состояние "проверка" и значение в памяти не соотоветствует, тому, что записывали, пробуем записать ещё раз
-                    if (mpvExt.GetState() == VariableState.Check &&
-                        readVarResult.Value != ((MemoryPatchVariable)_variables[id].Variable).ValueToSet)
-                        mpvExt.SetState(VariableState.Write);
-                    else
-                    {
-                        // Устанавливает состояние в стандартное "чтение"
-                        mpvExt.SetState(VariableState.Read);
-                        ((MemoryPatchVariable)_variables[id].Variable).ValueInMemory = readVarResult.Value;
-                    }
-                }
-            }*/
         }
     }
 }

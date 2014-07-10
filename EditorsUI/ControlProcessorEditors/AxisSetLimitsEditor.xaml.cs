@@ -46,6 +46,7 @@ namespace FlexRouter.ControlProcessorEditors
             ShowData();
             _resetLimits.Content = LanguageManager.GetPhrase(Phrases.EditorAxisReset);
             _calibrate.Content = LanguageManager.GetPhrase(Phrases.EditorAxisCalibrate);
+            _limitsLabel.Content = LanguageManager.GetPhrase(Phrases.EditorAxisLimitsLabel);
         }
 
         public bool IsDataChanged()

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.XPath;
 
 namespace FlexRouter
@@ -23,6 +24,7 @@ namespace FlexRouter
 
         public static string DefaultProfile { get; set; }
         public static string DefaultLanguage { get; set; }
+        public static bool ControlsSynchronizationIsOff { get; set; }
         //public static bool MinimizeToTrayOnStart { get; set; }
         //public static uint RepeaterFirstPause { get; set; }
         //public static uint RepeaterNextPause { get; set; }
@@ -53,6 +55,8 @@ namespace FlexRouter
 
                 DefaultProfile = settingsNav.Current.GetAttribute("DefaultProfile", settingsNav.Current.NamespaceURI);
                 DefaultLanguage = settingsNav.Current.GetAttribute("DefaultLanguage", settingsNav.Current.NamespaceURI);
+                ControlsSynchronizationIsOff = settingsNav.Current.GetAttribute("ControlsSynchronizationIsOff", settingsNav.Current.NamespaceURI).ToLower().Contains("true");
+
                 //MinimizeToTrayOnStart =
                 //    settingsNav.Current.GetAttribute("MinimizeToTrayOnStart", settingsNav.Current.NamespaceURI)
                 //        .ToLower()
@@ -88,25 +92,60 @@ namespace FlexRouter
 
         public static void SaveSettings()
         {
-            var writer = new XmlTextWriter(SettingsLocation, Encoding.Unicode);
+            try
+            {
+                using (var sw = new StringWriter())
+                {
+                    using (var writer = new XmlTextWriter(sw))
+                    {
+                        writer.Formatting = Formatting.Indented;
+                        writer.Indentation = 4;
+                        writer.WriteStartDocument();
+                        writer.WriteStartElement("FlexRouterProfile");
+                        writer.WriteAttributeString("Type", "Settings");
+                        writer.WriteAttributeString("Name", "Settings");
+                        writer.WriteStartElement("Settings");
+                        writer.WriteAttributeString("DefaultProfile", DefaultProfile);
+                        writer.WriteAttributeString("DefaultLanguage", DefaultLanguage);
+                        writer.WriteAttributeString("ControlsSynchronizationIsOff", ControlsSynchronizationIsOff.ToString());
+                        writer.WriteEndElement();
+                        writer.WriteEndElement();
+                        writer.WriteEndDocument();
+                    }
+                    if (File.Exists(SettingsLocation))
+                        File.Copy(SettingsLocation, SettingsLocation + ".bak", true);
+                    using (var swToDisk = new StreamWriter(SettingsLocation, false, Encoding.Unicode))
+                    {
+                        var parsedXml = XDocument.Parse(sw.ToString());
+                        swToDisk.Write(parsedXml.ToString());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+            
+            
+            
+            
+/*            var writer = new XmlTextWriter(SettingsLocation, Encoding.Unicode);
             writer.WriteStartDocument();
             writer.WriteStartElement("FlexRouterProfile");
             writer.WriteAttributeString("Type", "Settings");
             writer.WriteAttributeString("Name", "Settings");
-            writer.WriteString("\n");
             writer.WriteStartElement("Settings");
             writer.WriteAttributeString("DefaultProfile", DefaultProfile);
             writer.WriteAttributeString("DefaultLanguage", DefaultLanguage);
-            //writer.WriteAttributeString("MinimizeToTrayOnStart", MinimizeToTrayOnStart.ToString());
+            writer.WriteAttributeString("ControlsSynchronizationIsOff", ControlsSynchronizationIsOff.ToString());
             //writer.WriteAttributeString("JoystickBindingType", MinimizeToTrayOnStart.ToString());
             //writer.WriteAttributeString("ShowAxisInfo", ShowAxisInfo.ToString());
             //writer.WriteAttributeString("RepeaterFirstPause", RepeaterFirstPause.ToString());
             //writer.WriteAttributeString("RepeaterNextPause", RepeaterNextPause.ToString());
             writer.WriteEndElement();
-            writer.WriteString("\n");
             writer.WriteEndElement();
             writer.WriteEndDocument();
-            writer.Close();
+            writer.Close();*/
         }
     }
 }

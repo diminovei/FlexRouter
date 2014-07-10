@@ -12,7 +12,8 @@ namespace FlexRouter
         ClearConnectedDevicesList,  //  Очистить список подключенных устройств
         AddConnectedDevice,         //  Добавить подключенное устройство
         ShowEvent,                  //  Показать сработавший контрол
-        NewHardwareEvent
+        NewHardwareEvent,
+        RouterPaused
     }
 
     public interface IMessage

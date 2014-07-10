@@ -296,7 +296,7 @@ namespace FlexRouter
         }
         private void CheckFSUIPC()
         {
-            var v = new FsuipcVariable { Id = 0, Name = "Flaps", Offset = 0x0BDC, Size = MemoryVariableSize.FourBytes };
+/*            var v = new FsuipcVariable { Id = 0, Name = "Flaps", Offset = 0x0BDC, Set = MemoryVariableSize.FourBytes };
             var v2 = new FsuipcVariable { Id = 2, Name = "Bano", Offset = 0x280, Size = MemoryVariableSize.Byte };
             var v3 = new FsuipcVariable { Id = 3, Name = "Ready to fly", Offset = 0x3364, Size = MemoryVariableSize.Byte };
 
@@ -307,11 +307,6 @@ namespace FlexRouter
             var i = 0;
             while (1 == 1)
             {
-                /*                if(MessageBox.Show("a", "b", MessageBoxButton.OKCancel) == MessageBoxResult.Cancel)
-                                {
-                                    a.UnInitialize();
-                                    break;
-                                }*/
                 v.ValueToSet = val[i];
                 fsuipc.AddVariableToWrite(v);
                 fsuipc.AddVariableToRead(v3);
@@ -319,14 +314,10 @@ namespace FlexRouter
                 var a = fsuipc.GetValue(3);
                 Debug.Print(a.ToString());
                 Thread.Sleep(100);
-                /*                a.Open(); 
-                                a.AddVariableToRead(v2);
-                                a.Process();
-                                var vvv = a.GetValue(2);*/
                 i++;
                 if (i > val.Length - 1)
                     i = 0;
-            }
+            }*/
         }
     }
 }

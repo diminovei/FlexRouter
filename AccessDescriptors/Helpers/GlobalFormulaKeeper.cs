@@ -15,20 +15,20 @@ namespace FlexRouter.AccessDescriptors.Helpers
     /// </summary>
     public class FormulaKeeper
     {
-        public class FormulaContainer2
+        public class FormulaContainer
         {
             public string Formula;
             public int OwnerId;
             public int VariableId;
             public int StateId;
-            public FormulaContainer2(string formula, int ownerId)
+            public FormulaContainer(string formula, int ownerId)
             {
                 OwnerId = ownerId;
                 Formula = formula;
                 VariableId = -1;
                 StateId = -1;
             }
-            public FormulaContainer2(string formula, int ownerId, int variableId, int stateId)
+            public FormulaContainer(string formula, int ownerId, int variableId, int stateId)
             {
                 OwnerId = ownerId;
                 Formula = formula;
@@ -37,25 +37,24 @@ namespace FlexRouter.AccessDescriptors.Helpers
             }
         }
         
-        private readonly Dictionary<int, FormulaContainer2> _formulaDictionaryNew = new Dictionary<int, FormulaContainer2>();
+        private readonly Dictionary<int, FormulaContainer> _formulaDictionary = new Dictionary<int, FormulaContainer>();
 
-        public Dictionary<int, FormulaContainer2> Export()
+        public Dictionary<int, FormulaContainer> Export()
         {
-            return _formulaDictionaryNew;
+            return _formulaDictionary;
         }
         public void Import(FormulaKeeper gfk)
         {
             var exportedData = gfk.Export();
             foreach (var data in exportedData)
             {
-                _formulaDictionaryNew[data.Key] = data.Value;
+                _formulaDictionary[data.Key] = data.Value;
             }
         }
         #region NewMethods
-
         private int FindVariableFormulaId(int ownerId, int variableId, int stateId)
         {
-            foreach (var f in _formulaDictionaryNew)
+            foreach (var f in _formulaDictionary)
             {
                 if (f.Value.VariableId != variableId || f.Value.StateId != stateId || f.Value.OwnerId != ownerId)
                     continue;
@@ -63,39 +62,39 @@ namespace FlexRouter.AccessDescriptors.Helpers
             }
             return -1;
         }
+
         public void StoreVariableFormula(string formulaText, int ownerId, int variableId, int stateId)
         {
             var formulaId = FindVariableFormulaId(ownerId, variableId, stateId);
             if(formulaId == -1)
                 formulaId = GlobalId.GetNew();
             formulaText = ReplaceTextWithId(formulaText);
-            _formulaDictionaryNew[formulaId] = (new FormulaContainer2(formulaText, ownerId, variableId, stateId));
+            _formulaDictionary[formulaId] = (new FormulaContainer(formulaText, ownerId, variableId, stateId));
         }
 
         public string GetVariableFormulaText(int ownerId, int variableId, int stateId)
         {
-            return (from f in _formulaDictionaryNew where f.Value.VariableId == variableId && f.Value.StateId == stateId && f.Value.OwnerId == ownerId select ReplaceIdWithText(f.Value.Formula)).FirstOrDefault();
+            return (from f in _formulaDictionary where f.Value.VariableId == variableId && f.Value.StateId == stateId && f.Value.OwnerId == ownerId select ReplaceIdWithText(f.Value.Formula)).FirstOrDefault();
         }
 
         public int StoreFormula(string formulaText, int ownerId)
         {
             formulaText = ReplaceTextWithId(formulaText);
             var id = GlobalId.GetNew();
-            _formulaDictionaryNew.Add(id, new FormulaContainer2(formulaText, ownerId));
+            _formulaDictionary.Add(id, new FormulaContainer(formulaText, ownerId));
             return id;
         }
-
         public void ChangeFormulaText(int formulaId, string formulaText)
         {
-            if (!_formulaDictionaryNew.ContainsKey(formulaId))
+            if (!_formulaDictionary.ContainsKey(formulaId))
                 return;
             formulaText = ReplaceTextWithId(formulaText);
-            _formulaDictionaryNew[formulaId].Formula = formulaText;
+            _formulaDictionary[formulaId].Formula = formulaText;
         }
 
         public string GetFormulaText(int formulaId)
         {
-            return !_formulaDictionaryNew.ContainsKey(formulaId) ? null : ReplaceIdWithText(_formulaDictionaryNew[formulaId].Formula);
+            return !_formulaDictionary.ContainsKey(formulaId) ? null : ReplaceIdWithText(_formulaDictionary[formulaId].Formula);
         }
         #endregion
         /// <summary>
@@ -106,7 +105,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
         public int[] GetVariableOwnersByVariableId(int variableId)
         {
             var d = new List<int>();
-            foreach (var fd in _formulaDictionaryNew)
+            foreach (var fd in _formulaDictionary)
             {
                 if (fd.Value.VariableId == variableId || fd.Value.Formula.Contains("[" + variableId + "]"))
                 {
@@ -125,8 +124,8 @@ namespace FlexRouter.AccessDescriptors.Helpers
         public void RemoveVariableFormula(int ownerId, int variableId, int stateId)
         {
             var formulaId = FindVariableFormulaId(ownerId, variableId, stateId);
-            if (_formulaDictionaryNew.ContainsKey(formulaId))
-                _formulaDictionaryNew.Remove(formulaId);
+            if (_formulaDictionary.ContainsKey(formulaId))
+                _formulaDictionary.Remove(formulaId);
         }
 
         /// <summary>
@@ -134,7 +133,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
         /// </summary>
         public void ClearAll()
         {
-            _formulaDictionaryNew.Clear();
+            _formulaDictionary.Clear();
         }
         /// <summary>
         /// Удалить все формулы для указанного Item
@@ -142,10 +141,10 @@ namespace FlexRouter.AccessDescriptors.Helpers
         /// <param name="itemId">идентификатор</param>
         public void RemoveFormulasByOwnerId(int itemId)
         {
-            for (var i = _formulaDictionaryNew.Count-1; i >= 0; i--)
+            for (var i = _formulaDictionary.Count-1; i >= 0; i--)
             {
-                if (_formulaDictionaryNew.ElementAt(i).Value.OwnerId == itemId)
-                    _formulaDictionaryNew.Remove(_formulaDictionaryNew.Keys.ElementAt(i));
+                if (_formulaDictionary.ElementAt(i).Value.OwnerId == itemId)
+                    _formulaDictionary.Remove(_formulaDictionary.Keys.ElementAt(i));
             }
         }
 

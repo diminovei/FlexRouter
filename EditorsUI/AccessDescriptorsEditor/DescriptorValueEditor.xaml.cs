@@ -124,6 +124,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             RemoveState.Content = LanguageManager.GetPhrase(Phrases.EditorRemoveState);
             AddVariable.Content = LanguageManager.GetPhrase(Phrases.EditorAddVariable);
             RemoveVariable.Content = LanguageManager.GetPhrase(Phrases.EditorRemoveVariable);
+            SelectDefaultState.Content = LanguageManager.GetPhrase(Phrases.EditorSetDefaultState);
             ShowData();
         }
 

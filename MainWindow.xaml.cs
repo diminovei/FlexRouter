@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -29,73 +26,51 @@ using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Helpers;
 using FlexRouter.Localizers;
 
-// Иконки:
-//  Panel
-//      Панель
-//  Variable
-//      Memory
-//      FsUIPC
-//      Коммутатор
-// AccessDescriptor
-//      States
-//      Range
-//      Indicator
-//      Lamp
-//  ControlProcessor
-//      Assigned
-//      NotAssigned
-//      PartiallyAssigned
-
 //  ***************************** Проблемы профиля:
 // Ответчик не работает. Нет работы с окнами
 // Назначаем СПУ.Режим, на назначении последнего тумблера удаляем. Не получается. Писать почему.
-// Не работает корректно кран закрылков
-// Bug: логика работы ПН-6 неточна. Нужно глубже разбираться
-
 //      Bug: бага в тушке. Если включить ввод ЗК на ПН-5, а затем выключить стабилизацию крена будут гореть и Сброс программы и ввод ЗК
-
+// Катет, К1Г1К2Г2 - нужно питание, а то постоянно горит
+//  ***************************** Пока не подтвердилось
+// Автомат тяги работает не корректно. Не автоматит, не устанавливает в 2 "режим 2"
+// Стабилизация по высоте включается, а лампа не загорается. Нужно разбираться
 //  ***************************** Сделать
-//      Показать, работает ли переменные и FSUIPC, загружены ли модули, самолёт, сим, какие есть проблемы
+//      НВУ. Не верны формулы. В точке 360 "точно" ведёт себя странно. Нужно разбираться.
+//      Возможность втыкать и вытыкать железо во время работы роутера
+//      Вынести Repeater в AccessDescriptor (для Button вкл/выкл, для Range всегда вкл)
+//          Или режим удержания: приводим состояние переменных в соответстве с состоянием контролов. Тогда повторитель не нужен в Button, а в Range нужен всегда
+//      Проверить корректность срабатывания "данные изменились, сохранить?" в переменных, AD, CP
 //      public void OverwriteFormulaKeeper(FormulaKeeper formulaKeeper) // Это нужно или можно удалить?
-//      Централизованная локализация (локализовать все надписи. Сделать переключение языка у размера переменных)
 //      Контроль формул:
-//          Если в формуле ошибка, показывать AD, как не рабочий.
-//          Проверка формулы после добавления/изменения в FormulaKeeper, удалении переменной, пропаже модуля
-//          Если есть переменная, но её значение недоступно, то результат формулы - N/A (для этого в обработке переменных нужно проверять, что модули загружены)
-//          Если модули (dll) недоступны, в переменных показывать N/A и формулы не считать, показывать AD, как не рабочий
-//          Подсветка ошибок формул в редакторах AD
+//          Не позволять сохранять AD, если в формуле синтаксическая ошибка
+//          Если модули (dll) недоступны, в переменных показывать N/A и формулы не считать (для этого в обработке переменных нужно проверять, что модули загружены)
 //      Управление профилем
-//          Бэкап и ротация изменениё профилей
-//          Убрать ToDo: костыль для FS9 (сохранять в профиль)
+//          Бэкап и ротация изменений профилей
 //      Тест роутера без железа:
 //          Горячие клавиши Ctrl+, Ctrl-, Ctrl1...9 для тестирования работоспособности роутера
+//          Горячие клавиши остановить/запустить роутер
 //          Для тестирования роутера без железа в CP добавить контрол: «вывод на индикатор/лампу» со значением N/A, если самолёт не загружен или формула неверна
-//      Перенести Repeater в AccessDescriptor. Для PrevNext принудительно включен по-умолчанию.
 //      Калькулятор. X:1 = X-1 (НВУ.ЗПУ1)
-//      Добавить иконки (AccessDescriptor, Variable)
 
 //      Железо:
 //          Нужно сделать маски. Каждое железо говорит, что для индикаторов мне нужен только модуль, а номер контрола нет. И роутер сам удалит ненужные упраляющие элементы и будет укорачивать строку Arcc:xxx|Indicator|1
 //          Поддержка L2/F2
 //          Реализовать разовый дамп осей при старте роутера (это возможно?)
+//          В джойстике поддержать все оси и хатку
 //      AxisMultistate
 //      Редактор для AxisMultistate
 //      Что делать, если при загрузке профиля будет исключение?
 //          Обернуть загрузку и сохранение в try/catch
-//      Горячие клавиши
-//      Вывод информации о проблемах и ошибках
 //      Реализовать функции (FromBCD, ToBCD, получить дробную часть)
 //      Поправить выравнивание, чтобы не образовывались ScrollBar'ы по-умолчанию
 //      Refactoring: Вынести ускоряющийся Repeater из ButtonPlusMinisConrolProcessor и сделать его общим
-//      Refactoring: Использовать VariableSizeEditor во всех переменных
-//      Refactoring: +Нужно унести управление StopSearch из MainWindow в CPEditor
+//      Refactoring: Нужно унести управление StopSearch из MainWindow в CPEditor
 //      Проверить работу с профилем на многопоточность. Обращение к AD, CP, VAR только через методы класса Profile (даже внутри этого класса) при сохранении загрузке. И всё через lock
 //      Bug: Если удалить CP, то остаётся выбораннам пункт (например, "Лампа", но нет селекта в дереве(?)), но по кнопке Create ничего не происходит
 //      Работа с окнами
-//      Редактирование окон
-//      Редактирование описателя "Клики мышью (Multistate)"
-//      Редактирование описателя "Клики мышью (Range)"
-//      В джойстике поддержать все оси и хатку
+//          Редактирование окон
+//          Редактирование описателя "Клики мышью (Multistate)"
+//          Редактирование описателя "Клики мышью (Range)"
 //      Bug: биндинг не работает, если в названии переменной (колонки) "плохой" символ. Точка, слэш
 //  ***************************** Не срочно (или не нужно):
 //      При изменении имени переменной предупреждать, что нужно обновить данные в AD, если открытый AD использует эту переменную (узнать в FormulaKeeper)
@@ -135,6 +110,12 @@ namespace FlexRouter
         Variable,
         ControlProcessor
     }
+    public enum RouterState
+    {
+        Running,
+        Paused,
+        Stopped,
+    }
     class TreeItem
     {
         public TreeItemType Type;
@@ -147,7 +128,7 @@ namespace FlexRouter
     /// </summary>
     public partial class MainWindow
     {
-
+        private RouterState _routerState = RouterState.Stopped;
         private readonly Core _routerCore = new Core();
         readonly DispatcherTimer _timer;
         readonly DispatcherTimer _timer2;
@@ -163,8 +144,6 @@ namespace FlexRouter
             FillSelectLanguageCombobox();
             if (!string.IsNullOrEmpty(ApplicationSettings.DefaultLanguage))
                 LanguageManager.LoadLanguage(ApplicationSettings.DefaultLanguage);
-            VariableSizeLocalizer.Initialize();
-            ControlProcessorListLocalizer.Initialize();
             Localize();
             if (LoadProfile(ApplicationSettings.DefaultProfile))
             {
@@ -172,44 +151,83 @@ namespace FlexRouter
                 FillSelectProfileCombobox(ApplicationSettings.DefaultProfile);
             }
 
-//            GetSubsystemsStatus();
-            
             _createVariable.IsEnabled = false;
             _timer = new DispatcherTimer();
             _timer.Tick += OnTimedEvent;
             _timer.Interval = new TimeSpan(0, 0, 0, 0, 100);
             _timer.Start();
 
-/*            _timer2 = new DispatcherTimer();
+            _timer2 = new DispatcherTimer();
             _timer2.Tick += OnTimedEvent2;
             _timer2.Interval = new TimeSpan(0, 0, 0, 3);
-            _timer2.Start();*/
-
+            _timer2.Start();
         }
 
-/*        ObservableCollection<InitializationState> SubsystemStatuses { get; set; }
+        private static ListViewItem CreateListViewItem(string text, System.Drawing.Bitmap iconBitmap)
+        {
+            var item = new ListViewItem();
+
+            if (iconBitmap != null)
+            {
+                // create stack panel
+                var stack = new StackPanel { Orientation = Orientation.Horizontal };
+
+                // create Image
+                var image = new Image();
+                var bc = new WpfBitmapConverter();
+                var icon =
+                    (ImageSource)bc.Convert(iconBitmap, typeof(ImageSource), null, CultureInfo.InvariantCulture);
+
+                image.Source = icon;
+                image.Width = 16;
+                image.Height = 16;
+                // Label
+                var lbl = new Label { Content = text };
+
+                // Add into stack
+                stack.Children.Add(image);
+                stack.Children.Add(lbl);
+
+                // assign stack to header
+                item.Content = stack;
+            }
+            else
+                item.Content = text;
+            return item;
+        }
+        object _locker = new object();
+        /// <summary>
+        /// Заполнить форму данными из описателя доступа
+        /// </summary>
         private void GetSubsystemsStatus()
         {
-            SubsystemStatuses = VariableManager.GetInitializationStatus();
-            var tbl = new DataTable( "SubsystemsStatus" );
-            
-             tbl.Columns.Add("icon", typeof(System.Drawing.Bitmap)); 
-                tbl.Columns.Add( "Name", typeof( string ) );
-             tbl.Columns.Add( "Error", typeof( string ) );
-
-            foreach (var s in SubsystemStatuses)
+            lock (_locker)
             {
-            var icon = GetIcon(TreeItemType.Variable, 0);
-                tbl.Rows.Add(icon, s.System, s.ErrorMessage);
+                //var subsystemStatuses = VariableManager.GetInitializationStatus();
+                //_statusList.Items.Clear();
+                //// Добавляем строки. Первая колонка - наименование состояния, затем формулы для переменных
+                //foreach (var s in subsystemStatuses)
+                //    _statusList.Items.Add(CreateListViewItem(s.IsOk ? s.System : s.System + " - " + s.ErrorMessage, s.IsOk ? Properties.Resources.Ok : Properties.Resources.Fail));
+
+                if (!Problems.ProblemListWasChanged)
+                    return;
+                _statusList.Items.Clear();
+                var problems = Problems.GetProblemList();
+                foreach (var s in problems)
+                    _statusList.Items.Add(CreateListViewItem(s.IsFixed ? s.Name : s.Name + " - " + s.Description, s.IsFixed ? Properties.Resources.Ok : Properties.Resources.Fail));
             }
-            _subsystemStatus.ItemsSource = tbl.AsDataView();
-        }*/
+        }
+
         private void SetTitle(string profileName = null)
         {
             Title = "Flex Router v" + Assembly.GetExecutingAssembly().GetName().Version + (string.IsNullOrEmpty(profileName) ? "" : " - " + profileName);
         }
         private void Localize()
         {
+            _accessDescriptorsToCreateList.Text = string.Empty;
+            _controlProcessorsList.Text = string.Empty;
+            _accessMethods.Text = string.Empty;
+            
             _removeAccessDescriptor.Content = LanguageManager.GetPhrase(Phrases.CommonButtonRemove);
             _removeControlProcessor.Content = LanguageManager.GetPhrase(Phrases.CommonButtonRemove);
             _removeVariable.Content = LanguageManager.GetPhrase(Phrases.CommonButtonRemove);
@@ -257,11 +275,19 @@ namespace FlexRouter
             _formulaResultLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelFormulaResult) + " (Dec/Hex/Bool)";
             _copyFormulaToClipboard.Content = LanguageManager.GetPhrase(Phrases.CommonLabelCopyToClipboard);
             _addVarToFormula.Content = LanguageManager.GetPhrase(Phrases.CommonLabelCopyVariableToFormula);
+            _errorLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelError);
+            _routerStateLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelRouterState);
+            _connectedHardwareLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelConnectedHardwareList);
+            _problemsLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelProblemsList);
+            _lastEventLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelLastHardwareEvent);
+            _profileManagementGroup.Header = LanguageManager.GetPhrase(Phrases.CommonProfileManagement);
+            _turnControlsSynchronizationOffLabel.Content = LanguageManager.GetPhrase(Phrases.SettingsTurnControlsSynchronizationOff);
+            LocalizeRouterState();
         }
-/*        private void OnTimedEvent2(object sender, EventArgs e)
+        private void OnTimedEvent2(object sender, EventArgs e)
         {
             GetSubsystemsStatus();
-        }*/
+        }
 
         private void OnTimedEvent(object sender, EventArgs e)
         {
@@ -281,9 +307,14 @@ namespace FlexRouter
             foreach (var message in messages)
             {
                 if (message.MessageType == MessageToMainForm.RouterStarted)
-                    OnStartRouter();
+                    _routerState = RouterState.Running;
+                    LocalizeRouterState();
                 if (message.MessageType == MessageToMainForm.RouterStopped)
-                    OnStopRouter();
+                    _routerState = RouterState.Stopped;
+                    LocalizeRouterState();
+                if (message.MessageType == MessageToMainForm.RouterPaused)
+                    _routerState = RouterState.Paused;
+                    LocalizeRouterState();    
                 if (message.MessageType == MessageToMainForm.ClearConnectedDevicesList)
                     ConnectedDevicesList.Items.Clear();
                 if (message.MessageType == MessageToMainForm.AddConnectedDevice)
@@ -307,14 +338,20 @@ namespace FlexRouter
                     
             }
         }
-        private void OnStartRouter()
+        private void LocalizeRouterState()
         {
-            Output.Text = "Роутер запущен";
-        }
-        private void OnStopRouter()
-        {
-            Output.Text = "Роутер остановлен";
-//            System.Windows.Application.Current.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, (ThreadStart)delegate { Output.Text = "Роутер остановлен"; });
+            switch (_routerState)
+            {
+                    case RouterState.Running:
+                    Output.Text = LanguageManager.GetPhrase(Phrases.CommonStateRunning);
+                    break;
+                    case RouterState.Paused:
+                    Output.Text = LanguageManager.GetPhrase(Phrases.CommonStatePaused);
+                    break;
+                default:
+                    Output.Text = LanguageManager.GetPhrase(Phrases.CommonStateStopped);
+                    break;
+            }
         }
         #region AccessDescriptorEditor
         private readonly TreeViewHelper _accessDescriptorTreeHelper = new TreeViewHelper();
@@ -526,6 +563,7 @@ namespace FlexRouter
             {
                 editors.Add(new VariableEditorHeader(variable, Phrases.EditorHeaderMemoryPatch, isNew, selectedItemPanelName));
                 editors.Add(new MemoryPatchVariableEditor(variable));
+                editors.Add(new VariableSizeEditor(variable as IMemoryVariable));
                 editors.Add(new VariableValueEditor(variable));
                 editors.Add(new VariableEditorDescription(variable));
             }
@@ -533,6 +571,7 @@ namespace FlexRouter
             {
                 editors.Add(new VariableEditorHeader(variable, Phrases.EditorHeaderFsuipc, isNew, selectedItemPanelName));
                 editors.Add(new FsuipcVariableEditor(variable));
+                editors.Add(new VariableSizeEditor(variable as IMemoryVariable));
                 editors.Add(new VariableValueEditor(variable));
                 editors.Add(new VariableEditorDescription(variable));
             }
@@ -1035,7 +1074,7 @@ namespace FlexRouter
                             continue;
                         if(a.GetDependency().GetId() != adesc.GetId())
                             continue;
-                        icon = GetIcon(tit, adesc.GetId());
+                        icon = GetIcon(tit, a.GetId());
                         var treeDependentItem = CreateTreeViewItem(Profile.GetPanelById(a.GetAssignedPanelId()).Name + "." + a.GetName(), a, tit, icon);
                         treeAdItem.Items.Add(treeDependentItem);
                     }
@@ -1064,13 +1103,12 @@ namespace FlexRouter
             if (tit == TreeItemType.Variable)
             {
                 var variable = Profile.GetVariableById(itemId);
-                if (variable is FsuipcVariable)
-                    return Properties.Resources.FsuipcVariable;
-                if (variable is MemoryPatchVariable)
-                    return Properties.Resources.MemoryVariable;
-//                if (variable is FakeVariable)
-//                    return Properties.Resources.FakeVariable;
-                return null;
+                return  ((ITreeItem)variable).GetIcon();
+            }
+            if (tit == TreeItemType.AccessDescriptor)
+            {
+                var descriptor = Profile.GetAccessDesciptorById(itemId);
+                return descriptor.GetIcon();
             }
             return null;
         }
@@ -1215,7 +1253,7 @@ namespace FlexRouter
             const string resultTokenText = "[R]";
             if (((CalcTokenNumber) tokenToPreprocess).TokenText == resultTokenText)
             {
-                ((CalcTokenNumber) tokenToPreprocess).Value = string.IsNullOrEmpty(_formulaEditorInputValueDec.Text) ? 0 : double.Parse(_formulaEditorInputValueDec.Text);
+                ((CalcTokenNumber) tokenToPreprocess).Value = string.IsNullOrEmpty(_formulaEditorInputValueDec.Text) ? 0 : double.Parse(_formulaEditorInputValueDec.Text, CultureInfo.InvariantCulture);
             }
             return tokenToPreprocess;
         }
@@ -1346,9 +1384,7 @@ namespace FlexRouter
         /// <param name="e"></param>
         private void SelectProfileDropDownClosed(object sender, EventArgs e)
         {
-            if (_selectProfile.Text == null)
-                return;
-            if (_selectProfile.Text == Profile.GetLoadedProfileName())
+            if (_selectProfile.Text == null || _selectProfile.Text == Profile.GetLoadedProfileName())
                 return;
             LoadProfile(_selectProfile.Text);
         }
@@ -1384,6 +1420,7 @@ namespace FlexRouter
         {
             PauseRouterOnChangeProfile();
             Profile.CreateNewProfile();
+            FillSelectProfileCombobox(ApplicationSettings.DefaultProfile);
             ResumeRouterOnChangeProfile();
         }
         /// <summary>
@@ -1474,16 +1511,17 @@ namespace FlexRouter
         }
         #endregion
 
-        private void _copyAccessDescriptor_Click(object sender, RoutedEventArgs e)
+        private void TurnControlsSynchronizationOffUnchecked(object sender, RoutedEventArgs e)
         {
-/*            var item = GetTreeSelectedItem(_accessDescriptorsTree);
-            if (item == null)
-                return;
-            if (item.Type != TreeItemType.AccessDescriptor)
-                return;
-            var descriptor = ((DescriptorBase) item.Object).Copy();
-            Profile.RegisterAccessDescriptor(descriptor);
-            RenewTrees();*/
+            ApplicationSettings.ControlsSynchronizationIsOff = false;
+            ApplicationSettings.SaveSettings();
         }
+
+        private void TurnControlsSynchronizationOffChecked(object sender, RoutedEventArgs e)
+        {
+            ApplicationSettings.ControlsSynchronizationIsOff = true;
+            ApplicationSettings.SaveSettings();
+        }
+
     }
 }

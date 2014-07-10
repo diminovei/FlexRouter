@@ -33,7 +33,6 @@
   <Phrase Name="EditorRangeMinimumValue" Value = "Минимум"/>
   <Phrase Name="EditorRangeMaximumValue" Value = "Максимум"/>
   <Phrase Name="EditorRangeDefaultValue" Value = "По-умолчанию"/>
-  <Phrase Name="EditorRangeUseDefaultValue" Value = "Использовать значени по-умолчанию"/>
   <Phrase Name="EditorRangeStep" Value = "Шаг"/>
   <Phrase Name="EditorLoopRange" Value = "Цикличность"/>
   <Phrase Name="EditorRangeGetValueFormula" Value = "Формула для получения значения"/>
@@ -51,8 +50,10 @@
   <Phrase Name="EditorAddVariable" Value = "Добавить переменную"/>
   <Phrase Name="EditorRemoveVariable" Value = "Удалить переменную"/>
   <Phrase Name="EditorDefaultStateColumnHeader" Value = "По-умолчанию"/>
+  <Phrase Name="EditorSetDefaultState" Value = "По-умолчанию"/>
   <Phrase Name="EditorAxisReset" Value = "Сброс"/>
   <Phrase Name="EditorAxisCalibrate" Value = "Калибровка"/>
+  <Phrase Name="EditorAxisLimitsLabel" Value = "Ограничение хода"/>
   <Phrase Name="EditorVariableIsAlreadyExists" Value = "Выбранная переменная уже добавлена"/>
   <Phrase Name="EditorDependentDescriptorsList" Value = "Список зависимых описателей"/>
   <Phrase Name="EditorStartInitializeBinaryInputButtonsList" Value = "Инициализировать"/>
@@ -91,6 +92,10 @@
   <Phrase Name="EditorHeaderPanel" Value = "Панель"/>
   <Phrase Name="EditorHeaderFakeVariable" Value = "Коммутатор"/>
 
+  <Phrase Name="EditorCreateProfile" Value = "Создание нового профиля"/>
+  <Phrase Name="EditorProfileName" Value = "Имя профиля"/>
+  <Phrase Name="EditorMainProcessName" Value = "Процесс симулятора"/>
+
   <Phrase Name="HardwareButton" Value = "Кнопка"/>
   <Phrase Name="HardwareEncoder" Value = "Энкодер"/>
   <Phrase Name="HardwareIndicator" Value = "Индикатор"/>
@@ -125,6 +130,7 @@
   <Phrase Name="SettingsImportProfileDialogHeader" Value = "Импортировать профиль"/>
   <Phrase Name="SettingsImportProfileKeepAssignmentsDialogHeader" Value = "Импортировать новую версию профиля и сохранить мои назначения"/>
   <Phrase Name="SettingsMessageInputProfileNewName" Value = "Выберете имя профиля"/>
+  <Phrase Name="SettingsTurnControlsSynchronizationOff" Value = "Отключить регулярную синхронизацию реальных и виртуальных тумблеров"/>
 
   <Phrase Name="TabInfo" Value = "Информация"/>
   <Phrase Name="TabSettings" Value = "Настройки"/>
@@ -146,4 +152,13 @@
   <Phrase Name="CommonLabelCopyToClipboard" Value = "Формулу в буфер обмена"/>
   <Phrase Name="CommonLabelCopyVariableToFormula" Value = "Вставить переменную в формулу"/>
   <Phrase Name="CommonLabelProfileManagement" Value = "Управление профилем"/>
+  <Phrase Name="CommonLabelError" Value = "Ошибка"/>
+  <Phrase Name="CommonLabelRouterState" Value = "Состояние роутера"/>
+  <Phrase Name="CommonLabelConnectedHardwareList" Value = "Подключенное железо"/>
+  <Phrase Name="CommonLabelProblemsList" Value = "Проблемы"/>
+  <Phrase Name="CommonLabelLastHardwareEvent" Value = "Последнее событие"/>
+  <Phrase Name="CommonStateRunning" Value = "Запущен"/>
+  <Phrase Name="CommonStatePaused" Value = "Приостановлен"/>
+  <Phrase Name="CommonStateStopped" Value = "Остановлен"/>
+  <Phrase Name="CommonProfileManagement" Value = "Управление профилем"/>
 </FlexRouterProfile>

@@ -82,14 +82,20 @@ namespace FlexRouter
             _routerCoreStopCommand = false;
             ShutDownOutputHardware();
             if (!pause)
+            {
                 HardwareManager.Disconnect();
+                Messenger.AddMessage(MessageToMainForm.RouterStopped);
+            }
             else
+            {
                 _isPaused = true;
-            Messenger.AddMessage(MessageToMainForm.RouterStopped);
+                Messenger.AddMessage(MessageToMainForm.RouterPaused);
+            }
             return true;
         }
         private void ThreadLoop()
         {
+            int counter = 0;
             while (true)
             {
                 lock (_routerCoreThreadLocker)
@@ -108,26 +114,38 @@ namespace FlexRouter
                     }
                 }
                 Work();
+                counter++;
+                if (counter > 30)
+                {
+                    counter = 0;
+                    if(!ApplicationSettings.ControlsSynchronizationIsOff)
+                        SoftDump();
+                }
                 Thread.Sleep(100);
+            }
+        }
+
+        private void SoftDump()
+        {
+            var eventsCache = HardwareManager.SoftDump();
+            if (eventsCache != null)
+            {
+                foreach (var controlEvent in eventsCache)
+                    Profile.SendEventToControlProcessors(controlEvent);
             }
         }
         private void Work()
         {
             var events = HardwareManager.GetIncomingEvents();
-//            if (events == null)
-//                return;
+
             // Обрабатываем все события
             if (events != null)
             {
                 foreach (var controlEvent in events)
                 {
                     Profile.SendEventToControlProcessors(controlEvent);
-                    //                Messenger.AddMessage(MessageToMainForm.ShowEvent, string.Format("{0}:{1}", controlEvent.Hardware.GetHardwareGuid(), controlEvent.RotateDirection ? ">>>" : "<<<"));
                     if(controlEvent.Hardware.ModuleType != HardwareModuleType.Axis)
                         Messenger.AddMessage(MessageToMainForm.NewHardwareEvent, controlEvent);
-                    //                var a = controlEvent.Hardware.GetHardwareGuid();
-                    //                SendEventInfoToMainForm(controlEvent);
-                    //                ProcessControlEvent(controlEvent);
                 }
             }
 
@@ -174,36 +192,5 @@ namespace FlexRouter
             HardwareManager.Dump(DumpMode.AllKeys);
             HardwareManager.DumpModule(assignments);
         }
-/*        private void DumpKeys()
-        {
-            var modules = new List<string>();
-            foreach (var processor in Profile.ControlProcessors.ToArray())
-            {
-                var hw = processor.GetHardwareUsed();
-                var moduleType = processor.GetUsedHardwareModuleType();
-                if (moduleType != ArccModuleType.Button && moduleType != ArccModuleType.ButtonAsEncoder && moduleType != ArccModuleType.ButtonRepeater)
-                    continue;
-
-                var module = hw.MotherBoardId + ":" + hw.ModuleId;
-                if (modules.Contains(module))
-                    continue;
-                modules.Add(module);
-                var dev = new VisualizerEvent
-                {
-                    Hardware = new ControlProcessorHardware { MotherBoardId = (hw.MotherBoardId), ModuleId = hw.ModuleId, ModuleType = ArccModuleType.Button },
-                    Command = ((byte)ButtonCommand.DumpAllKeys) // DumpAllKeys
-                };
-                HardwareManager.PostOutgoingEvent(dev);
-                var dev1 = new VisualizerEvent
-                {
-                    Hardware = new ControlProcessorHardware { MotherBoardId = (hw.MotherBoardId), ModuleId = hw.ModuleId, ModuleType = ArccModuleType.Button },
-                    Command = ((byte)ButtonCommand.DumpPressedKeysOnly)
-                };
-                HardwareManager.PostOutgoingEvent(dev1);
-            }
-            HardwareManager.Dump(DumpMode.AllKeys);
-            HardwareManager.Dump(DumpMode.PressedKeys);
-            IsNeedToDumpKeys = false;
-        }*/
     }
 }

@@ -1,4 +1,5 @@
-﻿using FlexRouter.AccessDescriptors.Helpers;
+﻿using System.Drawing;
+using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.CalculatorRelated;
 using FlexRouter.CalculatorRelated.Tokens;
@@ -21,6 +22,12 @@ namespace FlexRouter.AccessDescriptors
         {
             return LanguageManager.GetPhrase(Phrases.EditorTypeMemoryRange);
         }
+
+        public override Bitmap GetIcon()
+        {
+            return Properties.Resources.Encoder;
+        }
+
         /// <summary>
         /// Отдельный калькулятор не понимающий [R], для того, чтобы не зацикливаться на получении значения из переменной 
         /// </summary>

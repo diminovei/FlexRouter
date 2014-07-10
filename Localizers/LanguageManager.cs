@@ -42,7 +42,7 @@ namespace FlexRouter.Localizers
         EditorRangeMinimumValue,
         EditorRangeMaximumValue,
         EditorRangeDefaultValue,
-        EditorRangeUseDefaultValue,
+        EditorSetDefaultState,
         EditorRangeStep,
         EditorRangeGetValueFormula,
         EditorLoopRange,
@@ -61,6 +61,7 @@ namespace FlexRouter.Localizers
         EditorDefaultStateColumnHeader,
         EditorAxisReset,
         EditorAxisCalibrate,
+        EditorAxisLimitsLabel,
         EditorVariableIsAlreadyExists,
         EditorDependentDescriptorsList,
         EditorStartInitializeBinaryInputButtonsList,
@@ -134,6 +135,7 @@ namespace FlexRouter.Localizers
         SettingsImportProfileDialogHeader,
         SettingsImportProfileKeepAssignmentsDialogHeader,
         SettingsMessageInputProfileNewName,
+        SettingsTurnControlsSynchronizationOff,
 
         TabInfo,
         TabSettings,
@@ -155,6 +157,18 @@ namespace FlexRouter.Localizers
         CommonLabelCopyToClipboard,
         CommonLabelCopyVariableToFormula,
         CommonLabelProfileManagement,
+        CommonLabelError,
+        CommonLabelRouterState,
+        CommonLabelConnectedHardwareList,
+        CommonLabelProblemsList,
+        CommonStateRunning,
+        CommonStatePaused,
+        CommonStateStopped,
+        CommonLabelLastHardwareEvent,
+        CommonProfileManagement,
+        EditorCreateProfile,
+        EditorProfileName,
+        EditorMainProcessName
     }
 
     static public class LanguageManager

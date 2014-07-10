@@ -7,6 +7,7 @@ using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
 using FlexRouter.Hardware.Joystick;
 using FlexRouter.Hardware.Keyboard;
+using SlimDX.Direct3D10;
 
 namespace FlexRouter.Hardware
 {
@@ -18,7 +19,8 @@ namespace FlexRouter.Hardware
         /// Таймер для смены фазы поиска компонентов
         /// </summary>
         private static Timer _timer;
-        
+
+        private static readonly object ObjectToLock = new object();
         static HardwareManager()
         {
             _timer = new Timer(_ => OnTimedEvent(null, null), null, 500, 500);
@@ -173,7 +175,11 @@ namespace FlexRouter.Hardware
             }
             // Именно здесь, чтобы не добавлять FakeEvent в FakeEvent. Получение данных из FakeEvent позже
             foreach (var ev in ie)
+            {
                 SetLastControlEvent(ev);
+                if (ev.Hardware.ModuleType == HardwareModuleType.Button || ev.Hardware.ModuleType == HardwareModuleType.Axis)
+                    SoftDumpCache[ev.Hardware.GetHardwareGuid()] = ev;
+            }
             
             // Получение данных из FakeEvent
             var fakeEvents = GetFakeIncomingEvents();
@@ -211,6 +217,13 @@ namespace FlexRouter.Hardware
         #region Код, запоминающий состояния всех контролов и позволяющий отправить фэйковое сообщение, "сдампить" контролы
         private static readonly Queue<ControlEventBase> IncomingEvents = new Queue<ControlEventBase>();
         private static readonly Dictionary<string, ControlEventBase> LastControlEvents = new Dictionary<string, ControlEventBase>();
+        /// <summary>
+        /// Мягкий дамп нужен для того, чтобы привести виртуальные тумблеры в соответствие с железячными сразу после загрузки самолёта
+        /// А также поддерживать их в согласованном состоянии в случае, если пользователь переключает их в симуляторе мышью
+        /// Сюда попадают только кнопки и оси
+        /// Мягкий дамп делается раз в N секунд
+        /// </summary>
+        private static readonly Dictionary<string, ControlEventBase> SoftDumpCache = new Dictionary<string, ControlEventBase>();
         static private void SetLastControlEvent(ControlEventBase controlEvent)
         {
             LastControlEvents[controlEvent.Hardware.GetHardwareGuid()] = controlEvent;
@@ -249,6 +262,16 @@ namespace FlexRouter.Hardware
                     ie.Add(IncomingEvents.Dequeue());
             }
             return ie.ToArray();
+        }
+        /// <summary>
+        /// Получить актуальное состояние всех кнопок и осей
+        /// </summary>
+        /// <returns>Список событий</returns>
+        public static ControlEventBase[] SoftDump()
+        {
+            var eventsArray = new List<ControlEventBase>();
+            eventsArray.AddRange(SoftDumpCache.Values);
+            return eventsArray.ToArray();
         }
         #endregion
     }

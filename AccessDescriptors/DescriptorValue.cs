@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Navigation;
 using System.Xml;
@@ -17,6 +18,11 @@ namespace FlexRouter.AccessDescriptors
         public override string GetDescriptorType()
         {
             return LanguageManager.GetPhrase(Phrases.EditorTypeMemoryMultistate);
+        }
+
+        public override Bitmap GetIcon()
+        {
+            return Properties.Resources.Button;
         }
 
         private int _defaultStateId = -1;

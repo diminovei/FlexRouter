@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Xml;
@@ -73,6 +74,12 @@ namespace FlexRouter.AccessDescriptors
         {
             return LanguageManager.GetPhrase(Phrases.EditorTypeRangeUnion);
         }
+
+        public override Bitmap GetIcon()
+        {
+            return Properties.Resources.RangeUnion;
+        }
+
         private readonly List<int> _loadedDependentDescriptors = new List<int>();
         public override void Initialize()
         {

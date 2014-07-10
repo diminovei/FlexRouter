@@ -11,11 +11,13 @@
                         <ColumnDefinition Width="753*"/>
                     </Grid.ColumnDefinitions>
                     <ListBox Name="ConnectedDevicesList" Margin="10,75,8,339" Grid.Column="1"/>
-                    <TextBox Name="Output" HorizontalAlignment="Left" Height="23" Margin="113,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Grid.Column="1"/>
-                    <TextBox x:Name="_incomingEvent" HorizontalAlignment="Left" Height="23" Margin="110,225,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="632" Grid.Column="1" AcceptsTab="True"/>
-                    <Label Content="Router state" HorizontalAlignment="Left" Margin="10,8,0,0" VerticalAlignment="Top" Grid.Column="1"/>
-                    <Label Content="Hardware list" HorizontalAlignment="Left" Margin="10,44,0,0" VerticalAlignment="Top" Grid.Column="1"/>
-                    <Label Content="Last event" HorizontalAlignment="Left" Margin="10,222,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+                    <TextBox Name="Output" HorizontalAlignment="Left" Height="23" Margin="198,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="545" Grid.Column="1"/>
+                    <TextBox x:Name="_incomingEvent" HorizontalAlignment="Left" Height="23" Margin="10,248,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="733" Grid.Column="1" AcceptsTab="True"/>
+                    <Label x:Name="_routerStateLabel" Content="Router state" HorizontalAlignment="Left" Margin="10,8,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+                    <Label x:Name="_connectedHardwareLabel" Content="Hardware list" HorizontalAlignment="Left" Margin="10,44,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+                    <Label x:Name="_lastEventLabel" Content="Last event" HorizontalAlignment="Left" Margin="10,222,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+                    <ListBox x:Name="_statusList" Grid.Column="1" HorizontalAlignment="Left" Height="242" Margin="10,307,0,0" VerticalAlignment="Top" Width="733"/>
+                    <Label x:Name="_problemsLabel" Content="Last event" HorizontalAlignment="Left" Margin="10,276,0,0" VerticalAlignment="Top" Grid.Column="1"/>
                 </Grid>
             </TabItem>
             <TabItem Header="AccessDescriptors" Name="tabAccessDescriptors">
@@ -34,7 +36,6 @@
                     <ComboBox x:Name="_accessDescriptorsToCreateList" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Bottom" Width="199" Grid.Column="2" DropDownOpened="AccessDescriptorToCreateDropDownOpened"/>
                     <TextBox Text="{Binding ElementName=__accessDescriptorsToCreateList, Path=Text}" TextChanged="OnAccessDescriptorsToCreateTextChanged" Visibility="Hidden" Grid.ColumnSpan="2"/>
                     <Button x:Name="_removeAccessDescriptor" Content="Remove access descriptor" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="75" Click="RemoveAccessDescriptorClick"/>
-                    <Button x:Name="_copyAccessDescriptor" Content="Copy" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="75" Click="_copyAccessDescriptor_Click" Grid.Column="1" Margin="202,0,0,0"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Variables" Name="tabVariables" HorizontalAlignment="Left">
@@ -87,7 +88,7 @@
                     <Label x:Name="_result" Content="[R]=Dec/Hex" Grid.Column="3" HorizontalAlignment="Left" Margin="10,8,0,0" VerticalAlignment="Top"/>
                     <Label x:Name="_formulaResultLabel" Content="Result = Dec/Hex/Bool" Grid.Column="3" HorizontalAlignment="Left" Margin="10,493,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.316,0.077" Width="149"/>
                     <TextBox x:Name="_formulaEditorInputValueDec" Grid.Column="3" HorizontalAlignment="Left" Height="23" Margin="124,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" PreviewTextInput="FormulaEditorInputValueDecPreviewTextInput" TextChanged="FormulaEditorInputValueDecTextChanged"/>
-                    <Label x:Name="_error" Content="Error" Grid.Column="3" HorizontalAlignment="Left" Margin="10,439,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.342,-0.231"/>
+                    <Label x:Name="_errorLabel" Content="Error" Grid.Column="3" HorizontalAlignment="Left" Margin="10,439,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.342,-0.231"/>
                     <TextBox x:Name="_formulaError" Grid.Column="3" HorizontalAlignment="Left" Height="21" Margin="10,470,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="359"/>
                     <Button x:Name="_copyFormulaToClipboard" HorizontalAlignment="Right" VerticalAlignment="Bottom" Content="Copy" Width="135" Grid.Column="3" Click="CopyFormulaToClipboardClick" Margin="0,0,10,10"/>
                     <Button x:Name="_addVarToFormula" Content="&gt;" Width="152" HorizontalAlignment="Right" VerticalAlignment="Bottom" Grid.Column="2" Click="AddVarToFormulaClick" Margin="0,0,10,10"/>
@@ -112,7 +113,9 @@
                     <Button x:Name="_createNewProfile" HorizontalAlignment="Right" VerticalAlignment="Top" Content="Create" Grid.Column="1" Margin="0,95,10,0" Click="CreateNewProfileClick" Width="115"/>
                     <Button x:Name="_removeProfile" HorizontalAlignment="Right" VerticalAlignment="Top" Content="Remove" Grid.Column="1" Margin="0,122,10,0" Click="RemoveProfileClick" Width="115"/>
                     <Button x:Name="_renameProfile" HorizontalAlignment="Right" VerticalAlignment="Top" Content="Rename" Grid.Column="1" Margin="0,149,10,0" Click="RenameProfileClick" Width="115"/>
-                    <GroupBox Header="GroupBox" Margin="5,41,0,377" Grid.Column="1"/>
+                    <GroupBox x:Name="_profileManagementGroup" Header="GroupBox" Margin="5,41,0,377" Grid.Column="1"/>
+                    <Label x:Name="_turnControlsSynchronizationOffLabel" Content="Label" Grid.Column="1" HorizontalAlignment="Left"  VerticalAlignment="Top" Margin="5,176,0,0"/>
+                    <CheckBox x:Name="_turnControlsSynchronizationOff" Content="" Grid.Column="1" Margin="0,186,10,0" HorizontalAlignment="Right"  VerticalAlignment="Top" Unchecked="TurnControlsSynchronizationOffUnchecked" Checked="TurnControlsSynchronizationOffChecked"/>
                 </Grid>
             </TabItem>
         </TabControl>

@@ -53,7 +53,7 @@ namespace FlexRouter.CalculatorRelated
         /// </summary>
         /// <param name="formula">текст формулы</param>
         /// <returns>разбор прошёл удачно, если в последнем токене код ошибки ErrorCode.Ok. Количество токенов всегда больше нуля</returns>
-        public ICalcToken[] TokenizeFormulaSkipFormatters(string formula)
+        private ICalcToken[] TokenizeFormulaSkipFormatters(string formula)
         {
             var tokens = new List<ICalcToken>();
             var tokenId = 0;

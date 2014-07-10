@@ -276,9 +276,9 @@ namespace FlexRouterUnitTests
             rangeAccessDescriptor.SetName("AccessDescriptorRange");
             rangeAccessDescriptor.SetFormula(0, secondTestVariableId, "[R]");
             rangeAccessDescriptor.SetFormula(1, thirdTestVariableId, "[R]:1");
-            rangeAccessDescriptor.MinimumValue = 0;
-            rangeAccessDescriptor.MaximumValue = 4;
-            rangeAccessDescriptor.SetStep(0.5);
+            rangeAccessDescriptor.SetMinimumValueFormula("0");
+            rangeAccessDescriptor.SetMaximumValueFormula("4");
+            rangeAccessDescriptor.SetStepFormula("0.5");
             rangeAccessDescriptor.IsLooped = true;
             var rangeAccessDescriptorId = Profile.RegisterAccessDescriptor(rangeAccessDescriptor);
             var tempFile = Path.GetTempFileName();
