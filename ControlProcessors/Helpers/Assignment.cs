@@ -1,4 +1,4 @@
-﻿namespace FlexRouter.ControlProcessors
+﻿namespace FlexRouter.ControlProcessors.Helpers
 {
     /// <summary>
     /// Класс для обмена данными между DataGrid редактора и ControlProcessor'ом

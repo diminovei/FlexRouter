@@ -82,7 +82,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
             if (_powerFormulaId == -1)
                 _powerFormulaId = GlobalFormulaKeeper.Instance.StoreFormula(powerFormula, GetId());
             else
-                GlobalFormulaKeeper.Instance.ChangeFormulaText(_powerFormulaId, powerFormula);
+                _powerFormulaId = GlobalFormulaKeeper.Instance.StoreOrChangeFormulaText(_powerFormulaId, powerFormula, GetId());
         }
 
         public string GetPowerFormula()

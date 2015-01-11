@@ -54,6 +54,7 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
         }
         public AssignEditorForBinaryInput(IControlProcessor processor, bool enableInverse, HardwareModuleType hardwareSupported)
         {
+            InitializeComponent();
             _hardwareSupported = hardwareSupported;
             _assignedControlProcessor = (ButtonBinaryInputProcessor)processor;
             var usedHardware = _assignedControlProcessor.GetUsedHardwareWithStates();
@@ -63,7 +64,6 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
             }
             _assignEditorHelper = new AssignEditorHelper(processor, enableInverse);
 
-            InitializeComponent();
             Localize();
         }
         /// <summary>

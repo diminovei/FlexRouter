@@ -20,22 +20,28 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             Localize();
             _assignedAccessDescriptor = assignedAccessDescriptor;
             _digitsAfterPoint.Text = _assignedAccessDescriptor.GetNumberOfDigitsAfterPoint().ToString(CultureInfo.InvariantCulture);
+            _totalDigits.Text = _assignedAccessDescriptor.GetNumberOfDigits().ToString(CultureInfo.InvariantCulture);
         }
 
         public void Save()
         {
             var digits = byte.Parse(_digitsAfterPoint.Text);
             _assignedAccessDescriptor.SetNumberOfDigitsAfterPoint(digits);
+            
+            var totalDigits = byte.Parse(_totalDigits.Text);
+            _assignedAccessDescriptor.SetNumberOfDigits(totalDigits);
         }
 
         public void Localize()
         {
             _digitsAfterPointLabel.Content = LanguageManager.GetPhrase(Phrases.EditorDigitsAfterPoint);
+            _totalDigitsLabel.Content = LanguageManager.GetPhrase(Phrases.EditorDigitsTotalNumber);
         }
 
         public bool IsDataChanged()
         {
-            return byte.Parse(_digitsAfterPoint.Text)!=_assignedAccessDescriptor.GetNumberOfDigitsAfterPoint();
+            return byte.Parse(_digitsAfterPoint.Text)!=_assignedAccessDescriptor.GetNumberOfDigitsAfterPoint()
+                || byte.Parse(_totalDigits.Text) != _assignedAccessDescriptor.GetNumberOfDigits();
         }
         /// <summary>
         /// Корректно ли заполнены поля
@@ -43,7 +49,13 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
         /// <returns>string.Empty или null, если корректно, иначе текст ошибок</returns>
         public EditorFieldsErrors IsCorrectData()
         {
-            return new EditorFieldsErrors(null);
+            var emptyField = string.Empty;
+            if (string.IsNullOrEmpty(_totalDigits.Text))
+                emptyField += "\n" + LanguageManager.GetPhrase(Phrases.EditorDigitsTotalNumber);
+            if (string.IsNullOrEmpty(_digitsAfterPoint.Text))
+                emptyField += "\n" + LanguageManager.GetPhrase(Phrases.EditorDigitsAfterPoint);
+
+            return new EditorFieldsErrors(emptyField);
         }
 
         private void DigitsAfterPointPreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)

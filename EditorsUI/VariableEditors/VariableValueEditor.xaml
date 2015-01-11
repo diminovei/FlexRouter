@@ -5,10 +5,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
              d:DesignHeight="70" d:DesignWidth="313" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="Auto">
-    <Grid Margin="0">
-        <Label x:Name="_variableDecValueLabel" Content="Dec Value" HorizontalAlignment="Left" Margin="10,8,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.184,-3" Width="168"/>
-        <TextBox x:Name="_variableDecValue" Height="23" Margin="0,11,10,0" VerticalAlignment="Top" Width="120" HorizontalAlignment="Right"/>
-        <Label x:Name="_variableHexValueLabel" Content="Hex Value" HorizontalAlignment="Left" Margin="10,36,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.184,-3" Width="168"/>
-        <TextBox x:Name="_variableHexValue" Height="23" Margin="0,39,10,0" VerticalAlignment="Top" Width="120" HorizontalAlignment="Right"/>
+    <Grid Margin="0" Unloaded="Grid_Unloaded">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="5*"/>
+        </Grid.ColumnDefinitions>
+        <Label x:Name="_variableDecValueLabel" Content="Dec Value" HorizontalAlignment="Left" Margin="10,8,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.184,-3" Width="168" Grid.ColumnSpan="2"/>
+        <TextBox x:Name="_variableDecValue" Height="23" Margin="0,11,10,0" VerticalAlignment="Top" Width="Auto" Grid.Column="1"/>
+        <Label x:Name="_variableHexValueLabel" Content="Hex Value" HorizontalAlignment="Left" Margin="10,36,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.184,-3" Width="168" Grid.ColumnSpan="2"/>
+        <TextBox x:Name="_variableHexValue" Height="23" Margin="0,39,10,0" VerticalAlignment="Top" Width="Auto" Grid.Column="1"/>
     </Grid>
 </UserControl>

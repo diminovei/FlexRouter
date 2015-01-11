@@ -1,4 +1,6 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Management;
+using System.Threading;
 using FlexRouter.VariableSynchronization;
 using System.Diagnostics;
 using FlexRouter.VariableWorkerLayer;
@@ -320,4 +322,76 @@ namespace FlexRouter
             }*/
         }
     }
+    //protected override void OnSourceInitialized(EventArgs e)
+    //   {
+    //       base.OnSourceInitialized(e);
+
+    //       // Adds the windows message processing hook and registers USB device add/removal notification.
+    //       HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+    //       if (source != null)
+    //       {
+    //           windowHandle = source.Handle;
+    //           source.AddHook(HwndHandler);
+    //           UsbNotification.RegisterUsbDeviceNotification(windowHandle);
+    //       }
+    //   }
+
+    /*        /// <summary>
+            /// Method that receives window messages.
+            /// </summary>
+           private IntPtr HwndHandler(IntPtr hwnd, int msg, IntPtr wparam, IntPtr lparam, ref bool handled)
+            {
+                if (msg == UsbNotification.WmDevicechange)
+                {
+                    switch ((int) wparam)
+                    {
+                        case UsbNotification.DbtDeviceremovecomplete:
+                            //Usb_DeviceRemoved(); // this is where you do your magic
+                            System.Diagnostics.Debug.Print(DateTime.Now + ": UsbRemoved");
+                            break;
+                        case UsbNotification.DbtDevicearrival:
+                            System.Diagnostics.Debug.Print(DateTime.Now + ": UsbAdded");
+
+    //                    Usb_DeviceAdded(); // this is where you do your magic
+                            break;
+                    }
+                }
+
+                handled = false;
+                return IntPtr.Zero;
+            }*/
+/*        class USBDeviceInfo
+        {
+            public USBDeviceInfo(string deviceID, string pnpDeviceID, string description)
+            {
+                this.DeviceID = deviceID;
+                this.PnpDeviceID = pnpDeviceID;
+                this.Description = description;
+            }
+            public string DeviceID { get; private set; }
+            public string PnpDeviceID { get; private set; }
+            public string Description { get; private set; }
+        }
+          private static List<USBDeviceInfo> GetUsbDevices()
+            {
+                var devices = new List<USBDeviceInfo>();
+
+                ManagementObjectCollection collection;
+                using (var searcher = new ManagementObjectSearcher(@"Select * From Win32_USBHub"))
+                    collection = searcher.Get();
+
+                foreach (var device in collection)
+                {
+                    devices.Add(new USBDeviceInfo(
+                        (string) device.GetPropertyValue("DeviceID"),
+                        (string) device.GetPropertyValue("PNPDeviceID"),
+                        (string) device.GetPropertyValue("Description")
+                        ));
+                }
+
+                collection.Dispose();
+                return devices;
+            }*/
+
+
 }

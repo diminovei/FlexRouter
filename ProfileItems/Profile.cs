@@ -1,20 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
-using FlexRouter.AccessDescriptors;
 using FlexRouter.AccessDescriptors.Helpers;
-using FlexRouter.ControlProcessors;
 using FlexRouter.ControlProcessors.Helpers;
-using FlexRouter.EditorPanels;
 using FlexRouter.EditorsUI.Dialogues;
 using FlexRouter.Hardware;
 using FlexRouter.Hardware.HardwareEvents;
@@ -25,14 +20,12 @@ using FlexRouter.VariableWorkerLayer;
 using FlexRouter.VariableWorkerLayer.MethodFakeVariable;
 using FlexRouter.VariableWorkerLayer.MethodFsuipc;
 using FlexRouter.VariableWorkerLayer.MethodMemoryPatch;
-using SlimDX.Direct3D10;
 using MessageBox = System.Windows.Forms.MessageBox;
 
 namespace FlexRouter.ProfileItems
 {
     public static class Profile
     {
-//        public AccessDescriptors = new AccessDescriptors();
         private static readonly Dictionary<int, Panel> PanelsStorage = new Dictionary<int, Panel>();
 
         private static readonly Dictionary<int, IControlProcessor> ControlProcessorsStorage =
@@ -229,27 +222,39 @@ namespace FlexRouter.ProfileItems
             }
         }
 
-        public static ControlEventBase[] GetControlProcessorsNewEvents()
+        public static IEnumerable<ControlEventBase> GetControlProcessorsNewEvents()
         {
             lock (ControlProcessorsStorage)
             {
-                return
-                    ControlProcessorsStorage.Values.Where(cp => cp is IVisualizer)
-                        .Select(cp => ((IVisualizer) cp).GetNewEvent())
-                        .Where(ev => ev != null)
-                        .ToArray();
+                var evs = new List<ControlEventBase>();
+                foreach (var cps in ControlProcessorsStorage)
+                {
+                    if(!(cps.Value is IVisualizer))
+                        continue;
+                    var range = ((IVisualizer) cps.Value).GetNewEvent();
+                    if(range == null)
+                        continue;
+                    evs.AddRange(range);
+                }
+                return evs;
             }
         }
 
-        public static ControlEventBase[] GetControlProcessorsClearEvents()
+        public static IEnumerable<ControlEventBase> GetControlProcessorsClearEvents()
         {
             lock (ControlProcessorsStorage)
             {
-                return
-                    ControlProcessorsStorage.Values.Where(cp => cp is IVisualizer)
-                        .Select(cp => ((IVisualizer) cp).GetClearEvent())
-                        .Where(ev => ev != null)
-                        .ToArray();
+                var evs = new List<ControlEventBase>();
+                foreach (var cps in ControlProcessorsStorage)
+                {
+                    if (!(cps.Value is IVisualizer))
+                        continue;
+                    var range = ((IVisualizer)cps.Value).GetClearEvent();
+                    if (range == null)
+                        continue;
+                    evs.AddRange(range);
+                }
+                return evs;
             }
         }
 
@@ -267,10 +272,6 @@ namespace FlexRouter.ProfileItems
                 index++;
             }
         }
-
-//        private static Dictionary<string, string> _profileList = new Dictionary<string, string>();
-        //ToDo: временно
-//        private static string ProfileName = "First";
         private const string ProfileHeader = "FlexRouterProfile";
         private const string ProfileExtensionMask = "*.ap";
         private const string ProfileType = "Aircraft";
@@ -501,17 +502,8 @@ namespace FlexRouter.ProfileItems
             while (navPointer.MoveNext())
             {
                 var type = navPointer.Current.GetAttribute("Type", navPointer.Current.NamespaceURI);
-                DescriptorBase ad = null;
-                if (type == "DescriptorBinaryOutput")
-                    ad = new DescriptorBinaryOutput();
-                if (type == "DescriptorIndicator")
-                    ad = new DescriptorIndicator();
-                if (type == "DescriptorRange")
-                    ad = new DescriptorRange();
-                if (type == "DescriptorValue")
-                    ad = new DescriptorValue();
-                if (type == "RangeUnion")
-                    ad = new RangeUnion();
+                var ad = Utils.FindAndCreate<DescriptorBase>(type);
+
                 if (ad != null)
                 {
                     ad.Load(navPointer.Current);
@@ -532,25 +524,31 @@ namespace FlexRouter.ProfileItems
                     continue;
                 }
                 var accessDescriptor = GetAccessDesciptorById(id);
-                IControlProcessor cp = null;
-                if (type == "AxisRangeProcessor")
-                    cp = new AxisRangeProcessor(accessDescriptor);
-                if (type == "LampProcessor")
-                    cp = new LampProcessor(accessDescriptor);
-                if (type == "IndicatorProcessor")
-                    cp = new IndicatorProcessor(accessDescriptor);
-                if (type == "EncoderProcessor")
-                    cp = new EncoderProcessor(accessDescriptor);
-                if (type == "ButtonProcessor")
-                    cp = new ButtonProcessor(accessDescriptor);
-                if (type == "ButtonPlusMinusProcessor")
-                    cp = new ButtonPlusMinusProcessor(accessDescriptor);
-                if (type == "ButtonBinaryInputProcessor")
-                    cp = new ButtonBinaryInputProcessor(accessDescriptor);
+
+                Object[] args = { accessDescriptor };
+                var cp = Utils.FindAndCreate<IControlProcessor>(type, args);
+
+                //IControlProcessor cp = null;
+                //if (type == "AxisRangeProcessor")
+                //    cp = new AxisRangeProcessor(accessDescriptor);
+                //if (type == "LampProcessor")
+                //    cp = new LampProcessor(accessDescriptor);
+                //if (type == "IndicatorProcessor")
+                //    cp = new IndicatorProcessor(accessDescriptor);
+                //if (type == "LedMatrixIndicatorProcessor")
+                //    cp = new LedMatrixIndicatorProcessor(accessDescriptor);
+                //if (type == "EncoderProcessor")
+                //    cp = new EncoderProcessor(accessDescriptor);
+                //if (type == "ButtonProcessor")
+                //    cp = new ButtonProcessor(accessDescriptor);
+                //if (type == "ButtonPlusMinusProcessor")
+                //    cp = new ButtonPlusMinusProcessor(accessDescriptor);
+                //if (type == "ButtonBinaryInputProcessor")
+                //    cp = new ButtonBinaryInputProcessor(accessDescriptor);
                 if (cp != null)
                 {
                     cp.Load(navPointer.Current);
-                    var cpId = RegisterControlProcessor((IControlProcessor)cp, id);
+                    var cpId = RegisterControlProcessor(cp, id);
                     var ad = AccessDescriptorsStorage[id] as DescriptorMultistateBase;
                     if (ad!=null)
                     {
@@ -599,6 +597,7 @@ namespace FlexRouter.ProfileItems
             AccessDescriptorsStorage.Clear();
             VariableManager.Clear();
             PanelsStorage.Clear();
+            GlobalFormulaKeeper.Instance.ClearAll();
             _mainSimulatorProcess = string.Empty;
             _moduleExtensionFilter = string.Empty;
             _currentProfileName = null;

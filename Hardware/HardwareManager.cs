@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using FlexRouter.Hardware.Arcc;
+using FlexRouter.Hardware.F3;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
 using FlexRouter.Hardware.Joystick;
 using FlexRouter.Hardware.Keyboard;
-using SlimDX.Direct3D10;
 
 namespace FlexRouter.Hardware
 {
@@ -20,13 +20,14 @@ namespace FlexRouter.Hardware
         /// </summary>
         private static Timer _timer;
 
-        private static readonly object ObjectToLock = new object();
+//        private static readonly object ObjectToLock = new object();
         static HardwareManager()
         {
             _timer = new Timer(_ => OnTimedEvent(null, null), null, 500, 500);
             AddHardwareClass(new ArccDevicesManager());
             AddHardwareClass(new JoystickDevicesManager());
             AddHardwareClass(new KeyboardDevicesManager());
+            AddHardwareClass(new F3DevicesManager());
         }
         #region Поиск компонентов
         /// <summary>
@@ -118,13 +119,14 @@ namespace FlexRouter.Hardware
         /// <returns></returns>
         static public bool Connect()
         {
+            System.Diagnostics.Debug.Print("Connect");
             var result = true;
             foreach (var hardware in Hardwares)
             {
                 if (!hardware.Connect())
                     result = false;
             }
-
+            System.Diagnostics.Debug.Print("Connected");
             return result;
         }
 
@@ -136,12 +138,11 @@ namespace FlexRouter.Hardware
             foreach (var hardware in Hardwares)
                 hardware.Disconnect();
         }
-        static public void DumpModule(ControlProcessorHardware[] hardware)
+        static public void Dump(ControlProcessorHardware[] hardware)
         {
             foreach (var item in Hardwares)
-                item.DumpModule(hardware);
+                item.Dump(hardware);
         }
-
         /// <summary>
         /// Получить список подключенных устройств
         /// </summary>
@@ -156,6 +157,21 @@ namespace FlexRouter.Hardware
                     allDevices.AddRange(devices);
             }
             return allDevices.ToArray();
+        }
+
+        /// <summary>
+        /// Получить информацию о возможностях устройства
+        /// </summary>
+        /// <param name="cph"></param>
+        /// <param name="deviceSubType"></param>
+        public static int[] GetCapacity(ControlProcessorHardware cph, DeviceSubType deviceSubType)
+        {
+            foreach (var hardware in Hardwares)
+            {
+                if (hardware.GetConnectedDevices().Contains(cph.MotherBoardId))
+                    return hardware.GetCapacity(cph, deviceSubType);
+            }
+            return null;
         }
 
         /// <summary>
@@ -185,7 +201,7 @@ namespace FlexRouter.Hardware
             var fakeEvents = GetFakeIncomingEvents();
             ie.AddRange(fakeEvents);
             
-            return ie.Count == 0 ? null : ie.ToArray();
+            return ie.Count == 0 ? new ControlEventBase[0] : ie.ToArray();
         }
         /// <summary>
         /// Отправить на устройство исходящее событие
@@ -199,6 +215,19 @@ namespace FlexRouter.Hardware
             foreach (var hardware in Hardwares)
                 hardware.PostOutgoingEvent(outgoingEvent);
         }
+        static public void PostOutgoingEvents(List<ControlEventBase> outgoingEvents)
+        {
+            var oe = new List<ControlEventBase>();
+            foreach (var ev in outgoingEvents)
+            {
+                if (ev.Hardware.GetHardwareGuid() == _contolInSearchGuid)
+                    continue;
+                SetLastControlEvent(ev);
+                oe.Add(ev);
+            }
+            foreach (var hardware in Hardwares)
+                hardware.PostOutgoingEvents(oe.ToArray());
+        }
         
         /// <summary>
         /// Отправить на устройство исходящее событие
@@ -208,11 +237,6 @@ namespace FlexRouter.Hardware
         {
             foreach (var hardware in Hardwares)
                 hardware.PostOutgoingEvent(outgoingEvent);
-        }
-        static public void Dump(DumpMode dumpMode)
-        {
-            foreach (var hardware in Hardwares)
-                hardware.Dump(dumpMode);
         }
         #region Код, запоминающий состояния всех контролов и позволяющий отправить фэйковое сообщение, "сдампить" контролы
         private static readonly Queue<ControlEventBase> IncomingEvents = new Queue<ControlEventBase>();

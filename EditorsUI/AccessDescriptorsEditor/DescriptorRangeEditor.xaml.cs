@@ -1,13 +1,10 @@
-﻿using System;
-using System.Globalization;
-using System.Text.RegularExpressions;
-using System.Windows.Controls;
+﻿using System.Windows.Controls;
 using FlexRouter.AccessDescriptors;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.EditorsUI.Helpers;
 using FlexRouter.Localizers;
 
-namespace FlexRouter.EditorPanels
+namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
 {
     /// <summary>
     /// Interaction logic for DescriptorRangeEditor.xaml
@@ -27,8 +24,23 @@ namespace FlexRouter.EditorPanels
             _enableDefaultValue.IsChecked = _assignedAccessDescriptor.EnableDefaultValue;
             _defaultValue.Text = _assignedAccessDescriptor.EnableDefaultValue ? _assignedAccessDescriptor.GetDefaultValueFormula() : string.Empty;
             _step.Text = _assignedAccessDescriptor.GetStepFormula();
-            _cyclic.IsChecked = _assignedAccessDescriptor.IsLooped;
             _defaultValue.IsReadOnly = !_assignedAccessDescriptor.EnableDefaultValue;
+
+            var cbi = new ComboBoxItem { Tag = CycleType.None };
+            _cycleType.Items.Add(cbi);
+            _cycleType.Items.Add(new ComboBoxItem { Tag = CycleType.Simple });
+            _cycleType.Items.Add(new ComboBoxItem { Tag = CycleType.UnreachableMinimum });
+            _cycleType.Items.Add(new ComboBoxItem { Tag = CycleType.UnreachableMaximum });
+            var ct = assignedAccessDescriptor.GetCycleType();
+            foreach (ComboBoxItem cti in _cycleType.Items)
+            {
+                if((CycleType)cti.Tag != ct)
+                    continue;
+                _cycleType.SelectedItem = cti;
+                break;
+            }
+            if(_cycleType.SelectedItem == null)
+                _cycleType.SelectedItem = cbi;
             Localize();
         }
 
@@ -43,8 +55,11 @@ namespace FlexRouter.EditorPanels
             _assignedAccessDescriptor.SetMinimumValueFormula(_minimum.Text);
             _assignedAccessDescriptor.SetMaximumValueFormula(_maximum.Text);
             _assignedAccessDescriptor.SetStepFormula(_step.Text);
-            _assignedAccessDescriptor.IsLooped = _cyclic.IsChecked == true;
             _assignedAccessDescriptor.EnableDefaultValue = _enableDefaultValue.IsChecked == true;
+            if(_cycleType.SelectedItem == null)
+                _assignedAccessDescriptor.SetCycleType(CycleType.None);
+            else
+                _assignedAccessDescriptor.SetCycleType((CycleType)((ComboBoxItem)_cycleType.SelectedItem).Tag);
             if (_enableDefaultValue.IsChecked == true)
                 //Double.TryParse(_defaultValue.Text, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo, out _assignedAccessDescriptor.DefaultValue);
                 _assignedAccessDescriptor.SetDefaultValueFormula(_defaultValue.Text);
@@ -58,26 +73,41 @@ namespace FlexRouter.EditorPanels
             _stepLabel.Content = LanguageManager.GetPhrase(Phrases.EditorRangeStep);
             _cyclicLabel.Content = LanguageManager.GetPhrase(Phrases.EditorLoopRange);
             _defaultValueLabel.Content = LanguageManager.GetPhrase(Phrases.EditorRangeDefaultValue);
+            foreach (ComboBoxItem ct in _cycleType.Items)
+                ct.Content = GetCycleTypeItemText((CycleType) ct.Tag);
+            ((ComboBoxItem)_cycleType.SelectedItem).Content = GetCycleTypeItemText((CycleType)((ComboBoxItem)_cycleType.SelectedItem).Tag);
+        }
+
+        private string GetCycleTypeItemText(CycleType ct)
+        {
+            var res = string.Empty;
+            switch (ct)
+            {
+                case CycleType.UnreachableMinimum:
+                    res = LanguageManager.GetPhrase(Phrases.CycleTypeUnreachableMinimum);
+                    break;
+                case CycleType.UnreachableMaximum:
+                    res = LanguageManager.GetPhrase(Phrases.CycleTypeUnreachableMaximum);
+                    break;
+                case CycleType.Simple:
+                    res = LanguageManager.GetPhrase(Phrases.CycleTypeReachableMinMax);
+                    break;
+                default:
+                    res = LanguageManager.GetPhrase(Phrases.CycleTypeNone);
+                    break;
+            }
+            return res;
         }
 
         public bool IsDataChanged()
         {
-            if (!Utils.IsNumeric(_minimum.Text) || !Utils.IsNumeric(_maximum.Text) || !Utils.IsNumeric(_step.Text))
-                return true;
-            if (_enableDefaultValue.IsChecked == true)
-            {
-                if (!Utils.IsNumeric(_defaultValue.Text))
+            if (_enableDefaultValue.IsChecked == true && _defaultValue.Text != _assignedAccessDescriptor.GetDefaultValueFormula())
                     return true;
-                if (_defaultValue.Text != _assignedAccessDescriptor.GetDefaultValueFormula())
-                    return true;
-            }
             if (_minimum.Text != _assignedAccessDescriptor.GetMinimumValueFormula())
                 return true;
             if (_maximum.Text != _assignedAccessDescriptor.GetMaximumValueFormula())
                 return true;
             if (_step.Text != _assignedAccessDescriptor.GetStepFormula())
-                return true;
-            if (_cyclic.IsChecked != _assignedAccessDescriptor.IsLooped)
                 return true;
             if (!Utils.AreStringsEqual(_getValueFormula.Text,_assignedAccessDescriptor.GetReceiveValueFormula()))
                 return true;
@@ -104,34 +134,14 @@ namespace FlexRouter.EditorPanels
             return new EditorFieldsErrors(emptyField);
         }
 
-        private void _enableDefaultValue_Checked(object sender, System.Windows.RoutedEventArgs e)
+        private void EnableDefaultValueChecked(object sender, System.Windows.RoutedEventArgs e)
         {
             _defaultValue.IsReadOnly = false;
         }
 
-        private void _enableDefaultValue_Unchecked(object sender, System.Windows.RoutedEventArgs e)
+        private void EnableDefaultValueUnchecked(object sender, System.Windows.RoutedEventArgs e)
         {
             _defaultValue.IsReadOnly = true;
         }
-
-/*        private void _minimum_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
-        {
-            e.Handled = !IsCharNumeric(e.Text);
-        }
-
-        private void _maximum_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
-        {
-            e.Handled = !IsCharNumeric(e.Text);
-        }
-
-        private void _defaultValue_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
-        {
-            e.Handled = !IsCharNumeric(e.Text);
-        }
-        private bool IsCharNumeric(string text)
-        {
-            string allowed = "-0123456789.";
-            return allowed.Contains(text);
-        }*/
     }
 }

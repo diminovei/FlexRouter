@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.CalculatorRelated;
@@ -8,8 +9,9 @@ using FlexRouter.VariableWorkerLayer;
 
 namespace FlexRouter.AccessDescriptors
 {
-    public class DescriptorRange : DescriptorRangeBase, IDescriptorPrevNext, IDescriptorRangeExt
+    public class DescriptorRange : DescriptorRangeBase, IDescriptorPrevNext, IDescriptorRangeExt, IRepeaterInDescriptor
     {
+        private readonly CalculatorVariableAccessAddon _calculatorVariableAccessAddonCachedValues = new CalculatorVariableAccessAddon(true);
         /// <summary>
         /// Сюда сохраняется результат, полученный из переменных для того, чтобы токенизировать [R]
         /// </summary>
@@ -22,12 +24,14 @@ namespace FlexRouter.AccessDescriptors
         {
             return LanguageManager.GetPhrase(Phrases.EditorTypeMemoryRange);
         }
-
+        /// <summary>
+        /// Получить битмап иконки этого описателя
+        /// </summary>
+        /// <returns></returns>
         public override Bitmap GetIcon()
         {
             return Properties.Resources.Encoder;
         }
-
         /// <summary>
         /// Отдельный калькулятор не понимающий [R], для того, чтобы не зацикливаться на получении значения из переменной 
         /// </summary>
@@ -37,21 +41,28 @@ namespace FlexRouter.AccessDescriptors
             StateDescriptors.Add(new AccessDescriptorState { Id = 0, Name = "*", Order = 0 });
             CalculatorE.RegisterTokenizer(FormulaResultTokenizer);
             CalculatorE.RegisterPreprocessor(FormulaResultProcessor);
-            _inputValueCalculator.RegisterTokenizer(CalculatorVariableAccessAddonE.VariableTokenizer);
-            _inputValueCalculator.RegisterPreprocessor(CalculatorVariableAccessAddonE.VariablePreprocessor);
+            _inputValueCalculator.RegisterTokenizer(_calculatorVariableAccessAddonCachedValues.VariableTokenizer);
+            _inputValueCalculator.RegisterPreprocessor(_calculatorVariableAccessAddonCachedValues.VariablePreprocessor);
+            // Для Range повторитель всегда включен
+            EnableRepeater(true);
+            //_inputValueCalculator.RegisterTokenizer(CalculatorVariableAccessAddonE.VariableTokenizer);
+            //_inputValueCalculator.RegisterPreprocessor(CalculatorVariableAccessAddonE.VariablePreprocessor);
         }
         /// <summary>
         /// Вычислить новое значение
         /// </summary>
         /// <param name="value">текущее значение</param>
+        /// <param name="repeats">на сколько шагов нужно изменить значение</param>
         /// <param name="stepValue">шаг изменения значения</param>
         /// <param name="minimumValue">минимальное значение</param>
         /// <param name="maximumValue">максимальное значение</param>
         /// <param name="nextState">false - уменьшаем, true - увеличиваем значение</param>
         /// <returns>новое значение</returns>
-        private double CalculateNewValue(double value, double stepValue, double minimumValue, double maximumValue, bool nextState)
+        private double CalculateNewValue(double value, double stepValue, int repeats, double minimumValue, double maximumValue, bool nextState)
         {
             double min, max;
+            const double epsilon = 0.0000001;
+            const int roundDigit = 5;
             // Определяем направление и задаём минимум и максимум
             if (minimumValue < maximumValue)
             {
@@ -70,30 +81,50 @@ namespace FlexRouter.AccessDescriptors
             if (value > max)
                 value = max;
 
+            var cycleType = GetCycleType();
             if (nextState)
             {
-                if (value + stepValue <= max)
-                    value += stepValue;
-                else
+                var newValue = Math.Round(value + stepValue * repeats, roundDigit);
+
+                if (cycleType == CycleType.Simple)
                 {
-                    if (!IsLooped)
-                        value = max;
-                    else
-                        value = (min - 1) + (stepValue - (max- value));
+                    value = newValue <= max ? newValue : (min - stepValue) + (newValue - max);
+                }
+                if (cycleType == CycleType.None)
+                {
+                    value = newValue <= max ? newValue : max;
+                }
+                if (cycleType == CycleType.UnreachableMinimum)
+                {
+                    value = newValue <= max ? newValue : min + (newValue - max);
+                }
+                if (cycleType == CycleType.UnreachableMaximum)
+                {
+                    value = newValue < max ? newValue : min + newValue - max;
                 }
             }
             else
             {
-                if (value - stepValue >= min)
-                    value -= stepValue;
-                else
+                var newValue = Math.Round(value - stepValue * repeats, roundDigit);
+
+                if (cycleType == CycleType.Simple)
                 {
-                    if (!IsLooped)
-                        value = min;
-                    else
-                        value = (max + 1) - (stepValue - (value - min));
+                    value = newValue >= min ? newValue : (max + stepValue) - (min - newValue);
+                }
+                if (cycleType == CycleType.None)
+                {
+                    value = newValue >= min ? newValue : min;
+                }
+                if (cycleType == CycleType.UnreachableMinimum)
+                {
+                    value = newValue > min ? newValue : max - (min - newValue);
+                }
+                if (cycleType == CycleType.UnreachableMaximum)
+                {
+                    value = newValue >= min ? newValue : max - (min - newValue);
                 }
             }
+            value = Math.Round(value, 5);
             return value;
         }
         /// <summary>
@@ -103,20 +134,6 @@ namespace FlexRouter.AccessDescriptors
         public void SetNextState(int repeats)
         {
             ChangeState(repeats, true);
-        }
-        /// <summary>
-        /// Вычислить формулу, если питание включенор
-        /// </summary>
-        /// <param name="formula">формула</param>
-        /// <returns>значение. null, если питание выключено или при вычислении формулы произошла ошибка</returns>
-        private double? CalculateFormulaIfPowerIsOn(string formula)
-        {
-            if (!IsPowerOn())
-                return null;
-            var formulaForVar = CalculatorE.ComputeFormula(formula);
-            return formulaForVar.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.DoubleResult
-                ? (double?) formulaForVar.CalculatedDoubleValue
-                : null;
         }
         /// <summary>
         /// Изменить значение, если с формулами всё в порядке
@@ -137,13 +154,44 @@ namespace FlexRouter.AccessDescriptors
             if (maximumValue == null)
                 return;
             
-            stepValue = stepValue * repeats;
             var receivedValueFormula = GetReceiveValueFormula();
             var formulaResult = _inputValueCalculator.ComputeFormula(receivedValueFormula);
             if (formulaResult.GetFormulaComputeResultType() != TypeOfComputeFormulaResult.DoubleResult)
                 return;
-            _currentFormulaResultForTokenizer = CalculateNewValue(formulaResult.CalculatedDoubleValue, (double)stepValue, (double)minimumValue, (double)maximumValue, nextState);
+            _currentFormulaResultForTokenizer = CalculateNewValue(formulaResult.CalculatedDoubleValue, (double)stepValue, repeats, (double)minimumValue, (double)maximumValue, nextState);
 
+            CalculateVariablesFormulaAndWriteValuesIfPowerIsOn();
+        }
+        /// <summary>
+        /// Вычислить формулу
+        /// </summary>
+        /// <param name="formula">формула</param>
+        /// <returns>значение. null, при вычислении формулы произошла ошибка</returns>
+        private double? CalculateFormula(string formula)
+        {
+            var formulaForVar = CalculatorE.ComputeFormula(formula);
+            return formulaForVar.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.DoubleResult
+                ? (double?)formulaForVar.CalculatedDoubleValue
+                : null;
+        }
+        /// <summary>
+        /// Вычислить формулу, если питание включено
+        /// </summary>
+        /// <param name="formula">формула</param>
+        /// <returns>значение. null, если питание выключено или при вычислении формулы произошла ошибка</returns>
+        private double? CalculateFormulaIfPowerIsOn(string formula)
+        {
+            if (!IsPowerOn())
+                return null;
+            return CalculateFormula(formula);
+        }
+        /// <summary>
+        /// Для всех переменных вычислить формулы и записать значения, если питание включено
+        /// </summary>
+        private void CalculateVariablesFormulaAndWriteValuesIfPowerIsOn()
+        {
+            if (!IsPowerOn())
+                return;
             CalculateVariablesFormulaAndWriteValues();
         }
         /// <summary>
@@ -151,8 +199,6 @@ namespace FlexRouter.AccessDescriptors
         /// </summary>
         private void CalculateVariablesFormulaAndWriteValues()
         {
-            if (!IsPowerOn())
-                return;
             foreach (var varId in UsedVariables)
             {
                 var formula = GlobalFormulaKeeper.Instance.GetVariableFormulaText(GetId(), varId, 0);
@@ -168,7 +214,7 @@ namespace FlexRouter.AccessDescriptors
         {
             if (!EnableDefaultValue)
                 return;
-            var defaultValue = CalculateFormulaIfPowerIsOn(GetDefaultValueFormula());
+            var defaultValue = CalculateFormula(GetDefaultValueFormula());
             if (defaultValue == null)
                 return;
 
@@ -191,7 +237,6 @@ namespace FlexRouter.AccessDescriptors
             var token = new CalcTokenNumber(currentTokenPosition) {TokenText = resultTokenText };
             return formula.Substring(currentTokenPosition, 3) != resultTokenText ? null : token;
         }
-
         // Как потом раздать результат в другие переменные? Ввести в формулы термин "[R]"?
         private ICalcToken FormulaResultProcessor(ICalcToken tokenToPreprocess)
         {
@@ -238,7 +283,7 @@ namespace FlexRouter.AccessDescriptors
 
             _currentFormulaResultForTokenizer = finalPosition;
 
-            CalculateVariablesFormulaAndWriteValues();
+            CalculateVariablesFormulaAndWriteValuesIfPowerIsOn();
         }
     }
 }

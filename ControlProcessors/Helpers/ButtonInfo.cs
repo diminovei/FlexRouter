@@ -1,6 +1,6 @@
 ﻿using FlexRouter.AccessDescriptors.Helpers;
 
-namespace FlexRouter.ControlProcessors
+namespace FlexRouter.ControlProcessors.Helpers
 {
     /// <summary>
     /// Индикатор состояния Toggle

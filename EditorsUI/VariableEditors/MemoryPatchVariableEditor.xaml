@@ -6,12 +6,16 @@
              mc:Ignorable="d" 
              d:DesignHeight="144" d:DesignWidth="301" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="Auto">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="5*"/>
+        </Grid.ColumnDefinitions>
         <Label x:Name="_absoluteOffsetLabel" Content="Absolute offset" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.184,-3"/>
-        <TextBox x:Name="_absoluteOffset" Height="23" Margin="0,9,10,0" VerticalAlignment="Top" Width="120" HorizontalAlignment="Right"/>
-        <Button x:Name="_convertOffset" Content="Convert to relative" Margin="0,37,10,0" VerticalAlignment="Top" Width="120" Click="ConvertOffsetClick" HorizontalAlignment="Right"/>
+        <TextBox x:Name="_absoluteOffset" Height="23" Margin="0,9,10,0" VerticalAlignment="Top" Width="Auto" Grid.Column="1"/>
+        <Button x:Name="_convertOffset" Content="Convert to relative" Margin="0,37,10,0" VerticalAlignment="Top" Width="Auto" Click="ConvertOffsetClick" Grid.Column="1"/>
         <Label x:Name="_offsetLabel" Content="Ralative offset" HorizontalAlignment="Left" Margin="10,82,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.184,-3"/>
-        <TextBox x:Name="_relativeOffset" Height="23" Margin="0,84,10,0" VerticalAlignment="Top" Width="120" HorizontalAlignment="Right"/>
+        <TextBox x:Name="_relativeOffset" Height="23" Margin="0,84,10,0" VerticalAlignment="Top" Width="Auto" Grid.Column="1"/>
         <Label x:Name="_variableModuleLabel" Content="Module" HorizontalAlignment="Left" Margin="10,109,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.184,-3"/>
-        <ComboBox x:Name="_moduleName" Margin="0,112,10,0" VerticalAlignment="Top" Width="120" DropDownOpened="ModuleNameDropDownOpened" HorizontalAlignment="Right"/>
+        <ComboBox x:Name="_moduleName" Margin="0,112,10,0" VerticalAlignment="Top" Width="Auto" DropDownOpened="ModuleNameDropDownOpened" Grid.Column="1"/>
     </Grid>
 </UserControl>

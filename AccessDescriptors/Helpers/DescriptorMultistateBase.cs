@@ -26,7 +26,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
         /// <param name="formulaKeeper"></param>
         public void OverwriteFormulaKeeper(FormulaKeeper formulaKeeper)
         {
-            // ToDo: оставить или удалить?
+            //ToDo: если оставить здесь, то не будет сохраняться формула питания
 //            GlobalFormulaKeeper.Instance.RemoveFormulasByOwnerId(GetId());
             GlobalFormulaKeeper.Instance.Import(formulaKeeper);
         }
@@ -47,6 +47,8 @@ namespace FlexRouter.AccessDescriptors.Helpers
         {
             base.LoadAdditionals(reader);
             StateDescriptors.Clear();
+            _repeaterIsOn = false;
+            bool.TryParse(reader.GetAttribute("RepeaterIsOn", reader.NamespaceURI), out _repeaterIsOn);
             var readerAdd = reader.Select("States/State");
             while (readerAdd.MoveNext())
             {
@@ -76,6 +78,8 @@ namespace FlexRouter.AccessDescriptors.Helpers
         public override void SaveAdditionals(XmlWriter writer)
         {
             base.SaveAdditionals(writer);
+            if (_repeaterIsOn)
+                writer.WriteAttributeString("RepeaterIsOn", _repeaterIsOn.ToString());
             writer.WriteString("\n");
             writer.WriteStartElement("States");
             writer.WriteString("\n");
@@ -208,7 +212,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
             return GlobalFormulaKeeper.Instance.GetVariableFormulaText(GetId(), variableId, stateId);
         }
 
-/*        private bool _repeaterIsOn;
+        private bool _repeaterIsOn;
 
         public bool IsRepeaterOn()
         {
@@ -217,6 +221,6 @@ namespace FlexRouter.AccessDescriptors.Helpers
         public void EnableRepeater(bool enable)
         {
             _repeaterIsOn = enable;
-        }*/
+        }
     }
 }

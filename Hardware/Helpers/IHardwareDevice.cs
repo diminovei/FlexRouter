@@ -8,7 +8,11 @@ namespace FlexRouter.Hardware.Helpers
         void Disconnect();
         ControlEventBase[] GetIncomingEvents();
         void PostOutgoingEvent(ControlEventBase outgoingEvent);
-        void Dump(DumpMode dumpMode);
-        void DumpModule(ControlProcessorHardware[] hardware);
+        void PostOutgoingEvents(ControlEventBase[] outgoingEvents);
+        /// <summary>
+        /// Сдампить клавиши, оси, ...
+        /// </summary>
+        /// <param name="allHardwareInUse">Все используемые в профиле контролы для железа, не понимающего общей команды Dump и дампящего помодульно (ARCC)</param>
+        void Dump(ControlProcessorHardware[] allHardwareInUse);
     }
 }

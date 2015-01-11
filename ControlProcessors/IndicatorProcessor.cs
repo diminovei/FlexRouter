@@ -1,7 +1,7 @@
-﻿using FlexRouter.AccessDescriptors.Helpers;
+﻿using System.Collections.Generic;
+using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.ControlProcessors.Helpers;
-using FlexRouter.Hardware;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
 using FlexRouter.Localizers;
@@ -21,7 +21,7 @@ namespace FlexRouter.ControlProcessors
             return LanguageManager.GetPhrase(Phrases.HardwareIndicator);
         }
 
-        public ControlEventBase GetNewEvent()
+        public IEnumerable<ControlEventBase> GetNewEvent()
         {
             if (string.IsNullOrEmpty(AssignedHardwareForSingle))
                 return null;
@@ -36,10 +36,10 @@ namespace FlexRouter.ControlProcessors
                 IndicatorText = text,
             };
             // ToDo: добавить восстановление текста, если индикатор участвовал в поиске
-            return ev;
+            return new List<ControlEventBase> { ev };
         }
 
-        public ControlEventBase GetClearEvent()
+        public IEnumerable<ControlEventBase> GetClearEvent()
         {
             if (string.IsNullOrEmpty(AssignedHardwareForSingle))
                 return null;
@@ -48,7 +48,9 @@ namespace FlexRouter.ControlProcessors
                 Hardware = ControlProcessorHardware.GenerateByGuid(AssignedHardwareForSingle),
                 IndicatorText = "",
             };
-            return ev;
+            // Требуется для того, чтобы при изменении, например, числа цифр в индикаторе не оставались гореть цифры
+            _previousIndicatorText = "";
+            return new List<ControlEventBase> { ev };
         }
     }
 }

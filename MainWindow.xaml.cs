@@ -6,16 +6,15 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using FlexRouter.AccessDescriptors;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.CalculatorRelated;
 using FlexRouter.CalculatorRelated.Tokens;
-using FlexRouter.ControlProcessorEditors;
 using FlexRouter.ControlProcessors;
 using FlexRouter.ControlProcessors.Helpers;
-using FlexRouter.EditorPanels;
 using FlexRouter.EditorsUI.AccessDescriptorsEditor;
 using FlexRouter.EditorsUI.ControlProcessorEditors;
 using FlexRouter.EditorsUI.Helpers;
@@ -23,46 +22,36 @@ using FlexRouter.EditorsUI.PanelEditors;
 using FlexRouter.EditorsUI.VariableEditors;
 using FlexRouter.Hardware;
 using FlexRouter.Hardware.HardwareEvents;
+using FlexRouter.Hardware.Helpers;
 using FlexRouter.Helpers;
 using FlexRouter.Localizers;
-
 //  ***************************** Проблемы профиля:
 // Ответчик не работает. Нет работы с окнами
 // Назначаем СПУ.Режим, на назначении последнего тумблера удаляем. Не получается. Писать почему.
 //      Bug: бага в тушке. Если включить ввод ЗК на ПН-5, а затем выключить стабилизацию крена будут гореть и Сброс программы и ввод ЗК
-// Катет, К1Г1К2Г2 - нужно питание, а то постоянно горит
 //  ***************************** Пока не подтвердилось
 // Автомат тяги работает не корректно. Не автоматит, не устанавливает в 2 "режим 2"
 // Стабилизация по высоте включается, а лампа не загорается. Нужно разбираться
 //  ***************************** Сделать
-//      НВУ. Не верны формулы. В точке 360 "точно" ведёт себя странно. Нужно разбираться.
-//      Возможность втыкать и вытыкать железо во время работы роутера
-//      Вынести Repeater в AccessDescriptor (для Button вкл/выкл, для Range всегда вкл)
-//          Или режим удержания: приводим состояние переменных в соответстве с состоянием контролов. Тогда повторитель не нужен в Button, а в Range нужен всегда
+//      Синхронизация реальных и виртуальных тумблеров работает плохо
+//      Сделать умную синхронизацию деревьев (удалять то, что исчезло, добавлять то, что появилось вместо полной перерисовки)
+//      Пройтись по всем ToDo и доделать
+
 //      Проверить корректность срабатывания "данные изменились, сохранить?" в переменных, AD, CP
-//      public void OverwriteFormulaKeeper(FormulaKeeper formulaKeeper) // Это нужно или можно удалить?
 //      Контроль формул:
 //          Не позволять сохранять AD, если в формуле синтаксическая ошибка
 //          Если модули (dll) недоступны, в переменных показывать N/A и формулы не считать (для этого в обработке переменных нужно проверять, что модули загружены)
 //      Управление профилем
 //          Бэкап и ротация изменений профилей
 //      Тест роутера без железа:
-//          Горячие клавиши Ctrl+, Ctrl-, Ctrl1...9 для тестирования работоспособности роутера
-//          Горячие клавиши остановить/запустить роутер
 //          Для тестирования роутера без железа в CP добавить контрол: «вывод на индикатор/лампу» со значением N/A, если самолёт не загружен или формула неверна
-//      Калькулятор. X:1 = X-1 (НВУ.ЗПУ1)
-
 //      Железо:
-//          Нужно сделать маски. Каждое железо говорит, что для индикаторов мне нужен только модуль, а номер контрола нет. И роутер сам удалит ненужные упраляющие элементы и будет укорачивать строку Arcc:xxx|Indicator|1
-//          Поддержка L2/F2
-//          Реализовать разовый дамп осей при старте роутера (это возможно?)
 //          В джойстике поддержать все оси и хатку
-//      AxisMultistate
-//      Редактор для AxisMultistate
-//      Что делать, если при загрузке профиля будет исключение?
-//          Обернуть загрузку и сохранение в try/catch
+//          Поддержка L3/F3 - шаговики
+//          Сделать переинициализацию роутера быстрой
+//          При изменении настройки JoystickBindByInstanceGuid переинициализировать железо
+//      AxisMultistate (управление набором значений при помощи оси, например, замена крана закрылков или галетных переключателей)
 //      Реализовать функции (FromBCD, ToBCD, получить дробную часть)
-//      Поправить выравнивание, чтобы не образовывались ScrollBar'ы по-умолчанию
 //      Refactoring: Вынести ускоряющийся Repeater из ButtonPlusMinisConrolProcessor и сделать его общим
 //      Refactoring: Нужно унести управление StopSearch из MainWindow в CPEditor
 //      Проверить работу с профилем на многопоточность. Обращение к AD, CP, VAR только через методы класса Profile (даже внутри этого класса) при сохранении загрузке. И всё через lock
@@ -73,19 +62,9 @@ using FlexRouter.Localizers;
 //          Редактирование описателя "Клики мышью (Range)"
 //      Bug: биндинг не работает, если в названии переменной (колонки) "плохой" символ. Точка, слэш
 //  ***************************** Не срочно (или не нужно):
+//      Возможность втыкать и вытыкать железо во время работы роутера
 //      При изменении имени переменной предупреждать, что нужно обновить данные в AD, если открытый AD использует эту переменную (узнать в FormulaKeeper)
-//      Копия переменной, AccessDescriptor
-//      После загрузки роутера на 100 индикаторов и все лампы подключенных модулей послать "выключить"
-//	    В CP принимать нажатия клавиш, а при отжатии учитывать ID, чтобы выставлять Default. Тогде не будет перескакивать
-
-//	    Ввод точки/запятой в RangeEditor проверить и сделать возможным и запятую и точку
-//      Сделать в дескрипторах и формулах единообразно: запретить всё, кроме точки как разделителя или понимать текущий CulturalInfo
-//          string s = someStringWithNum.Replace(",", ".");
-//          CultureInfo ci = new CultureInfo("en-US");
-//          double d = double.Parce(s, ci.NumberFormatInfo);
-//     или
-//          Double.TryParse(str_1, System.Globalization.NumberStyles.Any, System.Globalization.NumberFormatInfo.InvariantInfo, out retNum);
-//
+using FlexRouter.MessagesToMainForm;
 using FlexRouter.ProfileItems;
 using FlexRouter.VariableWorkerLayer;
 using FlexRouter.VariableWorkerLayer.MethodFakeVariable;
@@ -103,55 +82,56 @@ using UserControl = System.Windows.Controls.UserControl;
 
 namespace FlexRouter
 {
-    public enum TreeItemType
-    {
-        Panel,
-        AccessDescriptor,
-        Variable,
-        ControlProcessor
-    }
-    public enum RouterState
-    {
-        Running,
-        Paused,
-        Stopped,
-    }
-    class TreeItem
-    {
-        public TreeItemType Type;
-        public string Name;
-        public string FullName;
-        public object Object;
-    }
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow
     {
+        public const int WmDevicechange = 0x0219;
+//        public const int DbtDevicearrival = 0x8000; // system detected a new device        
+//        public const int DbtDeviceremovecomplete = 0x8004; // device is gone      
         private RouterState _routerState = RouterState.Stopped;
         private readonly Core _routerCore = new Core();
-        readonly DispatcherTimer _timer;
-        readonly DispatcherTimer _timer2;
+        private readonly DispatcherTimer _timer;
+        private readonly DispatcherTimer _timer2;
         private readonly Calculator _calculator = new Calculator();
+        readonly AxisDebouncer _axisDebouncer = new AxisDebouncer();
 
+
+        //protected override void OnStartup(StartupEventArgs e)
+        //{
+        //    // hook on error before app really starts
+        //    AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+        //    base.OnStartup(e);
+        //}
+
+        //void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        //{
+        //    // put your tracing or logging code here (I put a message box as an example)
+        //    MessageBox.Show(e.ExceptionObject.ToString());
+        //}
         public MainWindow()
         {
             InitializeComponent();
-            SetTitle();
-            LanguageManager.Initialize();
             ApplicationSettings.LoadSettings();
-            InitializeCalculator();
-            FillSelectLanguageCombobox();
-            if (!string.IsNullOrEmpty(ApplicationSettings.DefaultLanguage))
-                LanguageManager.LoadLanguage(ApplicationSettings.DefaultLanguage);
-            Localize();
-            if (LoadProfile(ApplicationSettings.DefaultProfile))
-            {
-                SetTitle(ApplicationSettings.DefaultProfile);
-                FillSelectProfileCombobox(ApplicationSettings.DefaultProfile);
-            }
+            LanguageManager.Initialize();
 
-            _createVariable.IsEnabled = false;
+
+            _turnControlsSynchronizationOff.IsChecked = ApplicationSettings.ControlsSynchronizationIsOff;
+            _joystickBindByInstanceGuid.IsChecked = ApplicationSettings.JoystickBindByInstanceGuid;
+
+            InitializeCalculator();
+
+            if (string.IsNullOrEmpty(ApplicationSettings.DefaultLanguage))
+                ApplicationSettings.DefaultLanguage = "Русский";
+            LanguageManager.LoadLanguage(ApplicationSettings.DefaultLanguage);
+            FillSelectLanguageCombobox();
+            
+            Localize();
+            var isProfileLoaded = LoadProfile(ApplicationSettings.DefaultProfile);
+            SetTitle(isProfileLoaded ? ApplicationSettings.DefaultProfile : null);
+            FillSelectProfileCombobox(ApplicationSettings.DefaultProfile);
+
             _timer = new DispatcherTimer();
             _timer.Tick += OnTimedEvent;
             _timer.Interval = new TimeSpan(0, 0, 0, 0, 100);
@@ -163,6 +143,120 @@ namespace FlexRouter
             _timer2.Start();
         }
 
+        private readonly object _locker = new object();
+
+        private void GetSubsystemsStatus()
+        {
+            lock (_locker)
+            {
+                if (!Problems.ProblemListWasChanged)
+                    return;
+                _statusList.Items.Clear();
+                var problems = Problems.GetProblemList();
+                foreach (var s in problems)
+                    _statusList.Items.Add(CreateListViewItem(s.IsFixed ? s.Name : s.Name + " - " + s.Description,
+                        s.IsFixed ? Properties.Resources.Ok : Properties.Resources.Fail));
+            }
+        }
+        /// <summary>
+        /// Установить заголовок главного окна
+        /// </summary>
+        /// <param name="profileName"></param>
+        private void SetTitle(string profileName = null)
+        {
+            Title = "Flex Router v" + Assembly.GetExecutingAssembly().GetName().Version + (string.IsNullOrEmpty(profileName) ? "" : " - " + profileName);
+        }
+        /// <summary>
+        /// Локализовать все надписи на формах
+        /// </summary>
+        private void Localize()
+        {
+            _accessDescriptorsToCreateList.Text = string.Empty;
+            _controlProcessorsList.Text = string.Empty;
+            _accessMethods.Text = string.Empty;
+
+            _removeAccessDescriptor.Content = LanguageManager.GetPhrase(Phrases.CommonButtonRemove);
+            _removeControlProcessor.Content = LanguageManager.GetPhrase(Phrases.CommonButtonClearAssignment);
+            _removeVariable.Content = LanguageManager.GetPhrase(Phrases.CommonButtonRemove);
+            foreach (var child in _accessDescriptorPanel.Children)
+            {
+                var editor = child as IEditor;
+                if (editor != null)
+                    editor.Localize();
+            }
+            foreach (var child in _controlProcessorsPanel.Children)
+            {
+                var editor = child as IEditor;
+                if (editor != null)
+                    editor.Localize();
+            }
+            foreach (var child in _variablesPanel.Children)
+            {
+                var editor = child as IEditor;
+                if (editor != null)
+                    editor.Localize();
+            }
+            tabInformation.Header = LanguageManager.GetPhrase(Phrases.TabInfo);
+            tabSettings.Header = LanguageManager.GetPhrase(Phrases.TabSettings);
+            tabAccessDescriptors.Header = LanguageManager.GetPhrase(Phrases.TabAccessDescriptors);
+            tabVariables.Header = LanguageManager.GetPhrase(Phrases.TabVariables);
+            tabControlProcessors.Header = LanguageManager.GetPhrase(Phrases.TabControlProcessors);
+            tabFormulaEditor.Header = LanguageManager.GetPhrase(Phrases.TabFormulaEditor);
+            _removeProfile.Content = LanguageManager.GetPhrase(Phrases.CommonButtonRemove);
+            _renameProfile.Content = LanguageManager.GetPhrase(Phrases.CommonButtonRename);
+            _createAccessDescriptor.Content = LanguageManager.GetPhrase(Phrases.CommonButtonCreate);
+            _createControlProcessor.Content = LanguageManager.GetPhrase(Phrases.CommonButtonCreate);
+            _createVariable.Content = LanguageManager.GetPhrase(Phrases.CommonButtonCreate);
+            _createNewProfile.Content = LanguageManager.GetPhrase(Phrases.CommonButtonCreate);
+            _saveAccessDescriptor.Content = LanguageManager.GetPhrase(Phrases.CommonButtonSave);
+            _saveControlProcessor.Content = LanguageManager.GetPhrase(Phrases.CommonButtonSave);
+            _saveVariable.Content = LanguageManager.GetPhrase(Phrases.CommonButtonSave);
+            _importProfile.Content = LanguageManager.GetPhrase(Phrases.CommonButtonImport);
+            _exportProfile.Content = LanguageManager.GetPhrase(Phrases.CommonButtonExport);
+            _importProfileAndKeepAssignments.Content = LanguageManager.GetPhrase(Phrases.CommonButtonImportAndKeepAssignments);
+            _selectProfileLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelProfile);
+            _selectLanguageLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelLanguage);
+            _formulaResultLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelFormulaResult) + " (Dec/Hex/Bool)";
+            _copyFormulaToClipboard.Content = LanguageManager.GetPhrase(Phrases.CommonLabelCopyToClipboard);
+            _addVarToFormula.Content = LanguageManager.GetPhrase(Phrases.CommonLabelCopyVariableToFormula);
+            _errorLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelError);
+            _routerStateLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelRouterState);
+            _connectedHardwareLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelConnectedHardwareList);
+            _problemsLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelProblemsList);
+            _lastEventLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelLastHardwareEvent);
+            _profileManagementGroup.Header = LanguageManager.GetPhrase(Phrases.CommonProfileManagement);
+            _turnControlsSynchronizationOffLabel.Content = LanguageManager.GetPhrase(Phrases.SettingsTurnControlsSynchronizationOff);
+            _joystickBindByInstanceGuidLabel.Content = LanguageManager.GetPhrase(Phrases.SettingsJoystickBindByInstanceGuid);
+            _dump.Content = LanguageManager.GetPhrase(Phrases.CommonDumpControls);
+            VisualizeRouterState();
+        }
+        /// <summary>
+        /// Обновить надпись, сообщающую о текущем состояни роутера
+        /// </summary>
+        private void VisualizeRouterState()
+        {
+            switch (_routerState)
+            {
+                case RouterState.Running:
+                    Output.Text = LanguageManager.GetPhrase(Phrases.CommonStateRunning);
+                    break;
+                case RouterState.Paused:
+                    Output.Text = LanguageManager.GetPhrase(Phrases.CommonStatePaused);
+                    break;
+                default:
+                    Output.Text = LanguageManager.GetPhrase(Phrases.CommonStateStopped);
+                    break;
+            }
+        }
+        private void OnTimedEvent2(object sender, EventArgs e)
+        {
+            GetSubsystemsStatus();
+        }
+        private void OnTimedEvent(object sender, EventArgs e)
+        {
+            ProcessMessages();
+            CalculateTestFormulaAndShowErrors();
+        }
         private static ListViewItem CreateListViewItem(string text, System.Drawing.Bitmap iconBitmap)
         {
             var item = new ListViewItem();
@@ -195,112 +289,17 @@ namespace FlexRouter
                 item.Content = text;
             return item;
         }
-        object _locker = new object();
-        /// <summary>
-        /// Заполнить форму данными из описателя доступа
-        /// </summary>
-        private void GetSubsystemsStatus()
-        {
-            lock (_locker)
-            {
-                //var subsystemStatuses = VariableManager.GetInitializationStatus();
-                //_statusList.Items.Clear();
-                //// Добавляем строки. Первая колонка - наименование состояния, затем формулы для переменных
-                //foreach (var s in subsystemStatuses)
-                //    _statusList.Items.Add(CreateListViewItem(s.IsOk ? s.System : s.System + " - " + s.ErrorMessage, s.IsOk ? Properties.Resources.Ok : Properties.Resources.Fail));
 
-                if (!Problems.ProblemListWasChanged)
-                    return;
-                _statusList.Items.Clear();
-                var problems = Problems.GetProblemList();
-                foreach (var s in problems)
-                    _statusList.Items.Add(CreateListViewItem(s.IsFixed ? s.Name : s.Name + " - " + s.Description, s.IsFixed ? Properties.Resources.Ok : Properties.Resources.Fail));
-            }
-        }
-
-        private void SetTitle(string profileName = null)
-        {
-            Title = "Flex Router v" + Assembly.GetExecutingAssembly().GetName().Version + (string.IsNullOrEmpty(profileName) ? "" : " - " + profileName);
-        }
-        private void Localize()
-        {
-            _accessDescriptorsToCreateList.Text = string.Empty;
-            _controlProcessorsList.Text = string.Empty;
-            _accessMethods.Text = string.Empty;
-            
-            _removeAccessDescriptor.Content = LanguageManager.GetPhrase(Phrases.CommonButtonRemove);
-            _removeControlProcessor.Content = LanguageManager.GetPhrase(Phrases.CommonButtonRemove);
-            _removeVariable.Content = LanguageManager.GetPhrase(Phrases.CommonButtonRemove);
-            foreach (var child in _accessDescriptorPanel.Children)
-            {
-                var editor = child as IEditor;
-                if(editor != null)
-                    editor.Localize();
-            }
-            foreach (var child in _controlProcessorsPanel.Children)
-            {
-                var editor = child as IEditor;
-                if (editor != null)
-                    editor.Localize();
-            }
-            foreach (var child in _variablesPanel.Children)
-            {
-                var editor = child as IEditor;
-                if (editor != null)
-                    editor.Localize();
-            }
-            tabInformation.Header = LanguageManager.GetPhrase(Phrases.TabInfo);
-            tabSettings.Header = LanguageManager.GetPhrase(Phrases.TabSettings);
-            tabAccessDescriptors.Header = LanguageManager.GetPhrase(Phrases.TabAccessDescriptors);
-            tabVariables.Header = LanguageManager.GetPhrase(Phrases.TabVariables);
-            tabControlProcessors.Header = LanguageManager.GetPhrase(Phrases.TabControlProcessors);
-            tabFormulaEditor.Header = LanguageManager.GetPhrase(Phrases.TabFormulaEditor);
-            _removeAccessDescriptor.Content = LanguageManager.GetPhrase(Phrases.CommonButtonRemove);
-            _removeControlProcessor.Content = LanguageManager.GetPhrase(Phrases.CommonButtonRemove);
-            _removeVariable.Content = LanguageManager.GetPhrase(Phrases.CommonButtonRemove);
-            _removeProfile.Content = LanguageManager.GetPhrase(Phrases.CommonButtonRemove);
-            _renameProfile.Content = LanguageManager.GetPhrase(Phrases.CommonButtonRename);
-            _createAccessDescriptor.Content = LanguageManager.GetPhrase(Phrases.CommonButtonCreate);
-            _createControlProcessor.Content = LanguageManager.GetPhrase(Phrases.CommonButtonCreate);
-            _createVariable.Content = LanguageManager.GetPhrase(Phrases.CommonButtonCreate);
-            _createNewProfile.Content = LanguageManager.GetPhrase(Phrases.CommonButtonCreate);
-            _saveAccessDescriptor.Content = LanguageManager.GetPhrase(Phrases.CommonButtonSave);
-            _saveControlProcessor.Content = LanguageManager.GetPhrase(Phrases.CommonButtonSave);
-            _saveVariable.Content = LanguageManager.GetPhrase(Phrases.CommonButtonSave);
-            _importProfile.Content = LanguageManager.GetPhrase(Phrases.CommonButtonImport);
-            _exportProfile.Content = LanguageManager.GetPhrase(Phrases.CommonButtonExport);
-            _importProfileAndKeepAssignments.Content = LanguageManager.GetPhrase(Phrases.CommonButtonImportAndKeepAssignments);
-            _selectProfileLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelProfile);
-            _selectLanguageLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelLanguage);
-            _formulaResultLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelFormulaResult) + " (Dec/Hex/Bool)";
-            _copyFormulaToClipboard.Content = LanguageManager.GetPhrase(Phrases.CommonLabelCopyToClipboard);
-            _addVarToFormula.Content = LanguageManager.GetPhrase(Phrases.CommonLabelCopyVariableToFormula);
-            _errorLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelError);
-            _routerStateLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelRouterState);
-            _connectedHardwareLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelConnectedHardwareList);
-            _problemsLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelProblemsList);
-            _lastEventLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelLastHardwareEvent);
-            _profileManagementGroup.Header = LanguageManager.GetPhrase(Phrases.CommonProfileManagement);
-            _turnControlsSynchronizationOffLabel.Content = LanguageManager.GetPhrase(Phrases.SettingsTurnControlsSynchronizationOff);
-            LocalizeRouterState();
-        }
-        private void OnTimedEvent2(object sender, EventArgs e)
-        {
-            GetSubsystemsStatus();
-        }
-
-        private void OnTimedEvent(object sender, EventArgs e)
-        {
-            ProcessMessages();
-            CalculateTestFormulaAndShowErrors();
-        }
         private void WindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (_routerCore.IsWorking())
-                _routerCore.Stop(false);
+            ApplicationSettings.SaveSettings();
+            _routerCore.Stop();
             _timer.Stop();
             VariableManager.Stop();
         }
+        /// <summary>
+        /// Обработать сообщения с данными для отображения, посланные главной форме внутренними компонентами роутера
+        /// </summary>
         private void ProcessMessages()
         {
             var messages = Messenger.GetMessages();
@@ -308,58 +307,60 @@ namespace FlexRouter
             {
                 if (message.MessageType == MessageToMainForm.RouterStarted)
                     _routerState = RouterState.Running;
-                    LocalizeRouterState();
+                VisualizeRouterState();
                 if (message.MessageType == MessageToMainForm.RouterStopped)
                     _routerState = RouterState.Stopped;
-                    LocalizeRouterState();
+                VisualizeRouterState();
                 if (message.MessageType == MessageToMainForm.RouterPaused)
                     _routerState = RouterState.Paused;
-                    LocalizeRouterState();    
+                VisualizeRouterState();
                 if (message.MessageType == MessageToMainForm.ClearConnectedDevicesList)
+
                     ConnectedDevicesList.Items.Clear();
-                if (message.MessageType == MessageToMainForm.AddConnectedDevice)
+                if (message.MessageType == MessageToMainForm.ChangeConnectedDevice)
                     ConnectedDevicesList.Items.Add(((TextMessage) message).Text);
                 if (message.MessageType == MessageToMainForm.NewHardwareEvent)
                 {
-                    var direction = string.Empty;
-                    var evButton = (((ControlEventBase)((ObjectMessage) message).AnyObject)) as ButtonEvent;
-                    if(evButton!=null)
-                        direction = evButton.IsPressed ? "vvv" : "^^^";
-                    var evEncoder = (((ControlEventBase)((ObjectMessage) message).AnyObject)) as EncoderEvent;
-                    if(evEncoder!=null)
-                        direction = evEncoder.RotateDirection ? ">>>" : "<<<";
-                    _incomingEvent.Text = ((ControlEventBase)((ObjectMessage)message).AnyObject).Hardware.GetHardwareGuid() + direction;
-                    foreach (var child in _controlProcessorsPanel.Children) 
+                    var evButton = (((ControlEventBase) ((ObjectMessage) message).AnyObject)) as ButtonEvent;
+                    if (evButton != null)
                     {
-                        if(child is IControlProcessorEditor)
-                            ((IControlProcessorEditor)child).OnNewControlEvent(((ControlEventBase)((ObjectMessage)message).AnyObject));
+                        string additionalInfo = evButton.IsPressed ? "vvv" : "^^^";
+                        _incomingEvent.Text = ((ControlEventBase)((ObjectMessage)message).AnyObject).Hardware.GetHardwareGuid() + " " + additionalInfo;
+                    }
+                        
+                    var evEncoder = (((ControlEventBase) ((ObjectMessage) message).AnyObject)) as EncoderEvent;
+                    if (evEncoder != null)
+                    {
+                        string additionalInfo = evEncoder.RotateDirection ? ">>>" : "<<<";
+                        _incomingEvent.Text = ((ControlEventBase)((ObjectMessage)message).AnyObject).Hardware.GetHardwareGuid() + " " + additionalInfo;
+                    }
+                    var evAxis = (((ControlEventBase)((ObjectMessage)message).AnyObject)) as AxisEvent;
+                    if (evAxis != null && _axisDebouncer.IsNeedToProcessAxisEvent(evAxis,2))
+                    {
+                        string additionalInfo = evAxis.Position.ToString(CultureInfo.InvariantCulture);
+                        _incomingEvent.Text = ((ControlEventBase)((ObjectMessage)message).AnyObject).Hardware.GetHardwareGuid() + " " + additionalInfo;
+                        _axisDebouncer.Reset();
+                    }
+
+                    foreach (var child in _controlProcessorsPanel.Children)
+                    {
+                        if (child is IControlProcessorEditor)
+                            ((IControlProcessorEditor) child).OnNewControlEvent(((ControlEventBase) ((ObjectMessage) message).AnyObject));
                     }
                 }
-                    
-            }
-        }
-        private void LocalizeRouterState()
-        {
-            switch (_routerState)
-            {
-                    case RouterState.Running:
-                    Output.Text = LanguageManager.GetPhrase(Phrases.CommonStateRunning);
-                    break;
-                    case RouterState.Paused:
-                    Output.Text = LanguageManager.GetPhrase(Phrases.CommonStatePaused);
-                    break;
-                default:
-                    Output.Text = LanguageManager.GetPhrase(Phrases.CommonStateStopped);
-                    break;
             }
         }
         #region AccessDescriptorEditor
+
         private readonly TreeViewHelper _accessDescriptorTreeHelper = new TreeViewHelper();
+
         private void AccessDescriptorsTreeSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            if (IsNeedToChangeItemInEditor(_accessDescriptorsTree, _accessDescriptorPanel, e, _accessDescriptorTreeHelper))
+            if (IsNeedToChangeItemInEditor(_accessDescriptorsTree, _accessDescriptorPanel, e,
+                _accessDescriptorTreeHelper))
                 ChangeAccessDescriptoriInEditor();
         }
+
         private void ChangeAccessDescriptoriInEditor()
         {
             var treeSelectedItem = GetTreeSelectedItem(_accessDescriptorsTree);
@@ -374,18 +375,21 @@ namespace FlexRouter
             }
             else
             {
-                var ad = Profile.GetAccessDesciptorById(((DescriptorBase)treeSelectedItem.Object).GetId());
+                var ad = Profile.GetAccessDesciptorById(((DescriptorBase) treeSelectedItem.Object).GetId());
                 ShowAccessDescriptorEditors(ad);
             }
         }
+
         private void SaveAccessDescriptorClick(object sender, RoutedEventArgs e)
         {
-            OnAnySaveButtonClicked(_accessDescriptorPanel);
+            OnAnySaveButtonClicked(_accessDescriptorPanel, false);
         }
+
         private void AccessDescriptorToCreateDropDownOpened(object sender, EventArgs e)
         {
             FillAccessDescriptorsToCreateList();
         }
+
         private void FillAccessDescriptorsToCreateList()
         {
             _accessDescriptorsToCreateList.Items.Clear();
@@ -401,25 +405,35 @@ namespace FlexRouter
             };
             foreach (var listItem in descriptorsList)
             {
-                var comboboxItem = new ComboBoxItem { Content = (listItem is DescriptorBase ? ((IAccessDescriptor)listItem).GetDescriptorType() : ((Panel)listItem).GetName()), Tag = listItem};
+                var comboboxItem = new ComboBoxItem
+                {
+                    Content =
+                        (listItem is DescriptorBase
+                            ? ((IAccessDescriptor) listItem).GetDescriptorType()
+                            : ((Panel) listItem).GetName()),
+                    Tag = listItem
+                };
                 _accessDescriptorsToCreateList.Items.Add(comboboxItem);
             }
         }
+
         private void OnAccessDescriptorsToCreateTextChanged(object sender, TextChangedEventArgs e)
         {
-            _createVariable.IsEnabled = !string.IsNullOrEmpty(((TextBox)sender).Text);
+            _createVariable.IsEnabled = !string.IsNullOrEmpty(((TextBox) sender).Text);
         }
+
         private void CreateAccessDescriptorClick(object sender, RoutedEventArgs e)
         {
             var accessDescriptor = GetObjectToCreateFromCombobox(_accessDescriptorsToCreateList, _variablesPanel);
-            if ((accessDescriptor as DescriptorBase)!= null)
+            if ((accessDescriptor as DescriptorBase) != null)
                 //ToDo: Добавить IsNew
-                ShowAccessDescriptorEditors((DescriptorBase)accessDescriptor);
+                ShowAccessDescriptorEditors((DescriptorBase) accessDescriptor);
             if ((accessDescriptor as Panel) != null)
-                ShowPanel((Panel)accessDescriptor, _accessDescriptorPanel, true);
+                ShowPanel((Panel) accessDescriptor, _accessDescriptorPanel, true);
             FillAccessDescriptorsToCreateList();
 
         }
+
         private void ShowAccessDescriptorEditors(DescriptorBase ad)
         {
             string selectedItemPanelName = GetSelectedItemPanelName(_accessDescriptorsTree);
@@ -428,28 +442,26 @@ namespace FlexRouter
             editors.Add(new DescriptorCommonEditor(ad, selectedItemPanelName));
             if (ad is DescriptorValue)
             {
-                editors.Add(new DescriptorValueEditor((DescriptorValue)ad, true));
-//                editors.Add(new RepeaterEditor((DescriptorMultistateBase)ad));
+                editors.Add(new DescriptorValueEditor((DescriptorValue) ad, true));
+                editors.Add(new RepeaterEditor((DescriptorMultistateBase)ad));
             }
             if (ad is DescriptorBinaryOutput)
             {
-                editors.Add(new DescriptorFormulaEditor((DescriptorOutputBase)ad));
+                editors.Add(new DescriptorFormulaEditor((DescriptorOutputBase) ad));
             }
             if (ad is DescriptorIndicator)
             {
-                editors.Add(new DescriptorDecPointEditor((DescriptorIndicator)ad));
-                editors.Add(new DescriptorFormulaEditor((DescriptorOutputBase)ad));
+                editors.Add(new DescriptorDecPointEditor((DescriptorIndicator) ad));
+                editors.Add(new DescriptorFormulaEditor((DescriptorOutputBase) ad));
             }
             if (ad is DescriptorRange)
             {
-                editors.Add(new DescriptorValueEditor((DescriptorMultistateBase)ad, false));
-//                editors.Add(new RepeaterEditor((DescriptorMultistateBase)ad));
-                editors.Add(new DescriptorRangeEditor((DescriptorRange)ad));
+                editors.Add(new DescriptorValueEditor((DescriptorMultistateBase) ad, false));
+                editors.Add(new DescriptorRangeEditor((DescriptorRange) ad));
             }
             if (ad is RangeUnion)
             {
-                editors.Add(new RangeUnionEditor((RangeUnion)ad));
-//                editors.Add(new RepeaterEditor((DescriptorMultistateBase)ad));
+                editors.Add(new RangeUnionEditor((RangeUnion) ad));
             }
             for (var i = 0; i < editors.Count; i++)
             {
@@ -457,6 +469,7 @@ namespace FlexRouter
                 _accessDescriptorPanel.Children.Add(editors[i]);
             }
         }
+
         private void RemoveAccessDescriptorClick(object sender, RoutedEventArgs e)
         {
             var item = GetTreeSelectedItem(_accessDescriptorsTree);
@@ -466,7 +479,7 @@ namespace FlexRouter
             }
             if (item.Type == TreeItemType.Panel)
             {
-                RemovePanel((Panel)item.Object);
+                RemovePanel((Panel) item.Object);
                 return;
             }
             if (
@@ -478,11 +491,12 @@ namespace FlexRouter
             {
 
                 _accessDescriptorPanel.Children.Clear();
-                Profile.RemoveAccessDescriptor(((DescriptorBase)item.Object).GetId());
+                Profile.RemoveAccessDescriptor(((DescriptorBase) item.Object).GetId());
                 Profile.SaveCurrentProfile();
                 RenewTrees();
             }
         }
+
         private void RemovePanel(Panel panel)
         {
             if (Profile.IsPanelInUse(panel.Id))
@@ -504,45 +518,51 @@ namespace FlexRouter
                 RenewTrees();
             }
         }
+
         #endregion
+
         #region VariableEditor
+
         private readonly TreeViewHelper _variableTreeHelper = new TreeViewHelper();
+
         private void VariablesTreeSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             if (IsNeedToChangeItemInEditor(_variablesTree, _variablesPanel, e, _variableTreeHelper))
                 ChangeVariableInEditor();
         }
+
         private void ChangeVariableInEditor()
         {
             _variablesPanel.Children.Clear();
-            if (((TreeViewItem)_variablesTree.SelectedItem).Name == TreeItemType.Panel.ToString())
+            if (((TreeViewItem) _variablesTree.SelectedItem).Name == TreeItemType.Panel.ToString())
             {
-                IEditor ie = new PanelProperties((Panel)((TreeViewItem)_variablesTree.SelectedItem).Tag, false);
-                DockPanel.SetDock((UserControl)ie, Dock.Top);
-                _variablesPanel.Children.Add((UserControl)ie);
+                IEditor ie = new PanelProperties((Panel) ((TreeViewItem) _variablesTree.SelectedItem).Tag, false);
+                DockPanel.SetDock((UserControl) ie, Dock.Top);
+                _variablesPanel.Children.Add((UserControl) ie);
             }
             else
             {
-                var selectedVariable = (IVariable)((TreeViewItem)_variablesTree.SelectedItem).Tag;
+                var selectedVariable = (IVariable) ((TreeViewItem) _variablesTree.SelectedItem).Tag;
                 ShowVariable(selectedVariable, false);
             }
         }
+
         private string GetSelectedItemPanelName(TreeView tree)
         {
             if (tree.SelectedItem != null)
             {
-                if (((TreeViewItem)tree.SelectedItem).Name == TreeItemType.Panel.ToString())
-                    return ((Panel)((TreeViewItem)tree.SelectedItem).Tag).Name;
+                if (((TreeViewItem) tree.SelectedItem).Name == TreeItemType.Panel.ToString())
+                    return ((Panel) ((TreeViewItem) tree.SelectedItem).Tag).Name;
                 var selectedItem = (TreeViewItem) tree.SelectedItem;
                 Panel panel = null;
                 if (selectedItem.Tag is IVariable)
                 {
-                    var selectedVariable = (IVariable)((TreeViewItem)tree.SelectedItem).Tag;
+                    var selectedVariable = (IVariable) ((TreeViewItem) tree.SelectedItem).Tag;
                     panel = Profile.GetPanelById(selectedVariable.PanelId);
                 }
                 if (selectedItem.Tag is DescriptorBase)
                 {
-                    var selectedDescriptor = (DescriptorBase)((TreeViewItem)tree.SelectedItem).Tag;
+                    var selectedDescriptor = (DescriptorBase) ((TreeViewItem) tree.SelectedItem).Tag;
                     panel = Profile.GetPanelById(selectedDescriptor.GetAssignedPanelId());
                 }
                 if (panel != null)
@@ -550,6 +570,7 @@ namespace FlexRouter
             }
             return null;
         }
+
         private void ShowVariable(IVariable variable, bool isNew)
         {
             string selectedItemPanelName = GetSelectedItemPanelName(_variablesTree);
@@ -561,7 +582,8 @@ namespace FlexRouter
 
             if (variable is MemoryPatchVariable)
             {
-                editors.Add(new VariableEditorHeader(variable, Phrases.EditorHeaderMemoryPatch, isNew, selectedItemPanelName));
+                editors.Add(new VariableEditorHeader(variable, Phrases.EditorHeaderMemoryPatch, isNew,
+                    selectedItemPanelName));
                 editors.Add(new MemoryPatchVariableEditor(variable));
                 editors.Add(new VariableSizeEditor(variable as IMemoryVariable));
                 editors.Add(new VariableValueEditor(variable));
@@ -577,7 +599,8 @@ namespace FlexRouter
             }
             if (variable is FakeVariable)
             {
-                editors.Add(new VariableEditorHeader(variable, Phrases.EditorHeaderFakeVariable, isNew, selectedItemPanelName));
+                editors.Add(new VariableEditorHeader(variable, Phrases.EditorHeaderFakeVariable, isNew,
+                    selectedItemPanelName));
                 editors.Add(new VariableSizeEditor(variable as IMemoryVariable));
                 editors.Add(new VariableValueEditor(variable));
                 editors.Add(new VariableEditorDescription(variable));
@@ -588,6 +611,7 @@ namespace FlexRouter
                 _variablesPanel.Children.Add(editors[i]);
             }
         }
+
         private void ShowVariablesTree(TreeView tree)
         {
             var vtk = new TreeViewStateKeeper();
@@ -596,7 +620,12 @@ namespace FlexRouter
             tree.Items.Clear();
             foreach (var panel in panels)
             {
-                var treeRootItem = new TreeViewItem { Tag = panel, Name = TreeItemType.Panel.ToString(), Header = panel.Name };
+                var treeRootItem = new TreeViewItem
+                {
+                    Tag = panel,
+                    Name = TreeItemType.Panel.ToString(),
+                    Header = panel.Name
+                };
 
                 var ad = Profile.GetSortedVariablesListByPanelId(panel.Id);
                 foreach (var adesc in ad)
@@ -605,8 +634,6 @@ namespace FlexRouter
                     var icon = GetIcon(TreeItemType.Variable, adesc.Id);
                     var treeAdItem = CreateTreeViewItem(adesc.Name, adesc, TreeItemType.Variable, icon);
                     treeAdItem.Name = TreeItemType.Variable.ToString();
-                    
-//                    var treeAdItem = new TreeViewItem { Tag = adesc, Name = TreeItemType.Variable.ToString(), Header = adesc.Name };
                     treeRootItem.Items.Add(treeAdItem);
                 }
                 tree.Items.Add(treeRootItem);
@@ -627,14 +654,17 @@ namespace FlexRouter
                 panel.Children.Add(editors[i]);
             }
         }
+
         private void SaveVariableClick(object sender, RoutedEventArgs e)
         {
-            OnAnySaveButtonClicked(_variablesPanel);
+            OnAnySaveButtonClicked(_variablesPanel, true);
         }
+
         private void VariableToCreateDropDownOpened(object sender, EventArgs e)
         {
             FillVariablesToCreateList();
         }
+
         private void FillVariablesToCreateList()
         {
             _accessMethods.Items.Clear();
@@ -648,23 +678,30 @@ namespace FlexRouter
             };
             foreach (var variable in variablesList)
             {
-                var item = new ComboBoxItem { Content = (variable is IVariable ? ((IVariable)variable).GetName() : ((Panel)variable).GetName()), Tag = variable };
+                var item = new ComboBoxItem
+                {
+                    Content = (variable is IVariable ? ((IVariable) variable).GetName() : ((Panel) variable).GetName()),
+                    Tag = variable
+                };
                 _accessMethods.Items.Add(item);
             }
         }
+
         private void OnVariablesToCreateTextChanged(object sender, TextChangedEventArgs e)
         {
-            _createVariable.IsEnabled = !string.IsNullOrEmpty(((TextBox)sender).Text);
+            _createVariable.IsEnabled = !string.IsNullOrEmpty(((TextBox) sender).Text);
         }
+
         private void CreateVariableClick(object sender, RoutedEventArgs e)
         {
             var variable = GetObjectToCreateFromCombobox(_accessMethods, _variablesPanel);
-            if((variable as IVariable)!=null)
-                ShowVariable((IVariable)variable, true);
-            if((variable as Panel)!=null)
-                ShowPanel((Panel)variable, _variablesPanel, true);
+            if ((variable as IVariable) != null)
+                ShowVariable((IVariable) variable, true);
+            if ((variable as Panel) != null)
+                ShowPanel((Panel) variable, _variablesPanel, true);
             FillVariablesToCreateList();
         }
+
         private void RemoveVariableClick(object sender, RoutedEventArgs e)
         {
             var item = GetTreeSelectedItem(_variablesTree);
@@ -672,23 +709,24 @@ namespace FlexRouter
                 return;
             if (item.Type == TreeItemType.Panel)
             {
-                RemovePanel((Panel)item.Object);
+                RemovePanel((Panel) item.Object);
                 return;
             }
-            var variableLinks = GlobalFormulaKeeper.Instance.GetVariableOwnersByVariableId(((IVariable)item.Object).Id);
+            var variableLinks = GlobalFormulaKeeper.Instance.GetVariableOwnersByVariableId(((IVariable) item.Object).Id);
             if (variableLinks.Length != 0)
             {
                 var message = LanguageManager.GetPhrase(Phrases.EditorMessageCantRemoveVariableInUse) + "\n\n";
                 foreach (var vl in variableLinks)
                 {
                     var ad = Profile.GetAccessDesciptorById(vl);
-                    if (ad!=null)
+                    if (ad != null)
                     {
                         var adName = Profile.GetPanelById(ad.GetAssignedPanelId()).GetName() + "." + ad.GetName();
-                        message += LanguageManager.GetPhrase(Phrases.EditorAccessDescriptor) + " '" + adName + "'" + "\n";
+                        message += LanguageManager.GetPhrase(Phrases.EditorAccessDescriptor) + " '" + adName + "'" +
+                                   "\n";
                     }
                     var panel = Profile.GetPanelById(vl);
-                    if (panel !=null)
+                    if (panel != null)
                     {
                         var panelName = panel.GetName();
                         message += LanguageManager.GetPhrase(Phrases.EditorPanel) + " '" + panelName + "'" + "\n";
@@ -700,29 +738,36 @@ namespace FlexRouter
                 return;
             }
             if (MessageBox.Show(
-                    LanguageManager.GetPhrase(Phrases.EditorMessageRemoveVariable) + " '" + item.FullName +
-                    "'?", LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader), MessageBoxButton.YesNo,
-                    MessageBoxImage.Question) ==
+                LanguageManager.GetPhrase(Phrases.EditorMessageRemoveVariable) + " '" + item.FullName +
+                "'?", LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader), MessageBoxButton.YesNo,
+                MessageBoxImage.Question) ==
                 MessageBoxResult.Yes)
             {
                 _variablesPanel.Children.Clear();
-                Profile.RemoveVariable(((IVariable)item.Object).Id);
+                Profile.RemoveVariable(((IVariable) item.Object).Id);
                 Profile.SaveCurrentProfile();
-                RenewTrees();
+                RenewVariablesTrees();
             }
         }
+
         #endregion
+
         #region ControlProcessorEditorsMethods
+
         private readonly TreeViewHelper _controlProcessorTreeHelper = new TreeViewHelper();
+
         private void OnControlProcessorsToCreateTextChanged(object sender, TextChangedEventArgs e)
         {
-            _createControlProcessor.IsEnabled = !string.IsNullOrEmpty(((TextBox)sender).Text);
+            _createControlProcessor.IsEnabled = !string.IsNullOrEmpty(((TextBox) sender).Text);
         }
+
         private void ControlProcessorsTreeSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            if (IsNeedToChangeItemInEditor(_controlProcessorsTree, _controlProcessorsPanel, e, _controlProcessorTreeHelper))
+            if (IsNeedToChangeItemInEditor(_controlProcessorsTree, _controlProcessorsPanel, e,
+                _controlProcessorTreeHelper))
                 ChangeControlProcessorInEditor();
         }
+
         private void FillCreateControlProcessorList()
         {
             if (_controlProcessorsTree.SelectedItem == null)
@@ -730,12 +775,13 @@ namespace FlexRouter
             if (((TreeViewItem) _controlProcessorsTree.SelectedItem).Name == TreeItemType.Panel.ToString())
                 return;
 
-            var accessDescriptor = (DescriptorBase)((TreeViewItem)_controlProcessorsTree.SelectedItem).Tag;
+            var accessDescriptor = (DescriptorBase) ((TreeViewItem) _controlProcessorsTree.SelectedItem).Tag;
             _controlProcessorsList.Items.Clear();
 
             IEnumerable<IControlProcessor> processorsList = new List<IControlProcessor>
             {
                 new IndicatorProcessor(accessDescriptor),
+                new LedMatrixIndicatorProcessor(accessDescriptor),
                 new LampProcessor(accessDescriptor),
                 new ButtonProcessor(accessDescriptor),
                 new EncoderProcessor(accessDescriptor),
@@ -743,7 +789,8 @@ namespace FlexRouter
                 new ButtonBinaryInputProcessor(accessDescriptor),
                 new AxisRangeProcessor(accessDescriptor)
             };
-            var controlProcessors = processorsList.Where(x => x.IsAccessDesctiptorSuitable(accessDescriptor)).Select(x => x).ToList();
+            var controlProcessors =
+                processorsList.Where(x => x.IsAccessDesctiptorSuitable(accessDescriptor)).Select(x => x).ToList();
             foreach (var controlProcessor in controlProcessors)
             {
                 var item = new ComboBoxItem {Content = controlProcessor.GetName(), Tag = controlProcessor};
@@ -752,6 +799,7 @@ namespace FlexRouter
             if (_controlProcessorsList.Items.Count == 1)
                 _controlProcessorsList.SelectedItem = _controlProcessorsList.Items[0];
         }
+
         private void ShowControlProcessor(IControlProcessor controlProcessor)
         {
             if (controlProcessor == null)
@@ -764,18 +812,15 @@ namespace FlexRouter
             {
                 editors.Add(new AssignEditor(controlProcessor, true, HardwareModuleType.Button));
                 editors.Add(new ButtonToggleEmulatorEditor(controlProcessor));
-                editors.Add(new ButtonRepeaterEditor(controlProcessor as IRepeater));
             }
             if (controlProcessor is ButtonPlusMinusProcessor)
             {
                 editors.Add(new AssignEditor(controlProcessor, true, HardwareModuleType.Button));
-                editors.Add(new ButtonRepeaterEditor(controlProcessor as IRepeater));
             }
 
             if (controlProcessor is AxisRangeProcessor)
             {
                 editors.Add(new AssignEditor(controlProcessor, true, HardwareModuleType.Axis));
-//                editors.Add(new AssignEditorForOutput(controlProcessor, true, HardwareModuleType.Axis));
                 editors.Add(new AxisSetLimitsEditor(controlProcessor));
             }
             if (controlProcessor is EncoderProcessor)
@@ -784,11 +829,15 @@ namespace FlexRouter
             }
             if (controlProcessor is IndicatorProcessor)
             {
-                editors.Add(new AssignEditorForOutput(controlProcessor, true, HardwareModuleType.Indicator));
+                editors.Add(new AssignEditorForOutput(controlProcessor, false, HardwareModuleType.Indicator));
+            }
+            if (controlProcessor is LedMatrixIndicatorProcessor)
+            {
+                editors.Add(new AssignEditorForOutput(controlProcessor, false, HardwareModuleType.Indicator));
             }
             if (controlProcessor is LampProcessor)
             {
-                editors.Add(new AssignEditorForOutput(controlProcessor, true, HardwareModuleType.BinaryOutput));
+                editors.Add(new AssignEditorForOutput(controlProcessor, false, HardwareModuleType.BinaryOutput));
             }
             if (controlProcessor is ButtonBinaryInputProcessor)
             {
@@ -800,6 +849,7 @@ namespace FlexRouter
                 _controlProcessorsPanel.Children.Add(editors[i]);
             }
         }
+
         private void ChangeControlProcessorInEditor()
         {
             var treeSelectedItem = GetTreeSelectedItem(_controlProcessorsTree);
@@ -810,18 +860,19 @@ namespace FlexRouter
 
             if (treeSelectedItem.Type == TreeItemType.Panel)
             {
-                _controlProcessorsPanel.Children.Add(new PanelProperties((Panel)treeSelectedItem.Object, false));
+                _controlProcessorsPanel.Children.Add(new PanelProperties((Panel) treeSelectedItem.Object, false));
             }
             else
             {
                 FillCreateControlProcessorList();
-                var descriptor = (DescriptorBase)treeSelectedItem.Object;
+                var descriptor = (DescriptorBase) treeSelectedItem.Object;
                 var controlProcessor = Profile.GetControlProcessorByAccessDescriptorId(descriptor.GetId());
                 ShowControlProcessor(controlProcessor);
             }
             // ToDo: нужно не отсюда вызывать, а давать CP панелям знать, что выбран другой узел дерева и нужно завершать поиск
             HardwareManager.StopComponentSearch();
         }
+
         private void CreateControlProcessorClick(object sender, RoutedEventArgs e)
         {
             var treeSelectedItem = GetTreeSelectedItem(_controlProcessorsTree);
@@ -831,17 +882,17 @@ namespace FlexRouter
             if (treeSelectedItem.Type == TreeItemType.Panel)
                 return;
 
-            if(string.IsNullOrEmpty(_controlProcessorsList.Text))
+            if (string.IsNullOrEmpty(_controlProcessorsList.Text))
                 return;
 
             var item = _controlProcessorsList.SelectedItem as ComboBoxItem;
             if (item == null)
                 return;
-            var controlProcessor = (IControlProcessor)((ComboBoxItem) _controlProcessorsList.SelectedItem).Tag;
+            var controlProcessor = (IControlProcessor) ((ComboBoxItem) _controlProcessorsList.SelectedItem).Tag;
 
             if (controlProcessor != null)
             {
-                var oldControlProcessorId = (((DescriptorBase)treeSelectedItem.Object)).GetId();
+                var oldControlProcessorId = (((DescriptorBase) treeSelectedItem.Object)).GetId();
                 if (Profile.GetControlProcessorByAccessDescriptorId(oldControlProcessorId) != null)
                     Profile.RemoveControlProcessor(oldControlProcessorId);
                 Profile.RegisterControlProcessor(controlProcessor, oldControlProcessorId);
@@ -850,7 +901,7 @@ namespace FlexRouter
                 {
                     var states = ad.GetStateDescriptors();
                     var cp = controlProcessor as IControlProcessorMultistate;
-                    if(cp!=null)
+                    if (cp != null)
                         cp.RenewStatesInfo(states);
                 }
                 ShowControlProcessor(controlProcessor);
@@ -858,10 +909,12 @@ namespace FlexRouter
                 FillCreateControlProcessorList();
             }
         }
+
         private void SaveControlProcrssorClick(object sender, RoutedEventArgs e)
         {
-            OnAnySaveButtonClicked(_controlProcessorsPanel);
+            OnAnySaveButtonClicked(_controlProcessorsPanel, false);
         }
+
         private void RemoveControlProcessorClick(object sender, RoutedEventArgs e)
         {
             var item = GetTreeSelectedItem(_controlProcessorsTree);
@@ -869,7 +922,7 @@ namespace FlexRouter
                 return;
             if (item.Type == TreeItemType.Panel)
             {
-                RemovePanel((Panel)item.Object);
+                RemovePanel((Panel) item.Object);
                 return;
             }
             if (
@@ -880,11 +933,12 @@ namespace FlexRouter
                 MessageBoxResult.Yes)
             {
                 _controlProcessorsPanel.Children.Clear();
-                Profile.RemoveControlProcessor(((DescriptorBase)item.Object).GetId());
+                Profile.RemoveControlProcessor(((DescriptorBase) item.Object).GetId());
                 Profile.SaveCurrentProfile();
                 RenewTrees();
             }
         }
+
         private static TreeViewItem CreateTreeViewItem(string text, object connectedObject, TreeItemType treeItemType, System.Drawing.Bitmap iconBitmap)
         {
             var item = new TreeViewItem();
@@ -897,8 +951,7 @@ namespace FlexRouter
                 // create Image
                 var image = new Image();
                 var bc = new WpfBitmapConverter();
-                var icon =
-                    (ImageSource) bc.Convert(iconBitmap, typeof (ImageSource), null, CultureInfo.InvariantCulture);
+                var icon = (ImageSource) bc.Convert(iconBitmap, typeof (ImageSource), null, CultureInfo.InvariantCulture);
 
                 image.Source = icon;
                 image.Width = 16;
@@ -921,8 +974,11 @@ namespace FlexRouter
         }
 
         #endregion
+
         #region CommonEditorsMethods
-        private bool IsNeedToChangeItemInEditor(TreeView tree, StackPanel panel, RoutedPropertyChangedEventArgs<object> e, TreeViewHelper treeHelper)
+
+        private bool IsNeedToChangeItemInEditor(TreeView tree, StackPanel panel,
+            RoutedPropertyChangedEventArgs<object> e, TreeViewHelper treeHelper)
         {
             if (tree.SelectedItem == null)
                 return false;
@@ -932,22 +988,37 @@ namespace FlexRouter
 
             return !treeHelper.SelectionChanging(tree, e, askUserToSaveVarBeforeSelectionChange);
         }
+
         private void RenewTrees()
         {
+            System.Diagnostics.Debug.Print("BeginTree: {0}", DateTime.Now);
             ShowTree(_accessDescriptorsTree, TreeItemType.AccessDescriptor);
             ShowVariablesTree(_variablesTree);
             ShowTree(_controlProcessorsTree, TreeItemType.ControlProcessor);
             ShowVariablesTree(_variablesForFormulaTree);
+            System.Diagnostics.Debug.Print("EndTree: {0}", DateTime.Now);
         }
-        private void OnAnySaveButtonClicked(StackPanel panel)
+        private void RenewVariablesTrees()
         {
+            System.Diagnostics.Debug.Print("BeginVarTree: {0}", DateTime.Now);
+            ShowVariablesTree(_variablesTree);
+            ShowVariablesTree(_variablesForFormulaTree);
+            System.Diagnostics.Debug.Print("EndVarTree: {0}", DateTime.Now);
+        }
+
+        private void OnAnySaveButtonClicked(StackPanel panel, bool isVariableTree)
+        {
+            // Требуется для того, чтобы при изменении, например, числа цифр в индикаторе не оставались гореть цифры
+            var clearEvents = Profile.GetControlProcessorsClearEvents();
+            HardwareManager.PostOutgoingEvents(clearEvents.ToList());
+            
             // Перерисовать дерево, развернуть необходимый узел и выделить переменную/дексриптор/панель. Нужно при переезде из одной панели в другую
             if (panel.Children.Count == 0)
                 return;
             var errors = string.Empty;
             foreach (var child in panel.Children)
             {
-                var res = ((IEditor)child).IsCorrectData();
+                var res = ((IEditor) child).IsCorrectData();
                 if (!res.IsDataFilledCorrectly)
                     errors += res.ErrorsText;
             }
@@ -958,13 +1029,17 @@ namespace FlexRouter
                 MessageBox.Show(message, header, MessageBoxButton.OK, MessageBoxImage.Stop);
                 return;
             }
-            _routerCore.Lock();
+            _routerCore.Pause();
             foreach (var child in panel.Children)
-                ((IEditor)child).Save();
-            RenewTrees();
+                ((IEditor) child).Save();
+            if(isVariableTree)
+                RenewVariablesTrees();
+            else
+                RenewTrees();
             Profile.SaveCurrentProfile();
-            _routerCore.Unlock();
+            _routerCore.Start();
         }
+
         private bool IsPanelDataChanged(StackPanel panel)
         {
             bool isChanged = false;
@@ -975,15 +1050,16 @@ namespace FlexRouter
             }
             return isChanged;
         }
+
         private TreeItem GetTreeSelectedItem(TreeView tree)
         {
             if (tree.SelectedItem == null)
                 return null;
             var item = new TreeItem();
             var found = false;
-            foreach (var type in (TreeItemType[])Enum.GetValues(typeof(TreeItemType)))
+            foreach (var type in (TreeItemType[]) Enum.GetValues(typeof (TreeItemType)))
             {
-                if (type.ToString() != ((TreeViewItem)tree.SelectedItem).Name)
+                if (type.ToString() != ((TreeViewItem) tree.SelectedItem).Name)
                     continue;
                 item.Type = type;
                 found = true;
@@ -991,12 +1067,12 @@ namespace FlexRouter
             }
             if (!found)
                 return null;
-            item.Object = ((TreeViewItem)tree.SelectedItem).Tag;
+            item.Object = ((TreeViewItem) tree.SelectedItem).Tag;
 //           item.Name = (string)((TreeViewItem)tree.SelectedItem).Header;
             item.Name = GetTreeItemText(tree.SelectedItem as TreeViewItem);
             if (item.Type != TreeItemType.Panel)
             {
-                var parentItem = ((TreeViewItem)((TreeViewItem)tree.SelectedItem).Parent);
+                var parentItem = ((TreeViewItem) ((TreeViewItem) tree.SelectedItem).Parent);
                 var parentText = GetTreeItemText(parentItem as TreeViewItem);
 //                item.FullName = (string)parentItem.Header + "." + item.Name;
                 item.FullName = parentText + "." + item.Name;
@@ -1012,14 +1088,15 @@ namespace FlexRouter
             {
                 if ((tvi.Header as StackPanel).Children.Count < 2)
                     return null;
-                var item = ((StackPanel)tvi.Header).Children[1] as Label;
-                if(item == null)
-                return null;
-                return (string)item.Content;
+                var item = ((StackPanel) tvi.Header).Children[1] as Label;
+                if (item == null)
+                    return null;
+                return (string) item.Content;
             }
             return (string) tvi.Header;
 
         }
+
         /// <summary>
         /// Получить из Combobox объект, который предстоит создать
         /// </summary>
@@ -1034,17 +1111,25 @@ namespace FlexRouter
             if (panel.Children.Count != 0)
                 askUser = IsPanelDataChanged(panel);
             if (askUser && MessageBox.Show(LanguageManager.GetPhrase(Phrases.MessageBoxUnsavedEditorData),
-                                           LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader),
-                                           MessageBoxButton.YesNo,
-                                           MessageBoxImage.Question) != MessageBoxResult.Yes)
+                LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader),
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question) != MessageBoxResult.Yes)
             {
                 return null;
             }
 
             var item = combobox.SelectedItem as ComboBoxItem;
-            return item == null ? null : ((ComboBoxItem)combobox.SelectedItem).Tag;
+            return item == null ? null : ((ComboBoxItem) combobox.SelectedItem).Tag;
         }
-        static void ShowTree(TreeView tree, TreeItemType tit)
+
+        //private static void ShowTree1(TreeView tree, TreeItemType tit)
+        //{
+        //    foreach (var item in tree.Items)
+        //    {
+        //        ((TreeViewItem)item).
+        //    }
+        //}
+        private static void ShowTree(TreeView tree, TreeItemType tit)
         {
             var vtk = new TreeViewStateKeeper();
             vtk.RememberState(ref tree);
@@ -1053,7 +1138,12 @@ namespace FlexRouter
             var adAll = Profile.GetSortedAccessDesciptorList();
             foreach (var panel in panels)
             {
-                var treeRootItem = new TreeViewItem { Tag = panel, Name = TreeItemType.Panel.ToString(), Header = panel.Name };
+                var treeRootItem = new TreeViewItem
+                {
+                    Tag = panel,
+                    Name = TreeItemType.Panel.ToString(),
+                    Header = panel.Name
+                };
 
                 var ad = Profile.GetSortedAccessDesciptorListByPanelId(panel.Id);
                 foreach (var adesc in ad)
@@ -1066,16 +1156,18 @@ namespace FlexRouter
                     treeAdItem.Name = tit.ToString();
 
                     treeRootItem.Items.Add(treeAdItem);
-                    if(tit == TreeItemType.ControlProcessor)
+                    if (tit == TreeItemType.ControlProcessor)
                         continue;
                     foreach (var a in adAll)
                     {
-                        if(!a.IsDependent())
+                        if (!a.IsDependent())
                             continue;
-                        if(a.GetDependency().GetId() != adesc.GetId())
+                        if (a.GetDependency().GetId() != adesc.GetId())
                             continue;
                         icon = GetIcon(tit, a.GetId());
-                        var treeDependentItem = CreateTreeViewItem(Profile.GetPanelById(a.GetAssignedPanelId()).Name + "." + a.GetName(), a, tit, icon);
+                        var treeDependentItem =
+                            CreateTreeViewItem(Profile.GetPanelById(a.GetAssignedPanelId()).Name + "." + a.GetName(), a,
+                                tit, icon);
                         treeAdItem.Items.Add(treeDependentItem);
                     }
                 }
@@ -1103,7 +1195,7 @@ namespace FlexRouter
             if (tit == TreeItemType.Variable)
             {
                 var variable = Profile.GetVariableById(itemId);
-                return  ((ITreeItem)variable).GetIcon();
+                return ((ITreeItem) variable).GetIcon();
             }
             if (tit == TreeItemType.AccessDescriptor)
             {
@@ -1112,6 +1204,7 @@ namespace FlexRouter
             }
             return null;
         }
+
         private void FillSelectLanguageCombobox()
         {
             _selectLanguage.Items.Clear();
@@ -1123,21 +1216,26 @@ namespace FlexRouter
             else
                 _selectLanguage.Text = string.Empty;
         }
+
         private void SelectLanguageDropDownOpened(object sender, EventArgs e)
         {
             FillSelectLanguageCombobox();
         }
+
         private void SelectLanguageDropDownClosed(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(_selectLanguage.Text))
                 return;
             ApplicationSettings.DefaultLanguage = _selectLanguage.Text;
-            ApplicationSettings.SaveSettings();
             LanguageManager.LoadLanguage(_selectLanguage.Text);
             Localize();
+            ApplicationSettings.DefaultLanguage = _selectLanguage.Text;
         }
+
         #endregion
+
         #region Тестирование формул
+
         /// <summary>
         ///     Raises an event when the text is changed,
         ///     this even is used to handle syntax colorization.
@@ -1148,6 +1246,7 @@ namespace FlexRouter
         {
             CalculateTestFormulaAndShowErrors();
         }
+
         private void SelectText(string keyword)
         {
             var text = new TextRange(_formulaTextBox.Document.ContentStart, _formulaTextBox.Document.ContentEnd);
@@ -1169,6 +1268,7 @@ namespace FlexRouter
                 current = current.GetNextContextPosition(LogicalDirection.Forward);
             }
         }
+
         /// <summary>
         /// Подсчитать и подкрасить формулу, если в ней есть ошибки и показать текст ошибки
         /// </summary>
@@ -1217,13 +1317,16 @@ namespace FlexRouter
                 {
                     _formulaError.Text = string.Empty;
                     _formulaResultDec.Text = result.CalculatedDoubleValue.ToString(CultureInfo.InvariantCulture);
-                    _formulaResultHex.Text = (result.CalculatedDoubleValue % 1) == 0 ? ((int)result.CalculatedDoubleValue).ToString("X") : string.Empty;
+                    _formulaResultHex.Text = (result.CalculatedDoubleValue%1) == 0
+                        ? ((int) result.CalculatedDoubleValue).ToString("X")
+                        : string.Empty;
                     _formulaResultBool.Text = string.Empty;
                     break;
                 }
             }
             _formulaTextBox.TextChanged += FormulaTextBoxTextChanged;
         }
+
         /// <summary>
         /// Токенизатор [R]
         /// </summary>
@@ -1241,6 +1344,7 @@ namespace FlexRouter
             token.TokenText = resultTokenText;
             return token;
         }
+
         /// <summary>
         /// Препроцессор токенов для подстановки [R]
         /// </summary>
@@ -1253,11 +1357,15 @@ namespace FlexRouter
             const string resultTokenText = "[R]";
             if (((CalcTokenNumber) tokenToPreprocess).TokenText == resultTokenText)
             {
-                ((CalcTokenNumber) tokenToPreprocess).Value = string.IsNullOrEmpty(_formulaEditorInputValueDec.Text) ? 0 : double.Parse(_formulaEditorInputValueDec.Text, CultureInfo.InvariantCulture);
+                ((CalcTokenNumber) tokenToPreprocess).Value = string.IsNullOrEmpty(_formulaEditorInputValueDec.Text)
+                    ? 0
+                    : double.Parse(_formulaEditorInputValueDec.Text, CultureInfo.InvariantCulture);
             }
             return tokenToPreprocess;
         }
-        readonly CalculatorVariableAccessAddon _cvaa = new CalculatorVariableAccessAddon();
+
+        private readonly CalculatorVariableAccessAddon _cvaa = new CalculatorVariableAccessAddon();
+
         private void InitializeCalculator()
         {
             _calculator.RegisterTokenizer(FormulaResultTokenizer);
@@ -1265,14 +1373,19 @@ namespace FlexRouter
             _calculator.RegisterTokenizer(_cvaa.VariableTokenizer);
             _calculator.RegisterPreprocessor(_cvaa.VariablePreprocessor);
         }
-        private void FormulaEditorInputValueDecPreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+
+        private void FormulaEditorInputValueDecPreviewTextInput(object sender,
+            System.Windows.Input.TextCompositionEventArgs e)
         {
-            e.Handled = !Utils.IsNumeric(e.Text) || ((TextBox)sender).Text.Length > 8;
+            e.Handled = !Utils.IsNumeric(e.Text) || ((TextBox) sender).Text.Length > 8;
         }
-        private void FormulaEditorInputValueHexPreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+
+        private void FormulaEditorInputValueHexPreviewTextInput(object sender,
+            System.Windows.Input.TextCompositionEventArgs e)
         {
-            e.Handled = !Utils.IsHexNumber(e.Text) || ((TextBox)sender).Text.Length > 8;
+            e.Handled = !Utils.IsHexNumber(e.Text) || ((TextBox) sender).Text.Length > 8;
         }
+
         private void FormulaEditorInputValueDecTextChanged(object sender, TextChangedEventArgs e)
         {
             _formulaEditorInputValueDec.TextChanged -= FormulaEditorInputValueDecTextChanged;
@@ -1280,11 +1393,14 @@ namespace FlexRouter
             if (string.IsNullOrEmpty(_formulaEditorInputValueDec.Text))
                 _formulaEditorInputValueHex.Text = string.Empty;
             int resultInt;
-            _formulaEditorInputValueHex.Text = int.TryParse(_formulaEditorInputValueDec.Text, out resultInt) ? resultInt.ToString("X") : string.Empty;
+            _formulaEditorInputValueHex.Text = int.TryParse(_formulaEditorInputValueDec.Text, out resultInt)
+                ? resultInt.ToString("X")
+                : string.Empty;
             _formulaEditorInputValueDec.TextChanged += FormulaEditorInputValueDecTextChanged;
             _formulaEditorInputValueHex.TextChanged += FormulaEditorInputValueHexTextChanged;
             CalculateTestFormulaAndShowErrors();
         }
+
         private void FormulaEditorInputValueHexTextChanged(object sender, TextChangedEventArgs e)
         {
             _formulaEditorInputValueDec.TextChanged -= FormulaEditorInputValueDecTextChanged;
@@ -1292,12 +1408,14 @@ namespace FlexRouter
             if (string.IsNullOrEmpty(_formulaEditorInputValueHex.Text))
                 _formulaEditorInputValueDec.Text = string.Empty;
             int result;
-            if (int.TryParse(_formulaEditorInputValueHex.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out result))
+            if (int.TryParse(_formulaEditorInputValueHex.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture,
+                out result))
                 _formulaEditorInputValueDec.Text = result.ToString(CultureInfo.InvariantCulture);
             _formulaEditorInputValueDec.TextChanged += FormulaEditorInputValueDecTextChanged;
             _formulaEditorInputValueHex.TextChanged += FormulaEditorInputValueHexTextChanged;
             CalculateTestFormulaAndShowErrors();
         }
+
         /// <summary>
         /// Скопировать формулу из редактора формул в буфер обмена
         /// </summary>
@@ -1312,6 +1430,7 @@ namespace FlexRouter
                 text = text.Remove(text.Length - 2, 2);
             Clipboard.SetText(text);
         }
+
         /// <summary>
         /// Добавить переменную в виде [панель.переменная] в текст контрола редактора формул
         /// </summary>
@@ -1326,9 +1445,12 @@ namespace FlexRouter
                 return;
             var variableName = "[" + item.FullName + "]";
             _formulaTextBox.CaretPosition.InsertTextInRun(variableName);
-       }
+        }
+
         #endregion
+
         #region Управление профилем
+
         /// <summary>
         /// Заполнить комбобокс списком профилей и установить выбранный элемент
         /// </summary>
@@ -1339,20 +1461,22 @@ namespace FlexRouter
             var profiles = Profile.GetProfileList();
             foreach (var profile in profiles)
             {
-                var cbi = new ComboBoxItem { Content = profile.Key, Tag = profile.Value };
+                var cbi = new ComboBoxItem {Content = profile.Key, Tag = profile.Value};
                 _selectProfile.Items.Add(cbi);
             }
             if (!string.IsNullOrEmpty(selectedItemText))
                 _selectProfile.Text = selectedItemText;
         }
+
         /// <summary>
         /// Приостановить работу роутера перед сменой профиля
         /// </summary>
         private void PauseRouterOnChangeProfile()
         {
-            _routerCore.Stop(true);
+            _routerCore.Stop();
             VariableManager.Stop();
         }
+
         /// <summary>
         /// Возобновить работу роутера после смены профиля
         /// </summary>
@@ -1364,7 +1488,6 @@ namespace FlexRouter
                 if (name != ApplicationSettings.DefaultProfile)
                 {
                     ApplicationSettings.DefaultProfile = name;
-                    ApplicationSettings.SaveSettings();
                     SetTitle(name);
                 }
             }
@@ -1376,7 +1499,9 @@ namespace FlexRouter
             VariableManager.Start();
             _routerCore.Start();
             RenewTrees();
+            RenewVariablesTrees();
         }
+
         /// <summary>
         /// При закрытии списка профилей загрузить выбранный. Если выбор не изменился - ничего не грузим
         /// </summary>
@@ -1387,7 +1512,9 @@ namespace FlexRouter
             if (_selectProfile.Text == null || _selectProfile.Text == Profile.GetLoadedProfileName())
                 return;
             LoadProfile(_selectProfile.Text);
+            ApplicationSettings.DefaultProfile = _selectProfile.Text;
         }
+
         /// <summary>
         /// Загрузить профиль
         /// </summary>
@@ -1403,14 +1530,11 @@ namespace FlexRouter
                 return false;
             var profilePath = profileList[profileName];
             PauseRouterOnChangeProfile();
-            bool loadResult;
-            if (controlProcessorsProfile == null)
-                loadResult = Profile.LoadProfile(profilePath);
-            else
-                loadResult = Profile.MergeAssignmentsWithProfile(profileName, controlProcessorsProfile);
+            var loadResult = controlProcessorsProfile == null ? Profile.LoadProfile(profilePath) : Profile.MergeAssignmentsWithProfile(profileName, controlProcessorsProfile);
             ResumeRouterOnChangeProfile();
             return loadResult;
         }
+
         /// <summary>
         /// Создать новый профиль
         /// </summary>
@@ -1423,6 +1547,7 @@ namespace FlexRouter
             FillSelectProfileCombobox(ApplicationSettings.DefaultProfile);
             ResumeRouterOnChangeProfile();
         }
+
         /// <summary>
         /// Удалить профиль
         /// </summary>
@@ -1438,6 +1563,7 @@ namespace FlexRouter
             Profile.RemoveCurrentProfile();
             ResumeRouterOnChangeProfile();
         }
+
         /// <summary>
         /// Экспортировать профиль в указанный пользователем файл
         /// </summary>
@@ -1455,6 +1581,7 @@ namespace FlexRouter
                 return;
             Profile.SaveProfileAs(of.FileName);
         }
+
         /// <summary>
         /// Импортировать профиль с сохранением назначений текущего профиля
         /// </summary>
@@ -1476,6 +1603,7 @@ namespace FlexRouter
             Profile.ImportAndSaveAssignments(of.FileName);
             ResumeRouterOnChangeProfile();
         }
+
         /// <summary>
         /// Испортировать профиль из внешнего файла, указанного пользователем во внутреннее хранилище профилей роутера
         /// </summary>
@@ -1495,6 +1623,7 @@ namespace FlexRouter
             Profile.Import(of.FileName);
             ResumeRouterOnChangeProfile();
         }
+
         /// <summary>
         /// Переименовать профиль
         /// </summary>
@@ -1509,19 +1638,120 @@ namespace FlexRouter
             FillSelectProfileCombobox(name);
             _selectProfile.Text = name;
         }
+
         #endregion
 
         private void TurnControlsSynchronizationOffUnchecked(object sender, RoutedEventArgs e)
         {
             ApplicationSettings.ControlsSynchronizationIsOff = false;
-            ApplicationSettings.SaveSettings();
         }
-
         private void TurnControlsSynchronizationOffChecked(object sender, RoutedEventArgs e)
         {
             ApplicationSettings.ControlsSynchronizationIsOff = true;
-            ApplicationSettings.SaveSettings();
+        }
+        private void _joystickBindByInstanceGuid_Checked(object sender, RoutedEventArgs e)
+        {
+            ApplicationSettings.JoystickBindByInstanceGuid = true;
         }
 
+        private void _joystickBindByInstanceGuid_Unchecked(object sender, RoutedEventArgs e)
+        {
+            ApplicationSettings.JoystickBindByInstanceGuid = false;
+        }
+
+        private void _dump_Click(object sender, RoutedEventArgs e)
+        {
+            if (_routerCore.IsWorking())
+                _routerCore.Dump();
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+            if (source != null) source.AddHook(new HwndSourceHook(WndProc));
+            // Adds the windows message processing hook and registers USB device add/removal notification.
+            //HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+            //if (source != null)
+            //{
+            //    IntPtr windowHandle = source.Handle;
+            //    source.AddHook(HwndHandler);
+            //    UsbNotification.RegisterUsbDeviceNotification(windowHandle);
+            //}
+        }
+
+        //private readonly object locker = new object();
+        //private bool _locked;
+        //private DateTime? _deviceChanged = null;
+        //private readonly List<string> _usbDevicesId = new List<string>();
+
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+//            if (msg == WmDevicechange)
+  //          {
+                //               System.Diagnostics.Debug.Print(DateTime.Now + ": !!!WM_DEVICECHANGE");
+                //if (locked)
+                //{
+                //    System.Diagnostics.Debug.Print(DateTime.Now + ": Passed");
+                //    handled = true;
+                //    return IntPtr.Zero;
+                //}
+               //lock (locker)
+               //{
+                  // _locked = true;
+               //    _deviceChanged = DateTime.Now;
+               //    var devicesNewList = Invoke(GetUsbDevices();
+               //    if (devicesNewList.Any(d => !_usbDevicesId.Contains(d.DeviceID)))
+               //     {
+                        //System.Diagnostics.Debug.Print(DateTime.Now + ": WM_DEVICECHANGE");
+               //         //                System.Diagnostics.Debug.Print("WM_DEVICECHANGE");
+                        //PauseRouterOnChangeProfile();
+                        //System.Diagnostics.Debug.Print(DateTime.Now + ": ProfileStopped");
+                      //                  Thread.Sleep(500);
+                        //ResumeRouterOnChangeProfile();
+                        //System.Diagnostics.Debug.Print(DateTime.Now + ": ProfileResumed");
+               //         //MessageBox.Show("WM_DEVICECHANGE");
+               //         _usbDevicesId.Clear();
+               //         foreach (var d in devicesNewList)
+               //             _usbDevicesId.Add(d.DeviceID);
+               //     }
+                   // handled = true;
+                    //_locked = false;
+    //           }
+  //          }
+            return IntPtr.Zero;
+        }
+
+        //class USBDeviceInfo
+        //{
+        //    public USBDeviceInfo(string deviceID, string pnpDeviceID, string description)
+        //    {
+        //        this.DeviceID = deviceID;
+        //        this.PnpDeviceID = pnpDeviceID;
+        //        this.Description = description;
+        //    }
+        //    public string DeviceID { get; private set; }
+        //    public string PnpDeviceID { get; private set; }
+        //    public string Description { get; private set; }
+        //}
+        //private static List<USBDeviceInfo> GetUsbDevices()
+        //{
+        //    var devices = new List<USBDeviceInfo>();
+
+        //    ManagementObjectCollection collection;
+        //    using (var searcher = new ManagementObjectSearcher(@"Select * From Win32_USBHub"))
+        //        collection = searcher.Get();
+
+        //    foreach (var device in collection)
+        //    {
+        //        devices.Add(new USBDeviceInfo(
+        //            (string)device.GetPropertyValue("DeviceID"),
+        //            (string)device.GetPropertyValue("PNPDeviceID"),
+        //            (string)device.GetPropertyValue("Description")
+        //            ));
+        //    }
+
+        //    collection.Dispose();
+        //    return devices;
+        //}
     }
 }

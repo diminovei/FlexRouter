@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -11,7 +12,7 @@ using FlexRouter.ProfileItems;
 
 namespace FlexRouter.AccessDescriptors
 {
-    public class RangeUnion : DescriptorBase, IDescriptorPrevNext, IDescriptorRangeExt
+    public class RangeUnion : DescriptorBase, IDescriptorPrevNext, IDescriptorRangeExt, IRepeaterInDescriptor
     {
         readonly List<DescriptorRange> _dependentDescriptors = new List<DescriptorRange>();
 
@@ -114,6 +115,23 @@ namespace FlexRouter.AccessDescriptors
                 var id = int.Parse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI));
                 _loadedDependentDescriptors.Add(id);
             }
+        }
+        /// <summary>
+        /// Включен ли покторитель
+        /// (в этом дексрипторе должен быть всегда включен)
+        /// </summary>
+        /// <returns>true - включен</returns>
+        public bool IsRepeaterOn()
+        {
+            return true;
+        }
+        /// <summary>
+        /// Включить/выключить повторитель
+        /// (в этом дексрипторе должен быть всегда включен)
+        /// </summary>
+        public void EnableRepeater(bool enable)
+        {
+            throw new NotImplementedException("This access descriptor repeater must be unmanaged and always on. Check your code");
         }
     }
 }

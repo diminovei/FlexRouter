@@ -32,11 +32,6 @@ namespace FlexRouter.EditorsUI.VariableEditors
             _timer.Start();
         }
 
-        ~VariableValueEditor()
-        {
-            _timer.Stop();
-        }
-
         private void OnTimedEvent(object sender, EventArgs e)
         {
             var value = VariableManager.ReadValue(_editableVariable.Id);
@@ -65,6 +60,11 @@ namespace FlexRouter.EditorsUI.VariableEditors
         {
             _variableDecValueLabel.Content = LanguageManager.GetPhrase(Phrases.EditorVariableDecValue);
             _variableHexValueLabel.Content = LanguageManager.GetPhrase(Phrases.EditorVariableHexValue);
+        }
+
+        private void Grid_Unloaded(object sender, System.Windows.RoutedEventArgs e)
+        {
+            _timer.Stop();
         }
     }
 }

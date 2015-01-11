@@ -15,8 +15,8 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
         private readonly IControlProcessor _assignedControlProcessor;
         public ButtonToggleEmulatorEditor(IControlProcessor processor)
         {
-            _assignedControlProcessor = processor;
             InitializeComponent();
+            _assignedControlProcessor = processor;
             ShowData();
             Localize();
         }

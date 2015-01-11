@@ -1,9 +1,17 @@
-﻿using System.Xml;
+﻿using System;
+using System.Xml;
 using System.Xml.XPath;
-using SlimDX.DXGI;
 
 namespace FlexRouter.AccessDescriptors.Helpers
 {
+    public enum CycleType
+    {
+        None,
+        Simple,
+        UnreachableMinimum,
+        UnreachableMaximum
+    }
+
     public abstract class DescriptorRangeBase : DescriptorMultistateBase
     {
         private int _minimumValueFormulaId = -1;
@@ -11,9 +19,17 @@ namespace FlexRouter.AccessDescriptors.Helpers
         private int _defaultValueFormulaId = -1;
         private int _stepFormulaId = -1;
         private int _receiveValueFormulaId = -1;
-        public bool IsLooped;
+        private CycleType _cycleType;
         public bool EnableDefaultValue;
 
+        public CycleType GetCycleType()
+        {
+            return _cycleType;
+        }
+        public void SetCycleType(CycleType cycleType)
+        {
+            _cycleType = cycleType;
+        }
         public string GetStepFormula()
         {
             return GlobalFormulaKeeper.Instance.GetFormulaText(_stepFormulaId);
@@ -51,7 +67,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
             if (id == -1)
                 id = GlobalFormulaKeeper.Instance.StoreFormula(formula, GetId());
             else
-                GlobalFormulaKeeper.Instance.ChangeFormulaText(id, formula);
+                id = GlobalFormulaKeeper.Instance.StoreOrChangeFormulaText(id, formula, GetId());
         }
         public string GetReceiveValueFormula()
         {
@@ -71,8 +87,9 @@ namespace FlexRouter.AccessDescriptors.Helpers
             if (EnableDefaultValue)
                 writer.WriteAttributeString("DefaultValue", GetDefaultValueFormula());
             writer.WriteAttributeString("Step", GetStepFormula());
-            writer.WriteAttributeString("IsLooped", IsLooped.ToString());
             writer.WriteAttributeString("GetValueFormula", GetReceiveValueFormula());
+            if(_cycleType!=CycleType.None)
+                writer.WriteAttributeString("CycleType", _cycleType.ToString());
             writer.WriteEndElement();
         }
 
@@ -91,9 +108,19 @@ namespace FlexRouter.AccessDescriptors.Helpers
             SetDefaultValueFormula(defaultValueFormula);
             var stepFormula = readerAdd.GetAttribute("Step", readerAdd.NamespaceURI);
             SetStepFormula(stepFormula);
-            IsLooped = bool.Parse(readerAdd.GetAttribute("IsLooped", readerAdd.NamespaceURI));
             var getValueFormula = readerAdd.GetAttribute("GetValueFormula", readerAdd.NamespaceURI);
             SetReceiveValueFormula(getValueFormula);
+            var cycleType = readerAdd.GetAttribute("CycleType", readerAdd.NamespaceURI);
+            if (string.IsNullOrEmpty(cycleType))
+                _cycleType = CycleType.None;
+            foreach (CycleType ct in Enum.GetValues(typeof(CycleType)))
+            {
+                if(ct.ToString() != cycleType)
+                    continue;
+                _cycleType = ct;
+                break;
+            }
+
         }
     }
 }

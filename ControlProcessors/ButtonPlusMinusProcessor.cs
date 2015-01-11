@@ -7,6 +7,7 @@ using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.Hardware.HardwareEvents;
+using FlexRouter.Hardware.Helpers;
 using FlexRouter.Localizers;
 
 namespace FlexRouter.ControlProcessors
@@ -62,7 +63,6 @@ namespace FlexRouter.ControlProcessors
         }
         protected override void SaveAdditionals(XmlTextWriter writer)
         {
-            writer.WriteAttributeString("RepeaterIsOn", _repeaterIsOn.ToString());
             writer.WriteStartElement("Connectors");
             foreach (var buttonInfo in _assignments)
             {
@@ -79,7 +79,6 @@ namespace FlexRouter.ControlProcessors
         }
         public override void LoadAdditionals(XPathNavigator reader)
         {
-            _repeaterIsOn = bool.Parse(reader.GetAttribute("RepeaterIsOn", reader.NamespaceURI));
             AssignedHardware.Clear();
             var readerAdd = reader.Select("Connectors/Connector");
             while (readerAdd.MoveNext())
@@ -89,7 +88,7 @@ namespace FlexRouter.ControlProcessors
                     StateId = int.Parse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI)),
                     StateName = readerAdd.Current.GetAttribute("Name", readerAdd.Current.NamespaceURI),
                     Inverse = bool.Parse(readerAdd.Current.GetAttribute("Invert", readerAdd.Current.NamespaceURI)),
-                    AssignedItem = readerAdd.Current.GetAttribute("AssignedHardware", readerAdd.Current.NamespaceURI)
+                    AssignedItem = ControlProcessorHardware.FixForNewVersion(readerAdd.Current.GetAttribute("AssignedHardware", readerAdd.Current.NamespaceURI))
                 };
                 _assignments[item.StateId] = item;
             }
@@ -98,7 +97,6 @@ namespace FlexRouter.ControlProcessors
         {
             return _assignments.ToArray();
         }
-
         public override void SetAssignment(Assignment assignment)
         {
             foreach (var t in _assignments.Where(t => t.StateId == assignment.StateId))
@@ -132,10 +130,9 @@ namespace FlexRouter.ControlProcessors
             Prev,
             Next
         };
-        private bool _repeaterIsOn;
         private LastState _lastState = LastState.None;
-        private int _repeatsPerTimeCounter = 0;
-        private int[] _repeatsPerTime =
+        private int _repeatsPerTimeCounter;
+        private readonly int[] _repeatsPerTime =
         {
             0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 5, 5, 5, 5, 5, 5, 5, 10
         };
@@ -145,23 +142,12 @@ namespace FlexRouter.ControlProcessors
             if (repeaterState == LastState.None)
                 _repeatsPerTimeCounter = 0;
         }
-        public bool IsRepeaterOn()
-        {
-            return _repeaterIsOn;
-        }
-        public void EnableRepeater(bool on)
-        {
-            _repeaterIsOn = on;
-            if (on)
-            {
-                _repeatsPerTimeCounter = 0;
-                SetRepeaterState(LastState.None);
-            }
-                
-        }
         public void Tick()
         {
-            if (!_repeaterIsOn || _lastState == LastState.None)
+            if (!(AccessDescriptor is IRepeaterInDescriptor))
+                return;
+            bool repeaterIsOn = ((IRepeaterInDescriptor)AccessDescriptor).IsRepeaterOn();
+            if (!repeaterIsOn || _lastState == LastState.None)
                 return;
             if (_repeatsPerTime[_repeatsPerTimeCounter] == 0)
             {

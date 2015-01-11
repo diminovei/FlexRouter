@@ -250,8 +250,7 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
                 try
                 {
                     var baseOffset = (IntPtr)((int)_modules[moduleName].BaseAddress + moduleOffset);
-                    var hProcess =
-                        OpenProcess(
+                    var hProcess = OpenProcess(
                             ProcessAccessFlags.VmOperation | ProcessAccessFlags.QueryInformation | ProcessAccessFlags.VmRead |
                             ProcessAccessFlags.VmWrite, false, _mainModuleProcessId);
                     if (hProcess == IntPtr.Zero)
@@ -267,8 +266,7 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
                     var buffer = varConverter.ValueToArray(valueToSet, variableSize);
 
                     uint bytesWrite = 0;
-                    var res = WriteProcessMemory(hProcess, baseOffset, buffer, (uint)buffer.Length /*(uint)variableSize*/,
-                                                 ref bytesWrite);
+                    var res = WriteProcessMemory(hProcess, baseOffset, buffer, (uint)buffer.Length, ref bytesWrite);
                     CloseHandle(hProcess);
                     return new ManageMemoryVariableResult
                     {

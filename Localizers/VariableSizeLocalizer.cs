@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Controls;
-using System.Windows.Media.Media3D;
 using FlexRouter.VariableWorkerLayer;
 
 namespace FlexRouter.Localizers
@@ -42,9 +41,6 @@ namespace FlexRouter.Localizers
 
         static public string LocalizeSizeString(string text)
         {
-//            if (string.IsNullOrEmpty(text))
-//                return string.Empty;
-
             var currentSizeKey = OldSizeTypeByText(text);
             if (currentSizeKey == null)
                 return string.Empty;

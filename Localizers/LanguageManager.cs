@@ -52,6 +52,7 @@ namespace FlexRouter.Localizers
         EditorRepeater,
         EditorHardwareMotherboard,
         EditorHardwareModule,
+        EditorHardwareBlock,
         EditorHardwareControl,
         EditorRenameState,
         EditorRemoveState,
@@ -104,6 +105,7 @@ namespace FlexRouter.Localizers
         HardwareButton,
         HardwareEncoder,
         HardwareIndicator,
+        HardwareLedMatrixIndicator,
         HardwareBinaryOutput,
         HardwareAxis,
         HardwareButtonPlusMinus,
@@ -136,6 +138,7 @@ namespace FlexRouter.Localizers
         SettingsImportProfileKeepAssignmentsDialogHeader,
         SettingsMessageInputProfileNewName,
         SettingsTurnControlsSynchronizationOff,
+        SettingsHardwareGuidConflict,
 
         TabInfo,
         TabSettings,
@@ -166,9 +169,19 @@ namespace FlexRouter.Localizers
         CommonStateStopped,
         CommonLabelLastHardwareEvent,
         CommonProfileManagement,
+        CommonDumpControls,
+        CommonButtonClearAssignment,
+
         EditorCreateProfile,
         EditorProfileName,
-        EditorMainProcessName
+        EditorMainProcessName, 
+        
+        CycleTypeReachableMinMax,
+        CycleTypeUnreachableMinimum,
+        CycleTypeUnreachableMaximum,
+        CycleTypeNone,
+        SettingsJoystickBindByInstanceGuid,
+        EditorDigitsTotalNumber,
     }
 
     static public class LanguageManager

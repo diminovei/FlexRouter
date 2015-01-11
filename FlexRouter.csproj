@@ -53,6 +53,9 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>MainIcon.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="FTChipIDNet">
       <HintPath>Addons\FTChipIDNet.dll</HintPath>
@@ -67,6 +70,7 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -96,6 +100,9 @@
     <Compile Include="AccessDescriptors\DescriptorValue.cs" />
     <Compile Include="AccessDescriptors\Helpers\GlobalFormulaKeeper.cs" />
     <Compile Include="AccessDescriptors\Helpers\IAccessDescriptor.cs" />
+    <Compile Include="AccessDescriptors\Helpers\IRepeaterInDescriptor.cs" />
+    <Compile Include="ApplicationSettings.cs" />
+    <Compile Include="ControlProcessors\LedMatrixIndicatorProcessor.cs" />
     <Compile Include="EditorsUI\Dialogues\ProfileEditor.xaml.cs">
       <DependentUpon>ProfileEditor.xaml</DependentUpon>
     </Compile>
@@ -108,7 +115,6 @@
     <Compile Include="AccessDescriptors\Interfaces\IIndicatorMethods.cs" />
     <Compile Include="AccessDescriptors\Interfaces\IValueOfRange.cs" />
     <Compile Include="AccessDescriptors\RangeUnion.cs" />
-    <Compile Include="ApplicationSettings.cs" />
     <Compile Include="CalculatorRelated\FormulaComputeResult.cs" />
     <Compile Include="CalculatorRelated\Tokens\CalcTokenFormulaSeparator.cs" />
     <Compile Include="CalculatorRelated\Tokens\CalcTokenIfStatement.cs" />
@@ -138,9 +144,6 @@
     <Compile Include="EditorsUI\ControlProcessorEditors\AssignEditorHelper.cs" />
     <Compile Include="EditorsUI\ControlProcessorEditors\AxisSetLimitsEditor.xaml.cs">
       <DependentUpon>AxisSetLimitsEditor.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="EditorsUI\ControlProcessorEditors\ButtonRepeaterEditor.xaml.cs">
-      <DependentUpon>ButtonRepeaterEditor.xaml</DependentUpon>
     </Compile>
     <Compile Include="EditorsUI\ControlProcessorEditors\ButtonToggleEmulatorEditor.xaml.cs">
       <DependentUpon>ButtonToggleEmulatorEditor.xaml</DependentUpon>
@@ -185,11 +188,24 @@
     <Compile Include="EditorsUI\Dialogues\InputString.xaml.cs">
       <DependentUpon>InputString.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Hardware\Arcc\ArccAxisCommand.cs" />
+    <Compile Include="Hardware\Arcc\ArccBinaryInputCommand.cs" />
+    <Compile Include="Hardware\Arcc\ArccButtonCommand.cs" />
+    <Compile Include="Hardware\Arcc\ArccIndicatorCommand.cs" />
+    <Compile Include="Hardware\Arcc\ArccLinearOutputCommand.cs" />
+    <Compile Include="Hardware\Arcc\ArccModuleType.cs" />
+    <Compile Include="Hardware\DeviceSubType.cs" />
+    <Compile Include="Hardware\F3\F3Device.cs" />
+    <Compile Include="Hardware\F3\F3DevicesManager.cs" />
+    <Compile Include="Hardware\F3\f3ioAPI.cs" />
+    <Compile Include="Hardware\HardwareEvents\DumpEvent.cs" />
+    <Compile Include="Hardware\Helpers\AxisDebouncer.cs" />
     <Compile Include="Hardware\Helpers\DeviceManagerBase.cs" />
-    <Compile Include="Hardware\Helpers\DumpMode.cs" />
     <Compile Include="Hardware\Helpers\IHardwareDevice.cs" />
+    <Compile Include="Hardware\Helpers\KeysFilter.cs" />
     <Compile Include="Hardware\Keyboard\KeyboardDevice.cs" />
     <Compile Include="Hardware\Keyboard\KeyboardDevicesManager.cs" />
+    <Compile Include="Hardware\UsbNotification.cs" />
     <Compile Include="Helpers\GlobalId.cs" />
     <Compile Include="Hardware\HardwareEvents\AxisEvent.cs" />
     <Compile Include="Hardware\HardwareEvents\ButtonEvent.cs" />
@@ -199,9 +215,15 @@
     <Compile Include="Hardware\HardwareEvents\LampEvent.cs" />
     <Compile Include="Hardware\Joystick\JoystickDevice.cs" />
     <Compile Include="Hardware\Joystick\JoystickDevicesManager.cs" />
-    <Compile Include="Helpers\Problems.cs" />
+    <Compile Include="MessagesToMainForm\IMessage.cs" />
+    <Compile Include="MessagesToMainForm\MessageToMainForm.cs" />
+    <Compile Include="MessagesToMainForm\ObjectMessage.cs" />
+    <Compile Include="MessagesToMainForm\SimpleMessage.cs" />
+    <Compile Include="MessagesToMainForm\TextMessage.cs" />
+    <Compile Include="Problems\Problem.cs" />
+    <Compile Include="Problems\ProblemHideOnFixOptions.cs" />
+    <Compile Include="Problems\Problems.cs" />
     <Compile Include="Helpers\WpfBitmapConverter.cs" />
-    <Compile Include="Localizers\ControlProcessorListLocalizer.cs" />
     <Compile Include="ProfileItems\ITreeItem.cs" />
     <Compile Include="ProfileItems\Panel.cs" />
     <Compile Include="EditorsUI\AccessDescriptorsEditor\DescriptorFormulaEditor.xaml.cs">
@@ -237,7 +259,7 @@
     <Compile Include="EditorsUI\VariableEditors\MemoryPatchVariableEditor.xaml.cs">
       <DependentUpon>MemoryPatchVariableEditor.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Helpers\Messenger.cs" />
+    <Compile Include="MessagesToMainForm\Messenger.cs" />
     <Compile Include="EditorsUI\PanelEditors\PanelProperties.xaml.cs">
       <DependentUpon>PanelProperties.xaml</DependentUpon>
     </Compile>
@@ -245,6 +267,10 @@
     <Compile Include="EditorsUI\Helpers\TreeViewHelper.cs" />
     <Compile Include="EditorsUI\Helpers\TreeViewStateKeeper.cs" />
     <Compile Include="Helpers\Utils.cs" />
+    <Compile Include="RouterState.cs" />
+    <Compile Include="TreeItem.cs" />
+    <Compile Include="TreeItemType.cs" />
+    <Compile Include="VariableWorkerLayer\MemoryVariableBase.cs" />
     <Compile Include="VariableWorkerLayer\MethodClick\ClickMacroProcessor.cs" />
     <Compile Include="VariableWorkerLayer\MethodClick\ClickMethodForFs2004.cs" />
     <Compile Include="VariableWorkerLayer\MethodClick\ClickVariable.cs" />
@@ -274,10 +300,6 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="EditorsUI\ControlProcessorEditors\AxisSetLimitsEditor.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="EditorsUI\ControlProcessorEditors\ButtonRepeaterEditor.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -434,6 +456,10 @@
     <Resource Include="Resources\Ok.bmp" />
     <Resource Include="Resources\RangeUnion.bmp" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="MainIcon.ico" />
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

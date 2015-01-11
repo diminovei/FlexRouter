@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Linq;
-using System.Windows;
 using System.Xml;
 using System.Xml.XPath;
-using FlexRouter.AccessDescriptors;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.ControlProcessors.Helpers;
-using FlexRouter.Hardware;
 using FlexRouter.Hardware.HardwareEvents;
+using FlexRouter.Hardware.Helpers;
 using FlexRouter.Localizers;
 
 namespace FlexRouter.ControlProcessors
@@ -38,7 +34,6 @@ namespace FlexRouter.ControlProcessors
         protected override void SaveAdditionals(XmlTextWriter writer)
         {
             writer.WriteAttributeString("EmulateToggle", _emulateToggle.ToString());
-            writer.WriteAttributeString("RepeaterIsOn", _repeaterIsOn.ToString());
             writer.WriteStartElement("Connectors");
             foreach (var buttonInfo in AssignedHardware)
             {
@@ -57,7 +52,6 @@ namespace FlexRouter.ControlProcessors
         public override void LoadAdditionals(XPathNavigator reader)
         {
             _emulateToggle = bool.Parse(reader.GetAttribute("EmulateToggle", reader.NamespaceURI));
-            _repeaterIsOn = bool.Parse(reader.GetAttribute("RepeaterIsOn", reader.NamespaceURI));
             AssignedHardware.Clear();
             var readerAdd = reader.Select("Connectors/Connector");
             while (readerAdd.MoveNext())
@@ -68,8 +62,7 @@ namespace FlexRouter.ControlProcessors
                     Order = int.Parse(readerAdd.Current.GetAttribute("Order", readerAdd.Current.NamespaceURI)),
                     Name = readerAdd.Current.GetAttribute("Name", readerAdd.Current.NamespaceURI),
                     Invert = bool.Parse(readerAdd.Current.GetAttribute("Invert", readerAdd.Current.NamespaceURI)),
-                    AssignedHardware =
-                        readerAdd.Current.GetAttribute("AssignedHardware", readerAdd.Current.NamespaceURI)
+                    AssignedHardware = ControlProcessorHardware.FixForNewVersion(readerAdd.Current.GetAttribute("AssignedHardware", readerAdd.Current.NamespaceURI))
                 };
                 AssignedHardware.Add(item);
             }
@@ -99,7 +92,6 @@ namespace FlexRouter.ControlProcessors
                 return;
 
             var direction = button.Invert ? !ev.IsPressed : ev.IsPressed;
-
             if (_emulateToggle)
             {
                 var action = button.Toggle(direction);
@@ -130,27 +122,21 @@ namespace FlexRouter.ControlProcessors
                     _lastStateId = -1;
                 }
             }
-            if (!AssignedHardware.Any(bi => bi.IsOn))
-            {
-                _lastStateId = -1;
-                AccessDescriptor.SetDefaultState();
-            }
+            // Для дампа кнопок с первого раза (без AllKeys, затем PressedKeysOnly) нужно игнорировать события отжатых кнопок, если одна из кнопок уже нажата
+            if (AssignedHardware.Any(bi => bi.IsOn)) 
+                return;
+            _lastStateId = -1;
+            AccessDescriptor.SetDefaultState();
         }
 
-        private bool _repeaterIsOn;
-
-        public bool IsRepeaterOn()
-        {
-            return _repeaterIsOn;
-        }
-        public void EnableRepeater(bool on)
-        {
-            _repeaterIsOn = on;
-        }
         public void Tick()
         {
-            if (!_repeaterIsOn || _lastStateId == -1)
+            if (!(AccessDescriptor is IRepeaterInDescriptor))
                 return;
+            var repeaterIsOn = ((DescriptorMultistateBase) AccessDescriptor).IsRepeaterOn();
+            if (!repeaterIsOn || _lastStateId == -1)
+                return;
+
             if (_lastStatePeriod == false)
             {
                 AccessDescriptor.SetDefaultState();

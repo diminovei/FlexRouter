@@ -6,7 +6,11 @@
              mc:Ignorable="d" 
              d:DesignHeight="44" d:DesignWidth="313" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="Auto">
     <Grid Margin="0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="5*"/>
+        </Grid.ColumnDefinitions>
         <Label x:Name="_variableSizeLabel" Content="Size" HorizontalAlignment="Left" Margin="10,8,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.184,-3"/>
-        <ComboBox x:Name="_variableSize" Margin="0,12,10,0" VerticalAlignment="Top" Width="120" HorizontalAlignment="Right"/>
+        <ComboBox x:Name="_variableSize" Margin="0,12,10,0" VerticalAlignment="Top" Width="Auto" Grid.Column="1"/>
     </Grid>
 </UserControl>

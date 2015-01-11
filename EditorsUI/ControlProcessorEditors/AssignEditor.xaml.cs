@@ -1,7 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Input;
 using FlexRouter.AccessDescriptors.Helpers;
-using FlexRouter.ControlProcessorEditors;
 using FlexRouter.ControlProcessors;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.EditorPanels;
@@ -23,9 +22,9 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
 
         public AssignEditor(IControlProcessor processor, bool enableInverse, HardwareModuleType hardwareSupported)
         {
+            InitializeComponent();
             _hardwareSupported = hardwareSupported;
             _assignEditorHelper = new AssignEditorHelper(processor, enableInverse);
-            InitializeComponent();
             ShowData();
             Localize();
         }

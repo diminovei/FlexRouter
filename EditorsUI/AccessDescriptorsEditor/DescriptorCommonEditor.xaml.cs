@@ -67,6 +67,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
 
         public void Save()
         {
+            GlobalFormulaKeeper.Instance.RemoveFormulasByOwnerId(_assignedAccessDescriptor.GetId());
 //            if(_assignedAccessDescriptor.GetId() == -1)
                 Profile.RegisterAccessDescriptor(_assignedAccessDescriptor);
             _assignedAccessDescriptor.SetName(_accessDescriptorName.Text);

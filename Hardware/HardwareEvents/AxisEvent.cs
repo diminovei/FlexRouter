@@ -8,7 +8,7 @@
         /// <summary>
         /// Текущая позиция бегунка сопротивления
         /// </summary>
-        public int Position;
+        public ushort Position;
         /// <summary>
         /// Минимально возможное значение (зависит от реализации в железе)
         /// </summary>

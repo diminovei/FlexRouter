@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using FlexRouter.CalculatorRelated.Tokens;
 using FlexRouter.ProfileItems;
-using FlexRouter.VariableSynchronization;
 using FlexRouter.VariableWorkerLayer;
 
 namespace FlexRouter.CalculatorRelated
@@ -11,6 +10,11 @@ namespace FlexRouter.CalculatorRelated
     /// </summary>
     public class CalculatorVariableAccessAddon
     {
+        private readonly bool _readCachedValues;
+        public CalculatorVariableAccessAddon(bool readCachedValues = false)
+        {
+            _readCachedValues = readCachedValues;
+        }
         /// <summary>
         /// Метод для доступа к значению переменной по токену в формуле
         /// </summary>
@@ -20,7 +24,7 @@ namespace FlexRouter.CalculatorRelated
         {
             if (!(tokenToPreprocess is CalcTokenNumber))
                 return tokenToPreprocess;
-            string text = ((CalcTokenNumber)tokenToPreprocess).TokenText;
+            var text = ((CalcTokenNumber)tokenToPreprocess).TokenText;
             if (!text.Contains('[') || !text.Contains(']') || !text.Contains('.'))
                 return tokenToPreprocess;
             var varAndPanelName = text.Substring(1, text.Length - 2).Split('.');
@@ -29,7 +33,7 @@ namespace FlexRouter.CalculatorRelated
             var varId = Profile.GetVariableByPanelAndName(varAndPanelName[0], varAndPanelName[1]);
             if (varId == -1)
                 return tokenToPreprocess;
-            var readResult = VariableManager.ReadValue(varId);
+            var readResult = _readCachedValues ? VariableManager.ReadCachedValue(varId) : VariableManager.ReadValue(varId);
             if (readResult.Error != ProcessVariableError.Ok)
                 return tokenToPreprocess;
             ((CalcTokenNumber)tokenToPreprocess).Value = readResult.Value;

@@ -22,11 +22,11 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
         /// </summary>
         private void ShowData()
         {
-//            _repeater.IsChecked = ((DescriptorMultistateBase)_accessDescriptor).IsRepeaterOn();
+            _repeater.IsChecked = _accessDescriptor.IsRepeaterOn();
         }
         public void Save()
         {
-//            (_accessDescriptor).EnableRepeater(_repeater.IsChecked == true);
+            _accessDescriptor.EnableRepeater(_repeater.IsChecked == true);
             ShowData();
         }
 
@@ -38,7 +38,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
 
         public bool IsDataChanged()
         {
-            return false;
+            return _accessDescriptor.IsRepeaterOn() != (_repeater.IsChecked == true);
         }
 
         public EditorFieldsErrors IsCorrectData()

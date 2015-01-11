@@ -1,4 +1,5 @@
-﻿using FlexRouter.AccessDescriptors;
+﻿using System.Collections.Generic;
+using FlexRouter.AccessDescriptors;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.ControlProcessors.Helpers;
@@ -23,12 +24,13 @@ namespace FlexRouter.ControlProcessors
             return LanguageManager.GetPhrase(Phrases.HardwareBinaryOutput);
         }
 
-        public ControlEventBase GetNewEvent()
+        public IEnumerable<ControlEventBase> GetNewEvent()
         {
             if (string.IsNullOrEmpty(AssignedHardwareForSingle))
                 return null;
+
             var ad = Profile.GetAccessDesciptorById(AssignedAccessDescriptorId);
-            var lineState = ((DescriptorBinaryOutput) ad).GetLineState();
+            var lineState = ((DescriptorBinaryOutput)ad).GetLineState();
             var powerState = ad.IsPowerOn();
             if (lineState == _previousState && powerState == _previousPowerState)
                 return null;
@@ -40,10 +42,10 @@ namespace FlexRouter.ControlProcessors
                 IsOn = _previousPowerState&&_previousState
             };
             // ToDo: добавить восстановление состояния, если лампа участвовала в поиске
-            return ev;
+            return new List<ControlEventBase> {ev};
         }
 
-        public ControlEventBase GetClearEvent()
+        public IEnumerable<ControlEventBase> GetClearEvent()
         {
             if (string.IsNullOrEmpty(AssignedHardwareForSingle))
                 return null;
@@ -52,7 +54,9 @@ namespace FlexRouter.ControlProcessors
                 Hardware = ControlProcessorHardware.GenerateByGuid(AssignedHardwareForSingle),
                 IsOn = false
             };
-            return ev;
+            // Требуется для того, чтобы при изменении, например, числа цифр в индикаторе не оставались гореть цифры
+            _previousState = false;
+            return new List<ControlEventBase> { ev };
         }
     }
 }

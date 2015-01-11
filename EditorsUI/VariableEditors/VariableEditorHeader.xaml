@@ -6,10 +6,14 @@
              mc:Ignorable="d" 
              d:DesignHeight="94" d:DesignWidth="300" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="Auto">
     <Grid Margin="0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="5*"/>
+        </Grid.ColumnDefinitions>
         <Label x:Name="_nameLabel" Content="Name" HorizontalAlignment="Left" Margin="10,33,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.184,-3"/>
-        <TextBox x:Name="_variableName" Height="23" Margin="0,33,0,0" VerticalAlignment="Top" Width="120" HorizontalAlignment="Right" PreviewTextInput="_variableName_PreviewTextInput"/>
+        <TextBox x:Name="_variableName" Height="23" Margin="0,33,0,0" VerticalAlignment="Top" Width="Auto" PreviewTextInput="_variableName_PreviewTextInput" Grid.Column="1"/>
         <Label x:Name="_panelLabel" Content="Panel" HorizontalAlignment="Left" Margin="10,57,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.184,-3"/>
-        <ComboBox x:Name="_panel" Margin="0,61,0,0" VerticalAlignment="Top" Width="120" DropDownOpened="PanelDropDownOpened" HorizontalAlignment="Right"/>
-        <Label x:Name="_editorTypeLabel" Content="Label" Margin="10,0,0,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" BorderThickness="1" BorderBrush="Black"/>
+        <ComboBox x:Name="_panel" Margin="0,61,0,0" VerticalAlignment="Top" Width="Auto" DropDownOpened="PanelDropDownOpened" Grid.Column="1"/>
+        <Label x:Name="_editorTypeLabel" Content="Label" Margin="10,0,0,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" BorderThickness="1" BorderBrush="Black" Grid.ColumnSpan="2"/>
     </Grid>
 </UserControl>

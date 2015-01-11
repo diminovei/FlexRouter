@@ -1,23 +1,31 @@
-﻿<UserControl x:Class="FlexRouter.EditorPanels.DescriptorRangeEditor"
+﻿<UserControl x:Class="FlexRouter.EditorsUI.AccessDescriptorsEditor.DescriptorRangeEditor"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
              d:DesignHeight="263" d:DesignWidth="300">
-    <Grid Height="309" VerticalAlignment="Top">
+    <Grid Height="263" VerticalAlignment="Top">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="73*"/>
+            <ColumnDefinition Width="77*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="262*"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
         <Label x:Name="_minimumLabel" Content="Minimum" HorizontalAlignment="Left" Margin="9,121,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="_minimum" HorizontalAlignment="Left" Height="23" Margin="169,121,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
+        <TextBox x:Name="_minimum" Width="Auto" Height="23" Margin="0,121,10,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Grid.Column="1"/>
         <Label x:Name="_maximumLabel" Content="Maximum" HorizontalAlignment="Left" Margin="9,149,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="_maximum" HorizontalAlignment="Left" Height="23" Margin="169,149,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
+        <TextBox x:Name="_maximum" Width="Auto" Height="23" Margin="0,149,10,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Grid.Column="1"/>
         <Label x:Name="_stepLabel" Content="Step" HorizontalAlignment="Left" Margin="9,177,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="_step" HorizontalAlignment="Left" Height="23" Margin="169,177,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
-        <Label x:Name="_cyclicLabel" Content="Is cyclic" HorizontalAlignment="Left" Margin="9,203,0,0" VerticalAlignment="Top"/>
-        <CheckBox x:Name="_cyclic" Content="" HorizontalAlignment="Left" Margin="169,205,0,0" VerticalAlignment="Top" RenderTransformOrigin="6.235,0.188"/>
-        <TextBox x:Name="_getValueFormula" HorizontalAlignment="Left" Height="78" Margin="9,38,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="280"/>
-        <Label x:Name="_getValueFormulaLabel" Content="Get value formula" HorizontalAlignment="Left" Height="23" Margin="10,10,0,0" VerticalAlignment="Top" Width="279"/>
-        <CheckBox x:Name="_enableDefaultValue" Content="" HorizontalAlignment="Left" Margin="169,238,0,0" VerticalAlignment="Top" RenderTransformOrigin="6.235,0.188" Checked="_enableDefaultValue_Checked" Unchecked="_enableDefaultValue_Unchecked"/>
-        <Label x:Name="_defaultValueLabel" Content="Default value" HorizontalAlignment="Left" Margin="9,234,0,0" VerticalAlignment="Top" Width="138"/>
-        <TextBox x:Name="_defaultValue" HorizontalAlignment="Left" Height="23" Margin="194,234,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="96"/>
+        <TextBox x:Name="_step" Width="Auto" Height="23" Margin="0,177,10,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Grid.Column="1"/>
+        <Label x:Name="_cyclicLabel" Content="Is cyclic" HorizontalAlignment="Left" Margin="10,203,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.7,0.731" Width="126"/>
+        <TextBox x:Name="_getValueFormula" Width="Auto" Height="78" Margin="9,38,10,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
+        <Label x:Name="_getValueFormulaLabel" Content="Get value formula" Height="23" Margin="10,10,0,0" VerticalAlignment="Top" Width="Auto" Grid.ColumnSpan="2"/>
+        <CheckBox x:Name="_enableDefaultValue" Content="" HorizontalAlignment="Left" Margin="10,237,0,0" VerticalAlignment="Top" RenderTransformOrigin="6.235,0.188" Checked="EnableDefaultValueChecked" Unchecked="EnableDefaultValueUnchecked" Grid.Column="1"/>
+        <Label x:Name="_defaultValueLabel" Content="Default value" HorizontalAlignment="Left" Margin="9,234,0,0" VerticalAlignment="Top" Width="138" Grid.ColumnSpan="2"/>
+        <TextBox x:Name="_defaultValue" HorizontalAlignment="Left, Right" Height="23" Margin="0,232,11,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="116" Grid.Column="1"/>
+        <ComboBox x:Name="_cycleType" Width="Auto" Margin="0,205,10,0" VerticalAlignment="Top" Grid.Column="1"/>
     </Grid>
 </UserControl>

@@ -6,11 +6,15 @@
              mc:Ignorable="d" 
              d:DesignHeight="194" d:DesignWidth="370">
     <Grid>
-        <Label x:Name="_nameLabel" Content="Name" HorizontalAlignment="Left" Margin="10,33,0,0" VerticalAlignment="Top" Width="200"/>
-        <TextBox x:Name="_panelName" Height="23" Margin="0,33,10,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="175" HorizontalAlignment="Right" PreviewTextInput="PanelNamePreviewTextInput"/>
-        <Label x:Name="_powerFormulaLabel" Content="Power formula" HorizontalAlignment="Left" Margin="10,64,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.105,-0.346" Width="200"/>
-        <TextBox x:Name="_powerFormula" Height="89" Margin="0,95,10,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="350" RenderTransformOrigin="0.426,4.13" HorizontalAlignment="Right"/>
-        <Label x:Name="_editorTypeLabel" Content="Label" Margin="10,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" BorderThickness="1" BorderBrush="Black"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="5*"/>
+        </Grid.ColumnDefinitions>
+        <Label x:Name="_nameLabel" Content="Name" HorizontalAlignment="Left" Margin="10,33,0,0" VerticalAlignment="Top" Width="Auto"/>
+        <TextBox x:Name="_panelName" Height="23" Margin="0,33,10,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="Auto" PreviewTextInput="PanelNamePreviewTextInput" Grid.Column="1"/>
+        <Label x:Name="_powerFormulaLabel" Content="Power formula" Margin="10,64,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.105,-0.346" Width="Auto" Grid.Column="0"/>
+        <TextBox x:Name="_powerFormula" Height="89" Margin="0,95,10,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="Auto" RenderTransformOrigin="0.426,4.13" Grid.ColumnSpan="2"/>
+        <Label x:Name="_editorTypeLabel" Content="Label" Margin="10,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" BorderThickness="1" BorderBrush="Black" Grid.ColumnSpan="2"/>
 
     </Grid>
 </UserControl>

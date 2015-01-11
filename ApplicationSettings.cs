@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Xml;
@@ -25,14 +23,7 @@ namespace FlexRouter
         public static string DefaultProfile { get; set; }
         public static string DefaultLanguage { get; set; }
         public static bool ControlsSynchronizationIsOff { get; set; }
-        //public static bool MinimizeToTrayOnStart { get; set; }
-        //public static uint RepeaterFirstPause { get; set; }
-        //public static uint RepeaterNextPause { get; set; }
-        //public static bool ShowAxisInfo { get; set; }
-        //public static bool JoystickBindingType { get; set; }
-
-        //public static readonly uint DefaultRepeaterFirstPause = 10;
-        //public static readonly uint DefaultRepeaterNextPause = 0;
+        public static bool JoystickBindByInstanceGuid { get; set; }
 
         public static bool LoadSettings()
         {
@@ -56,32 +47,14 @@ namespace FlexRouter
                 DefaultProfile = settingsNav.Current.GetAttribute("DefaultProfile", settingsNav.Current.NamespaceURI);
                 DefaultLanguage = settingsNav.Current.GetAttribute("DefaultLanguage", settingsNav.Current.NamespaceURI);
                 ControlsSynchronizationIsOff = settingsNav.Current.GetAttribute("ControlsSynchronizationIsOff", settingsNav.Current.NamespaceURI).ToLower().Contains("true");
-
-                //MinimizeToTrayOnStart =
-                //    settingsNav.Current.GetAttribute("MinimizeToTrayOnStart", settingsNav.Current.NamespaceURI)
-                //        .ToLower()
-                //        .Contains("true");
-                //JoystickBindingType =
-                //    settingsNav.Current.GetAttribute("JoystickBindingType", settingsNav.Current.NamespaceURI)
-                //        .ToLower()
-                //        .Contains("true");
-                //ShowAxisInfo =
-                //    settingsNav.Current.GetAttribute("ShowAxisInfo", settingsNav.Current.NamespaceURI)
-                //        .ToLower()
-                //        .Contains("true");
-                //uint repeater;
+                JoystickBindByInstanceGuid = settingsNav.Current.GetAttribute("JoystickBindByInstanceGuid", settingsNav.Current.NamespaceURI).ToLower().Contains("true");
+                
                 //RepeaterFirstPause =
                 //    uint.TryParse(
                 //        settingsNav.Current.GetAttribute("RepeaterFirstPause", settingsNav.Current.NamespaceURI),
                 //        out repeater)
                 //        ? repeater
                 //        : DefaultRepeaterFirstPause;
-                //RepeaterNextPause =
-                //    uint.TryParse(
-                //        settingsNav.Current.GetAttribute("RepeaterNextPause", settingsNav.Current.NamespaceURI),
-                //        out repeater)
-                //        ? repeater
-                //        : DefaultRepeaterNextPause;
                 return true;
             }
             catch (Exception)
@@ -108,6 +81,7 @@ namespace FlexRouter
                         writer.WriteAttributeString("DefaultProfile", DefaultProfile);
                         writer.WriteAttributeString("DefaultLanguage", DefaultLanguage);
                         writer.WriteAttributeString("ControlsSynchronizationIsOff", ControlsSynchronizationIsOff.ToString());
+                        writer.WriteAttributeString("JoystickBindByInstanceGuid", JoystickBindByInstanceGuid.ToString());
                         writer.WriteEndElement();
                         writer.WriteEndElement();
                         writer.WriteEndDocument();
@@ -125,27 +99,6 @@ namespace FlexRouter
             {
 
             }
-            
-            
-            
-            
-/*            var writer = new XmlTextWriter(SettingsLocation, Encoding.Unicode);
-            writer.WriteStartDocument();
-            writer.WriteStartElement("FlexRouterProfile");
-            writer.WriteAttributeString("Type", "Settings");
-            writer.WriteAttributeString("Name", "Settings");
-            writer.WriteStartElement("Settings");
-            writer.WriteAttributeString("DefaultProfile", DefaultProfile);
-            writer.WriteAttributeString("DefaultLanguage", DefaultLanguage);
-            writer.WriteAttributeString("ControlsSynchronizationIsOff", ControlsSynchronizationIsOff.ToString());
-            //writer.WriteAttributeString("JoystickBindingType", MinimizeToTrayOnStart.ToString());
-            //writer.WriteAttributeString("ShowAxisInfo", ShowAxisInfo.ToString());
-            //writer.WriteAttributeString("RepeaterFirstPause", RepeaterFirstPause.ToString());
-            //writer.WriteAttributeString("RepeaterNextPause", RepeaterNextPause.ToString());
-            writer.WriteEndElement();
-            writer.WriteEndElement();
-            writer.WriteEndDocument();
-            writer.Close();*/
         }
     }
 }

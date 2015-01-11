@@ -1,11 +1,14 @@
-﻿using FlexRouter.AccessDescriptors.Helpers;
+﻿using System;
+using System.Collections.Generic;
+using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.ControlProcessors;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.EditorsUI.Helpers;
 using FlexRouter.Hardware.HardwareEvents;
+using FlexRouter.Hardware.Helpers;
 using FlexRouter.Localizers;
 
-namespace FlexRouter.ControlProcessorEditors
+namespace FlexRouter.EditorsUI.ControlProcessorEditors
 {
     /// <summary>
     /// Interaction logic for DescriptorValueEditor.xaml
@@ -19,8 +22,8 @@ namespace FlexRouter.ControlProcessorEditors
 
         public AxisSetLimitsEditor(IControlProcessor processor)
         {
-            _assignedControlProcessor = processor;
             InitializeComponent();
+            _assignedControlProcessor = processor;
             _axisMinimum = ((AxisRangeProcessor)_assignedControlProcessor).GetAxisMinimum();
             _axisMaximum = ((AxisRangeProcessor)_assignedControlProcessor).GetAxisMaximum();
             _axisCurrentPosition.Minimum = AxisDefaultRange.GetAxisDefaultMinimum();
@@ -59,6 +62,7 @@ namespace FlexRouter.ControlProcessorEditors
             return new EditorFieldsErrors(null);
         }
 
+        AxisDebouncer _axisDebouncer = new AxisDebouncer();
         /// <summary>
         /// Функция обрабатывает нажатие кнопки или кручение энкодера
         /// Для того, чтобы корректно обрабатывать галетники, функция реагирует преимущестенно на состояние "включено"
@@ -71,6 +75,9 @@ namespace FlexRouter.ControlProcessorEditors
                 return;
             var axisControlProcessor = _assignedControlProcessor as AxisRangeProcessor;
             if (axisControlProcessor == null)
+                return;
+
+            if (!_axisDebouncer.IsNeedToProcessAxisEvent(ev, 10))
                 return;
 
             // Приводим 0-1023 arcc к 0-1000 роутера

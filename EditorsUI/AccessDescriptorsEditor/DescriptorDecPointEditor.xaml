@@ -4,10 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="40" d:DesignWidth="300">
+             d:DesignHeight="70" d:DesignWidth="300">
     <Grid>
-        <Label x:Name="_digitsAfterPointLabel" Content="Label" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.421,0.385"/>
-        <TextBox x:Name="_digitsAfterPoint" HorizontalAlignment="Left" Height="23" Margin="170,10,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120" PreviewTextInput="DigitsAfterPointPreviewTextInput"/>
+        <Label x:Name="_digitsAfterPointLabel" Content="Label" HorizontalAlignment="Left" Margin="10,37,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.421,0.385"/>
+        <TextBox x:Name="_digitsAfterPoint" HorizontalAlignment="Left" Height="23" Margin="170,37,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120" PreviewTextInput="DigitsAfterPointPreviewTextInput"/>
+        <Label x:Name="_totalDigitsLabel" Content="Label" HorizontalAlignment="Left" Margin="10,9,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.421,0.385"/>
+        <TextBox x:Name="_totalDigits" HorizontalAlignment="Left" Height="23" Margin="170,9,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120" PreviewTextInput="DigitsAfterPointPreviewTextInput"/>
 
     </Grid>
 </UserControl>

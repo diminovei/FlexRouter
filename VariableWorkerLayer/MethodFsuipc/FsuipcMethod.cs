@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using FlexRouter.VariableSynchronization;
-using FlexRouter.VariableWorkerLayer.MethodMemoryPatch;
+using System.Diagnostics;
 using FsuipcSdk;
 
 namespace FlexRouter.VariableWorkerLayer.MethodFsuipc
@@ -25,11 +24,10 @@ namespace FlexRouter.VariableWorkerLayer.MethodFsuipc
         readonly Dictionary<int, InternalVariableDesc> _fsuipcVariablesForWrite = new Dictionary<int, InternalVariableDesc>();
         private readonly Fsuipc _fsuipc = new Fsuipc();	// Our main fsuipc object!
         private int _dwResult = -1;				// Variable to hold returned results
-        private InitializationState _lastInitStatus = null;
+        private InitializationState _lastInitStatus;
         private DateTime _lastTimeTryToInitialize = DateTime.Now;
         public InitializationState Initialize()
         {
-
             const string systemName = "FSUIPC";
             // Без этого процессор грузится на 50%, пока симулятор не загружен
             if (DateTime.Now < _lastTimeTryToInitialize + new TimeSpan(0, 0, 0, 2))
@@ -43,7 +41,6 @@ namespace FlexRouter.VariableWorkerLayer.MethodFsuipc
                     ErrorMessage = "Attempted to initialize too often",
                     IsOk = false
                 };
-
             }
             _lastTimeTryToInitialize = DateTime.Now;            
             _fsuipcVariablesForRead.Clear();
@@ -51,10 +48,7 @@ namespace FlexRouter.VariableWorkerLayer.MethodFsuipc
             const int dwFsReq = 0;				// Any version of FS is OK
             _fsuipc.FSUIPC_Initialization();
             var initStatus = _fsuipc.FSUIPC_Open(dwFsReq, ref _dwResult);
-            _lastInitStatus = new InitializationState();
-            _lastInitStatus.IsOk = initStatus;
-            _lastInitStatus.System = systemName;
-            _lastInitStatus.ErrorCode = _dwResult;
+            _lastInitStatus = new InitializationState {IsOk = initStatus, System = systemName, ErrorCode = _dwResult};
 
             switch (_lastInitStatus.ErrorCode)
             {
@@ -135,7 +129,7 @@ namespace FlexRouter.VariableWorkerLayer.MethodFsuipc
             var convertedVariableSize = varConverter.ConvertSize(variable.GetVariableSize());
             _fsuipcVariablesForWrite[variable.Id] = new InternalVariableDesc(ref variable);
 
-            _fsuipcVariablesForWrite[variable.Id].Buffer = varConverter.ValueToArray(variable.ValueToSet, variable.GetVariableSize());
+            _fsuipcVariablesForWrite[variable.Id].Buffer = varConverter.ValueToArray((double)variable.GetValueToSet(), variable.GetVariableSize());
             var result = _fsuipc.FSUIPC_Write(variable.Offset, convertedVariableSize, ref _fsuipcVariablesForWrite[variable.Id].Buffer, ref _fsuipcVariablesForWrite[variable.Id].Token, ref _dwResult);
             return result;
             // что делать с dwResult. Куда-то возвращать?
@@ -148,14 +142,16 @@ namespace FlexRouter.VariableWorkerLayer.MethodFsuipc
                 var varConverter = new VariableConverter();
                 var convertedVariableSize = varConverter.ConvertSize(variable.Value.Variable.GetVariableSize());
                 _fsuipc.FSUIPC_Get(ref variable.Value.Token, convertedVariableSize, ref variable.Value.Buffer);
-                variable.Value.Variable.ValueInMemory = varConverter.ArrayToValue(variable.Value.Buffer, variable.Value.Variable.GetVariableSize());
+                variable.Value.Variable.SetValueInMemory(varConverter.ArrayToValue(variable.Value.Buffer, variable.Value.Variable.GetVariableSize()));
             }
         }
-        public double GetValue(int id)
+        public double? GetValue(int id)
         {
             if(!_fsuipcVariablesForRead.ContainsKey(id))
                 return -1;
-            return _fsuipcVariablesForRead[id].Variable.ValueInMemory;
+//            return _fsuipcVariablesForRead[id].Variable.GetValueInMemory();
+            var varConverter = new VariableConverter();
+            return varConverter.ArrayToValue(_fsuipcVariablesForRead[id].Buffer, _fsuipcVariablesForRead[id].Variable.GetVariableSize());
         }
     }
 }

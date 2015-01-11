@@ -279,7 +279,7 @@ namespace FlexRouterUnitTests
             rangeAccessDescriptor.SetMinimumValueFormula("0");
             rangeAccessDescriptor.SetMaximumValueFormula("4");
             rangeAccessDescriptor.SetStepFormula("0.5");
-            rangeAccessDescriptor.IsLooped = true;
+//            rangeAccessDescriptor.IsLooped = true;
             var rangeAccessDescriptorId = Profile.RegisterAccessDescriptor(rangeAccessDescriptor);
             var tempFile = Path.GetTempFileName();
 

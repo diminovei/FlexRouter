@@ -13,7 +13,7 @@ using FlexRouter.VariableWorkerLayer;
 
 namespace FlexRouter.AccessDescriptors
 {
-    public class DescriptorValue : DescriptorMultistateBase, IDescriptorMultistate, IDefautValueAbility
+    public class DescriptorValue : DescriptorMultistateBase, IDescriptorMultistate, IDefautValueAbility, IRepeaterInDescriptor
     {
         public override string GetDescriptorType()
         {

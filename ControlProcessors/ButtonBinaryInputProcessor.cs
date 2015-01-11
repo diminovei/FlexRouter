@@ -7,6 +7,7 @@ using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.Hardware.HardwareEvents;
+using FlexRouter.Hardware.Helpers;
 using FlexRouter.Localizers;
 
 namespace FlexRouter.ControlProcessors
@@ -182,6 +183,7 @@ namespace FlexRouter.ControlProcessors
             while (readerAdd.MoveNext())
             {
                 var id = readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI);
+                id = ControlProcessorHardware.FixForNewVersion(id);
                 _usedHardware.Add(id, false);
             }
             readerAdd = reader.Select("Connectors/Connector");

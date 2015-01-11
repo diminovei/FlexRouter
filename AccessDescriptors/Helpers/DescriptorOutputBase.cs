@@ -24,7 +24,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
             if (OutputFormulaId == -1)
                 OutputFormulaId = GlobalFormulaKeeper.Instance.StoreFormula(formula, GetId());
             else
-                GlobalFormulaKeeper.Instance.ChangeFormulaText(OutputFormulaId, formula);
+                OutputFormulaId = GlobalFormulaKeeper.Instance.StoreOrChangeFormulaText(OutputFormulaId, formula, GetId());
         }
         public override void SaveAdditionals(XmlWriter writer)
         {

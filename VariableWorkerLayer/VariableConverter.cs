@@ -1,7 +1,6 @@
 ﻿using System;
-using FlexRouter.VariableWorkerLayer;
 
-namespace FlexRouter.VariableSynchronization
+namespace FlexRouter.VariableWorkerLayer
 {
     class VariableConverter
     {

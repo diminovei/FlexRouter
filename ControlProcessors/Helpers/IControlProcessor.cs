@@ -65,12 +65,12 @@ namespace FlexRouter.ControlProcessors.Helpers
         /// Получить от роутера новое событие для визуализатора (индикатора, лампы, ...)
         /// </summary>
         /// <returns></returns>
-        ControlEventBase GetNewEvent();
+        IEnumerable<ControlEventBase> GetNewEvent();
         /// <summary>
         /// Получить от роутера событие "очистки" для визуализатора (индиктор, лампа, ...). Нужно гасить визуализаторы при выключении роутера
         /// </summary>
         /// <returns></returns>
-        ControlEventBase GetClearEvent();
+        IEnumerable<ControlEventBase> GetClearEvent();
     }
     /// <summary>
     /// Интерфейс ControlProcessor'ов 
@@ -87,7 +87,7 @@ namespace FlexRouter.ControlProcessors.Helpers
     public interface IRepeater
     {
         void Tick();
-        bool IsRepeaterOn();
-        void EnableRepeater(bool on);
+//        bool IsRepeaterOn();
+//        void EnableRepeater(bool on);
     }
 }

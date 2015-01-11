@@ -39,7 +39,7 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
                 if(_enableInverse)
                     _dataTable.Rows.Add(assignment.StateId, assignment.StateName, assignment.AssignedItem, assignment.Inverse);
                 else
-                        _dataTable.Rows.Add(assignment.StateId, assignment.StateName, assignment.AssignedItem);
+                    _dataTable.Rows.Add(assignment.StateId, assignment.StateName, assignment.AssignedItem);
             }
             return _dataTable.AsDataView();
         }

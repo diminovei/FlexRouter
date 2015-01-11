@@ -2,6 +2,7 @@
 using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.AccessDescriptors.Helpers;
+using FlexRouter.Hardware.Helpers;
 
 namespace FlexRouter.ControlProcessors.Helpers
 {
@@ -81,6 +82,7 @@ namespace FlexRouter.ControlProcessors.Helpers
         public virtual void LoadAdditionals(XPathNavigator reader)
         {
             AssignedHardwareForSingle = reader.GetAttribute("AssignedHardware", reader.NamespaceURI);
+            AssignedHardwareForSingle = ControlProcessorHardware.FixForNewVersion(AssignedHardwareForSingle);
         }
     }
 }

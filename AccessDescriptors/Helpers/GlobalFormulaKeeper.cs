@@ -84,12 +84,13 @@ namespace FlexRouter.AccessDescriptors.Helpers
             _formulaDictionary.Add(id, new FormulaContainer(formulaText, ownerId));
             return id;
         }
-        public void ChangeFormulaText(int formulaId, string formulaText)
+        public int StoreOrChangeFormulaText(int formulaId, string formulaText, int ownerId)
         {
             if (!_formulaDictionary.ContainsKey(formulaId))
-                return;
+                return StoreFormula(formulaText, ownerId);
             formulaText = ReplaceTextWithId(formulaText);
             _formulaDictionary[formulaId].Formula = formulaText;
+            return formulaId;
         }
 
         public string GetFormulaText(int formulaId)

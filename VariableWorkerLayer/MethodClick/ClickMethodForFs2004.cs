@@ -868,15 +868,15 @@ namespace FlexRouter.VariableSynchronization
                 FindAddedWindows();
                 if (a != simChangeSightEvent)
                 {
-                    Debug.Print(a.ToString());
+//                    Debug.Print(a.ToString());
                     simChangeSightEvent = a;
                 }
-                Debug.Print("Got changes");
+//                Debug.Print("Got changes");
                 foreach (var window in _simWindows)
                 {
                     window.Value.SaveChanges();
                 }
-                Debug.Print("Saved changes");
+//                Debug.Print("Saved changes");
                 Thread.Sleep(5000);
             }
         }

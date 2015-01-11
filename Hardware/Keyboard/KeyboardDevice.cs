@@ -41,7 +41,7 @@ namespace FlexRouter.Hardware.Keyboard
         /// <summary>
         /// Режим дампа клавиш и осей
         /// </summary>
-        private DumpMode _dumpMode;
+        private bool _dumpMode;
         /// <summary>
         /// Объект блокировки при дампе состояния клавиш и осей
         /// </summary>
@@ -55,42 +55,56 @@ namespace FlexRouter.Hardware.Keyboard
             _deviceInstance = deviceInstance;
             _directInput = directInput;
         }
+
         /// <summary>
         /// Найти все устройства типа джойстик
         /// </summary>
         /// <returns></returns>
         public bool Connect()
         {
-            _quitThread = false;
-            // create a device from this controller.
-            _device = new SlimDX.DirectInput.Keyboard(_directInput);
+            try
+            {
+                _quitThread = false;
+                // create a device from this controller.
+                _device = new SlimDX.DirectInput.Keyboard(_directInput);
 
-            _device.SetCooperativeLevel(IntPtr.Zero, CooperativeLevel.Background | CooperativeLevel.Nonexclusive);
+                _device.SetCooperativeLevel(IntPtr.Zero, CooperativeLevel.Background | CooperativeLevel.Nonexclusive);
 
-            _thread = new Thread(GetDeviceData);
-            _device.SetNotification(_event);
+                _thread = new Thread(GetDeviceData);
+                _device.SetNotification(_event);
 
-            // Finally, acquire the device.
-            _buttons = new KeyboardButtonState[_device.GetObjects(ObjectDeviceType.Button).Count];
-            for (var i = 0; i < _buttons.Length; i++)
-                _buttons[i] = new KeyboardButtonState();    
-           
-            _device.Acquire();
+                // Finally, acquire the device.
+                _buttons = new KeyboardButtonState[_device.GetObjects(ObjectDeviceType.Button).Count];
+                for (var i = 0; i < _buttons.Length; i++)
+                    _buttons[i] = new KeyboardButtonState();
 
-            _thread.Start();
-            return true;
+                _device.Acquire();
+
+                _thread.Start();
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
         /// <summary>
         /// Отключение
         /// </summary>
         public void Disconnect()
         {
-            lock (_threadLock)
+            try
             {
-                _quitThread = true;
+                lock (_threadLock)
+                {
+                    _quitThread = true;
+                }
+                _thread.Join();
+                _device.Unacquire();
             }
-            _thread.Join();
-            _device.Unacquire();
+            catch (Exception)
+            {
+            }
         }
         /// <summary>
         /// Получить все новые события, пришедшие от джойстика
@@ -107,9 +121,16 @@ namespace FlexRouter.Hardware.Keyboard
                     ie.Add(_incomingEvents.Dequeue());
             }
             return ie.ToArray();
+            //lock (_incomingEvents)
+            //{
+            //    return _incomingEvents.ToArray();
+            //}
         }
 
         public void PostOutgoingEvent(ControlEventBase outgoingEvent)
+        {
+        }
+        public void PostOutgoingEvents(ControlEventBase[] outgoingEvent)
         {
         }
         /// <summary>
@@ -119,57 +140,63 @@ namespace FlexRouter.Hardware.Keyboard
         {
             while (true)
             {
-                lock (_threadLock)
+                try
                 {
-                    if (_quitThread)
-                        break;
-                }
-                if (!_event.WaitOne(30))
-                    continue;
-                _device.Poll();
-                var state = _device.GetCurrentState();
-
-                lock (_dumpObjectLocker)
-                {
-                    var modifiers = 0;
-                    if (state.IsPressed(Key.LeftShift) || state.IsPressed(Key.RightShift))
-                        modifiers |= (int)Modifiers.Shift;
-                    if (state.IsPressed(Key.LeftAlt) || state.IsPressed(Key.RightAlt))
-                        modifiers |= (int)Modifiers.Alt;
-                    if (state.IsPressed(Key.LeftControl) || state.IsPressed(Key.RightControl))
-                        modifiers |= (int)Modifiers.Control;
-
-                    for (var i = 0; i < _buttons.Length; i++)
+                    lock (_threadLock)
                     {
-                        if (state.IsPressed((Key)i))
-                        {
-                            // Если кнопка нажата и модификаторы не изменились и не нужно дампить - не запоминаем
-                            if(_buttons[i].IsPressed && modifiers==_buttons[i].ModifiersMask && (_dumpMode == DumpMode.Null || _dumpMode == DumpMode.UnpressedKeys))
-                                continue;
-                        }
-                        else
-                        {
-                            // Если кнопка нажата и модификаторы не изменились и не нужно дампить - не запоминаем
-                            if (!_buttons[i].IsPressed && (_dumpMode == DumpMode.Null || _dumpMode == DumpMode.PressedKeys))
-                                continue;
-                        }
-                        _buttons[i].ModifiersMask = modifiers;
-                        _buttons[i].IsPressed = state.IsPressed((Key) i);
-                        var ev = new ButtonEvent
-                        {
-                            Hardware =
-                                new ControlProcessorHardware
-                                {
-                                    ModuleType = HardwareModuleType.Button,
-                                    MotherBoardId = GetDeviceGuid(),
-                                    ModuleId = (uint) _buttons[i].ModifiersMask,
-                                    ControlId = (uint) i
-                                },
-                            IsPressed = _buttons[i].IsPressed
-                        };
-                        _incomingEvents.Enqueue(ev);
+                        if (_quitThread)
+                            break;
                     }
-                    _dumpMode = DumpMode.Null;
+                    if (!_event.WaitOne(30))
+                        continue;
+                    _device.Poll();
+                    var state = _device.GetCurrentState();
+
+                    lock (_dumpObjectLocker)
+                    {
+                        var modifiers = 0;
+                        if (state.IsPressed(Key.LeftShift) || state.IsPressed(Key.RightShift))
+                            modifiers |= (int) Modifiers.Shift;
+                        if (state.IsPressed(Key.LeftAlt) || state.IsPressed(Key.RightAlt))
+                            modifiers |= (int) Modifiers.Alt;
+                        if (state.IsPressed(Key.LeftControl) || state.IsPressed(Key.RightControl))
+                            modifiers |= (int) Modifiers.Control;
+
+                        for (var i = 0; i < _buttons.Length; i++)
+                        {
+                            if (state.IsPressed((Key) i))
+                            {
+                                // Если кнопка нажата и модификаторы не изменились и не нужно дампить - не запоминаем
+                                if (_buttons[i].IsPressed && modifiers == _buttons[i].ModifiersMask && _dumpMode == false)
+                                    continue;
+                            }
+                            else
+                            {
+                                // Если кнопка нажата и модификаторы не изменились и не нужно дампить - не запоминаем
+                                if (!_buttons[i].IsPressed && _dumpMode == false)
+                                    continue;
+                            }
+                            _buttons[i].ModifiersMask = modifiers;
+                            _buttons[i].IsPressed = state.IsPressed((Key) i);
+                            var ev = new ButtonEvent
+                            {
+                                Hardware =
+                                    new ControlProcessorHardware
+                                    {
+                                        ModuleType = HardwareModuleType.Button,
+                                        MotherBoardId = GetDeviceGuid(),
+                                        ModuleId = (uint) _buttons[i].ModifiersMask,
+                                        ControlId = (uint) i
+                                    },
+                                IsPressed = _buttons[i].IsPressed
+                            };
+                            _incomingEvents.Enqueue(ev);
+                        }
+                        _dumpMode = false;
+                    }
+                }
+                catch (Exception ex)
+                {
                 }
             }
         }
@@ -182,21 +209,16 @@ namespace FlexRouter.Hardware.Keyboard
         {
             return _deviceInstance.ProductName + ":" + _deviceInstance.ProductGuid;
         }
-        /// <summary>
-        /// Сдампить состояние кнопок и осей джойстика
+                /// <summary>
+        /// Сдампить клавиши, оси, ...
         /// </summary>
-        /// <param name="dumpMode"></param>
-        public void Dump(DumpMode dumpMode)
+        /// <param name="allHardwareInUse">Все используемые в профиле контролы для железа, не понимающего общей команды Dump и дампящего помодульно (ARCC)</param>
+        public void Dump(ControlProcessorHardware[] allHardwareInUse)
         {
             lock (_dumpObjectLocker)
             {
-                _dumpMode = dumpMode;
+                _dumpMode = true;
             }
-        }
-
-        public void DumpModule(ControlProcessorHardware[] hardware)
-        {
-            Dump(DumpMode.AllKeys);
         }
     }
 }

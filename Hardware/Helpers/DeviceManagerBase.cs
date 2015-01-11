@@ -21,10 +21,10 @@ namespace FlexRouter.Hardware.Helpers
         }
 
         /// <summary>
-        ///     Получить входящие события (нажатие кнопки, вращение энкодера и т.д.)
+        /// Получить входящие события (нажатие кнопки, вращение энкодера и т.д.)
         /// </summary>
         /// <returns>Массив событий</returns>
-        public ControlEventBase[] GetIncomingEvents()
+        public virtual ControlEventBase[] GetIncomingEvents()
         {
             var ie = new List<ControlEventBase>();
             for (int i = 0; i < Devices.Count; i++)
@@ -43,16 +43,15 @@ namespace FlexRouter.Hardware.Helpers
         /// <param name="outgoingEvent">Событие</param>
         public abstract void PostOutgoingEvent(ControlEventBase outgoingEvent);
 
-        public void Dump(DumpMode dumpMode)
+        public abstract void PostOutgoingEvents(ControlEventBase[] outgoingEvents);
+
+        public virtual void Dump(ControlProcessorHardware[] allHardwareInUse)
         {
             foreach (var device in Devices)
-                device.Value.Dump(dumpMode);
+                device.Value.Dump(allHardwareInUse);
         }
 
-        public virtual void DumpModule(ControlProcessorHardware[] hardware)
-        {
-            Dump(DumpMode.AllKeys);
-        }
+        public abstract int[] GetCapacity(ControlProcessorHardware cph, DeviceSubType deviceSubType);
 
         /// <summary>
         ///     Подключить все устройства
@@ -63,7 +62,7 @@ namespace FlexRouter.Hardware.Helpers
         /// <summary>
         ///     Отключить все устройства
         /// </summary>
-        public void Disconnect()
+        public virtual void Disconnect()
         {
             foreach (var device in Devices)
                 device.Value.Disconnect();
