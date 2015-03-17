@@ -2,11 +2,6 @@
 
 namespace FlexRouter.Hardware.Helpers
 {
-    //public class ElectricDevice
-    //{
-    //    public int Id;
-        
-    //}
     public class ControlProcessorHardware
     {
         public ControlProcessorHardware()

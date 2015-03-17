@@ -1,7 +1,7 @@
 ﻿namespace FlexRouter.Hardware.HardwareEvents
 {
     /// <summary>
-    /// Входящее событие от энкодера
+    /// Входящее событие от оси
     /// </summary>
     public class AxisEvent : ControlEventBase
     {

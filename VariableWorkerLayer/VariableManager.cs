@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -8,6 +9,7 @@ using FlexRouter.ProfileItems;
 using FlexRouter.VariableWorkerLayer.MethodFakeVariable;
 using FlexRouter.VariableWorkerLayer.MethodFsuipc;
 using FlexRouter.VariableWorkerLayer.MethodMemoryPatch;
+using SlimDX.XInput;
 
 namespace FlexRouter.VariableWorkerLayer
 {
@@ -61,6 +63,24 @@ namespace FlexRouter.VariableWorkerLayer
                 InitializationStatus.Add(fsuipcStatus);
                 Problems.AddOrUpdateProblem(fsuipcStatus.System, fsuipcStatus.ErrorMessage, ProblemHideOnFixOptions.HideDescription, fsuipcStatus.IsOk);
             }
+        }
+
+        public static string GetVariableAndPanelNameById(int id)
+        {
+            var variable = Profile.GetVariableById(id);
+            var variableName = variable.Name;
+            var panel = Profile.GetPanelById(variable.PanelId);
+            return panel.Name + "." + variableName;
+        }
+        /// <summary>
+        /// GetSameVariablesNames
+        /// </summary>
+        /// <param name="variable"></param>
+        /// <returns>null - такие же переменные не существуют</returns>
+        public static string GetSameVariablesNames(IVariable variable)
+        {
+            var varNames = Variables.Where(v => v.Value.IsEqualTo(variable) && v.Key!=variable.Id).Aggregate(string.Empty, (current, v) => current + (GetVariableAndPanelNameById(v.Key) + Environment.NewLine));
+            return string.IsNullOrEmpty(varNames) ? null : varNames;
         }
 
 /*        static ~VariableManager()

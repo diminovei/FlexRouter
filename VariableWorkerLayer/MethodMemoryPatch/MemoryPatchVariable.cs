@@ -13,18 +13,21 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
         {
             return LanguageManager.GetPhrase(Phrases.EditorHeaderMemoryPatch);
         }
-
         public override Bitmap GetIcon()
         {
             return Properties.Resources.MemoryVariable;
         }
 
-//        public bool IsValueToSetInitialized = false;
+        public override bool IsEqualTo(object obj)
+        {
+            if (!(obj is MemoryPatchVariable))
+                return false;
+            var varToCompare = obj as MemoryPatchVariable;
+            return Offset == varToCompare.Offset && string.Equals(ModuleName, varToCompare.ModuleName);
+        }
+
         public uint Offset;
         public string ModuleName;
-//        private MemoryVariableSize _size;
-//        public double ValueToSet;
-//        public double ValueInMemory;
         public override void SaveAdditionals(XmlTextWriter writer)
         {
             writer.WriteAttributeString("Offset", Offset.ToString("X"));
@@ -37,15 +40,5 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
             Size = (MemoryVariableSize)Enum.Parse(typeof(MemoryVariableSize), reader.GetAttribute("Size", reader.NamespaceURI));
             ModuleName = reader.GetAttribute("ModuleName", reader.NamespaceURI);
         }
-
-/*        public MemoryVariableSize GetVariableSize()
-        {
-            return _size;
-        }
-
-        public void SetVariableSize(MemoryVariableSize size)
-        {
-            _size = size;
-        }*/
     }
 }

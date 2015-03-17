@@ -18,9 +18,11 @@ namespace FlexRouter.VariableWorkerLayer.MethodFakeVariable
             return Properties.Resources.FakeVariable;
         }
 
-        //public MemoryVariableSize Size;
-        //public double ValueToSet;
-        //public double ValueInMemory;
+        public override bool IsEqualTo(object obj)
+        {
+            return false;
+        }
+
         public override void SaveAdditionals(XmlTextWriter writer)
         {
             writer.WriteAttributeString("Size", Size.ToString());
@@ -29,15 +31,5 @@ namespace FlexRouter.VariableWorkerLayer.MethodFakeVariable
         {
             Size = (MemoryVariableSize)Enum.Parse(typeof(MemoryVariableSize), reader.GetAttribute("Size", reader.NamespaceURI));
         }
-
-        //public MemoryVariableSize GetVariableSize()
-        //{
-        //    return _size;
-        //}
-
-        //public void SetVariableSize(MemoryVariableSize size)
-        //{
-        //    _size = size;
-        //}
     }
 }

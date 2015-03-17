@@ -16,5 +16,6 @@ namespace FlexRouter.VariableWorkerLayer
         /// </summary>
         /// <returns></returns>
         string GetName();
+        bool IsEqualTo(object obj);
     }
 }

@@ -57,5 +57,10 @@ namespace FlexRouter.Helpers
                 return true;
             }
         }
+
+        static public void ClearAll()
+        {
+            UsedIdList.Clear();
+        }
     }
 }

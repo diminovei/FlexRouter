@@ -1,6 +1,4 @@
-﻿using FlexRouter.VariableSynchronization;
-
-namespace FlexRouter.VariableWorkerLayer
+﻿namespace FlexRouter.VariableWorkerLayer
 {
     public interface IMemoryVariable
     {

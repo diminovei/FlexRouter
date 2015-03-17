@@ -1,4 +1,6 @@
-﻿using FlexRouter.AccessDescriptors.Helpers;
+﻿using System;
+using System.Windows;
+using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.EditorsUI.Helpers;
 using FlexRouter.Localizers;
 using FlexRouter.VariableSynchronization;
@@ -38,6 +40,15 @@ namespace FlexRouter.EditorsUI.VariableEditors
         public void Save()
         {
             _editableVariable.Description = _description.Text;
+            var sameVarNames = VariableManager.GetSameVariablesNames(_editableVariable);
+            if (sameVarNames != null)
+            {
+                var message = LanguageManager.GetPhrase(Phrases.EditorMessageTheSameVariableIsExist) + ": " + Environment.NewLine + Environment.NewLine + sameVarNames;
+                var header = LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader);
+                MessageBox.Show(message, header, MessageBoxButton.OK, MessageBoxImage.Stop);
+                // Bug: потенциальная бага. Удаление держится только на том, что это будет последний контрол в панели. Иначе сохранение данных в уже удалённую переменную продолжится
+                VariableManager.RemoveVariable(_editableVariable.Id);
+            }
         }
 
         public void Localize()

@@ -7,6 +7,7 @@ using FlexRouter.EditorPanels;
 using FlexRouter.EditorsUI.Helpers;
 using FlexRouter.Hardware;
 using FlexRouter.Hardware.HardwareEvents;
+using FlexRouter.Hardware.Helpers;
 using FlexRouter.Localizers;
 
 namespace FlexRouter.EditorsUI.ControlProcessorEditors

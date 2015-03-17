@@ -102,7 +102,15 @@
     <Compile Include="AccessDescriptors\Helpers\IAccessDescriptor.cs" />
     <Compile Include="AccessDescriptors\Helpers\IRepeaterInDescriptor.cs" />
     <Compile Include="ApplicationSettings.cs" />
+    <Compile Include="ControlProcessors\Helpers\ICollector.cs" />
+    <Compile Include="ControlProcessors\Helpers\IControlProcessorMultistate.cs" />
+    <Compile Include="ControlProcessors\Helpers\IRepeater.cs" />
+    <Compile Include="ControlProcessors\Helpers\IVisualizer.cs" />
+    <Compile Include="ControlProcessors\SteppingMotorProcessor.cs" />
     <Compile Include="ControlProcessors\LedMatrixIndicatorProcessor.cs" />
+    <Compile Include="EditorsUI\AccessDescriptorsEditor\DescriptorSteppingMotorEditor.xaml.cs">
+      <DependentUpon>DescriptorSteppingMotorEditor.xaml</DependentUpon>
+    </Compile>
     <Compile Include="EditorsUI\Dialogues\ProfileEditor.xaml.cs">
       <DependentUpon>ProfileEditor.xaml</DependentUpon>
     </Compile>
@@ -194,11 +202,14 @@
     <Compile Include="Hardware\Arcc\ArccIndicatorCommand.cs" />
     <Compile Include="Hardware\Arcc\ArccLinearOutputCommand.cs" />
     <Compile Include="Hardware\Arcc\ArccModuleType.cs" />
+    <Compile Include="Hardware\Arcc\ArccHardwareDataProcessor.cs" />
     <Compile Include="Hardware\DeviceSubType.cs" />
     <Compile Include="Hardware\F3\F3Device.cs" />
     <Compile Include="Hardware\F3\F3DevicesManager.cs" />
     <Compile Include="Hardware\F3\f3ioAPI.cs" />
+    <Compile Include="Hardware\HardwareEvents\BrightnessEvent.cs" />
     <Compile Include="Hardware\HardwareEvents\DumpEvent.cs" />
+    <Compile Include="Hardware\HardwareEvents\SteppingMotorEvent.cs" />
     <Compile Include="Hardware\Helpers\AxisDebouncer.cs" />
     <Compile Include="Hardware\Helpers\DeviceManagerBase.cs" />
     <Compile Include="Hardware\Helpers\IHardwareDevice.cs" />
@@ -220,10 +231,12 @@
     <Compile Include="MessagesToMainForm\ObjectMessage.cs" />
     <Compile Include="MessagesToMainForm\SimpleMessage.cs" />
     <Compile Include="MessagesToMainForm\TextMessage.cs" />
+    <Compile Include="PanelStorage.cs" />
     <Compile Include="Problems\Problem.cs" />
     <Compile Include="Problems\ProblemHideOnFixOptions.cs" />
     <Compile Include="Problems\Problems.cs" />
     <Compile Include="Helpers\WpfBitmapConverter.cs" />
+    <Compile Include="ProfileClasses.cs" />
     <Compile Include="ProfileItems\ITreeItem.cs" />
     <Compile Include="ProfileItems\Panel.cs" />
     <Compile Include="EditorsUI\AccessDescriptorsEditor\DescriptorFormulaEditor.xaml.cs">
@@ -287,6 +300,10 @@
     <Compile Include="VariableWorkerLayer\VariableBase.cs" />
     <Compile Include="VariableWorkerLayer\VariableConverter.cs" />
     <Compile Include="VariableWorkerLayer\VariableManager.cs" />
+    <Page Include="EditorsUI\AccessDescriptorsEditor\DescriptorSteppingMotorEditor.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="EditorsUI\AccessDescriptorsEditor\RepeaterEditor.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

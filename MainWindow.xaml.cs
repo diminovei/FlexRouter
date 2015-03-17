@@ -1,4 +1,65 @@
-﻿using System;
+﻿
+//Не полный оборот (Амперметр)
+//    AD: значение
+//Полный оборот (Компас)
+//    AD: возможность перейти через 0
+//    AD: 1 оборот – это от X до Y. По достижению Y устанавливаем Х
+//Многооборотный (Высотометр)
+//    AD: От скольки до скольки?
+//    AD: 1 оборот – это сколько? (только для многооборотных)
+
+//Тип:
+//1.	Не полный оборот (Амперметр)
+//2.	Полный оборот (Компас)
+//3.	Многооборотный (Высотометр)
+//AD: От скольки до скольки?
+//AD: 1 оборот – это сколько? (только для 3)
+
+//CP: колибруем начальную позицию
+//CP: колибруем позицию окончания (только для 1)
+
+
+//  ***************************** Проблемы профиля:
+// Ответчик не работает. Нет работы с окнами
+// Назначаем СПУ.Режим, на назначении последнего тумблера удаляем. Не получается. Писать почему.
+//      Bug: бага в тушке. Если включить ввод ЗК на ПН-5, а затем выключить стабилизацию крена будут гореть и Сброс программы и ввод ЗК
+//  ***************************** Пока не подтвердилось
+// Автомат тяги работает не корректно. Не автоматит, не устанавливает в 2 "режим 2"
+// Стабилизация по высоте включается, а лампа не загорается. Нужно разбираться
+//  ***************************** Сделать
+//      Сделать умную синхронизацию деревьев (удалять то, что исчезло, добавлять то, что появилось вместо полной перерисовки)
+//      Пройтись по всем ToDo и доделать
+
+//      AD для управления яркостью
+//      Проверить корректность срабатывания "данные изменились, сохранить?" в переменных, AD, CP
+//      Контроль формул:
+//          Не позволять сохранять AD, если в формуле синтаксическая ошибка
+//          Если модули (dll) недоступны, в переменных показывать N/A и формулы не считать (для этого в обработке переменных нужно проверять, что модули загружены)
+//      Управление профилем
+//          Бэкап и ротация изменений профилей
+//      Тест роутера без железа:
+//          Для тестирования роутера без железа в CP добавить контрол: «вывод на индикатор/лампу» со значением N/A, если самолёт не загружен или формула неверна
+//      Железо:
+//          В джойстике поддержать все оси и хатку
+//          Поддержка L3/F3 - шаговики
+//          Сделать переинициализацию роутера быстрой
+//          При изменении настройки JoystickBindByInstanceGuid переинициализировать железо
+//      AxisMultistate (управление набором значений при помощи оси, например, замена крана закрылков или галетных переключателей)
+//      Реализовать функции (FromBCD, ToBCD, получить дробную часть)
+//      Refactoring: Вынести ускоряющийся Repeater из ButtonPlusMinisConrolProcessor и сделать его общим
+//      Refactoring: Нужно унести управление StopSearch из MainWindow в CPEditor
+//      Refactoring: правильно не сохранять в готовый объект (например, переменную) о частям из разных элементов панели, а сохранить в отдельных экземпляр, вернуть его, а затем сохранить. Нужно для возможности контроля перед сохранением на наличие дубликатов
+//      Проверить работу с профилем на многопоточность. Обращение к AD, CP, VAR только через методы класса Profile (даже внутри этого класса) при сохранении загрузке. И всё через lock
+//      Bug: Если удалить CP, то остаётся выбораннам пункт (например, "Лампа", но нет селекта в дереве(?)), но по кнопке Create ничего не происходит
+//      Работа с окнами
+//          Редактирование окон
+//          Редактирование описателя "Клики мышью (Multistate)"
+//          Редактирование описателя "Клики мышью (Range)"
+//      Bug: биндинг не работает, если в названии переменной (колонки) "плохой" символ. Точка, слэш
+//  ***************************** Не срочно (или не нужно):
+//      Возможность втыкать и вытыкать железо во время работы роутера
+//      При изменении имени переменной предупреждать, что нужно обновить данные в AD, если открытый AD использует эту переменную (узнать в FormulaKeeper)
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -25,45 +86,6 @@ using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
 using FlexRouter.Helpers;
 using FlexRouter.Localizers;
-//  ***************************** Проблемы профиля:
-// Ответчик не работает. Нет работы с окнами
-// Назначаем СПУ.Режим, на назначении последнего тумблера удаляем. Не получается. Писать почему.
-//      Bug: бага в тушке. Если включить ввод ЗК на ПН-5, а затем выключить стабилизацию крена будут гореть и Сброс программы и ввод ЗК
-//  ***************************** Пока не подтвердилось
-// Автомат тяги работает не корректно. Не автоматит, не устанавливает в 2 "режим 2"
-// Стабилизация по высоте включается, а лампа не загорается. Нужно разбираться
-//  ***************************** Сделать
-//      Синхронизация реальных и виртуальных тумблеров работает плохо
-//      Сделать умную синхронизацию деревьев (удалять то, что исчезло, добавлять то, что появилось вместо полной перерисовки)
-//      Пройтись по всем ToDo и доделать
-
-//      Проверить корректность срабатывания "данные изменились, сохранить?" в переменных, AD, CP
-//      Контроль формул:
-//          Не позволять сохранять AD, если в формуле синтаксическая ошибка
-//          Если модули (dll) недоступны, в переменных показывать N/A и формулы не считать (для этого в обработке переменных нужно проверять, что модули загружены)
-//      Управление профилем
-//          Бэкап и ротация изменений профилей
-//      Тест роутера без железа:
-//          Для тестирования роутера без железа в CP добавить контрол: «вывод на индикатор/лампу» со значением N/A, если самолёт не загружен или формула неверна
-//      Железо:
-//          В джойстике поддержать все оси и хатку
-//          Поддержка L3/F3 - шаговики
-//          Сделать переинициализацию роутера быстрой
-//          При изменении настройки JoystickBindByInstanceGuid переинициализировать железо
-//      AxisMultistate (управление набором значений при помощи оси, например, замена крана закрылков или галетных переключателей)
-//      Реализовать функции (FromBCD, ToBCD, получить дробную часть)
-//      Refactoring: Вынести ускоряющийся Repeater из ButtonPlusMinisConrolProcessor и сделать его общим
-//      Refactoring: Нужно унести управление StopSearch из MainWindow в CPEditor
-//      Проверить работу с профилем на многопоточность. Обращение к AD, CP, VAR только через методы класса Profile (даже внутри этого класса) при сохранении загрузке. И всё через lock
-//      Bug: Если удалить CP, то остаётся выбораннам пункт (например, "Лампа", но нет селекта в дереве(?)), но по кнопке Create ничего не происходит
-//      Работа с окнами
-//          Редактирование окон
-//          Редактирование описателя "Клики мышью (Multistate)"
-//          Редактирование описателя "Клики мышью (Range)"
-//      Bug: биндинг не работает, если в названии переменной (колонки) "плохой" символ. Точка, слэш
-//  ***************************** Не срочно (или не нужно):
-//      Возможность втыкать и вытыкать железо во время работы роутера
-//      При изменении имени переменной предупреждать, что нужно обновить данные в AD, если открытый AD использует эту переменную (узнать в FormulaKeeper)
 using FlexRouter.MessagesToMainForm;
 using FlexRouter.ProfileItems;
 using FlexRouter.VariableWorkerLayer;
@@ -92,8 +114,8 @@ namespace FlexRouter
 //        public const int DbtDeviceremovecomplete = 0x8004; // device is gone      
         private RouterState _routerState = RouterState.Stopped;
         private readonly Core _routerCore = new Core();
-        private readonly DispatcherTimer _timer;
-        private readonly DispatcherTimer _timer2;
+        private DispatcherTimer _timer;
+        private DispatcherTimer _timer2;
         private readonly Calculator _calculator = new Calculator();
         readonly AxisDebouncer _axisDebouncer = new AxisDebouncer();
 
@@ -116,18 +138,19 @@ namespace FlexRouter
             ApplicationSettings.LoadSettings();
             LanguageManager.Initialize();
 
+            if (string.IsNullOrEmpty(ApplicationSettings.DefaultLanguage))
+                ApplicationSettings.DefaultLanguage = "Русский";
+            LanguageManager.LoadLanguage(ApplicationSettings.DefaultLanguage);
 
+            Localize();
+            
             _turnControlsSynchronizationOff.IsChecked = ApplicationSettings.ControlsSynchronizationIsOff;
             _joystickBindByInstanceGuid.IsChecked = ApplicationSettings.JoystickBindByInstanceGuid;
 
             InitializeCalculator();
 
-            if (string.IsNullOrEmpty(ApplicationSettings.DefaultLanguage))
-                ApplicationSettings.DefaultLanguage = "Русский";
-            LanguageManager.LoadLanguage(ApplicationSettings.DefaultLanguage);
             FillSelectLanguageCombobox();
-            
-            Localize();
+
             var isProfileLoaded = LoadProfile(ApplicationSettings.DefaultProfile);
             SetTitle(isProfileLoaded ? ApplicationSettings.DefaultProfile : null);
             FillSelectProfileCombobox(ApplicationSettings.DefaultProfile);
@@ -228,6 +251,7 @@ namespace FlexRouter
             _turnControlsSynchronizationOffLabel.Content = LanguageManager.GetPhrase(Phrases.SettingsTurnControlsSynchronizationOff);
             _joystickBindByInstanceGuidLabel.Content = LanguageManager.GetPhrase(Phrases.SettingsJoystickBindByInstanceGuid);
             _dump.Content = LanguageManager.GetPhrase(Phrases.CommonDumpControls);
+            _varAndPanelNameToClipboard.Content = LanguageManager.GetPhrase(Phrases.EditorVariableAndPanelNameToClipboard);
             VisualizeRouterState();
         }
         /// <summary>
@@ -410,7 +434,7 @@ namespace FlexRouter
                     Content =
                         (listItem is DescriptorBase
                             ? ((IAccessDescriptor) listItem).GetDescriptorType()
-                            : ((Panel) listItem).GetName()),
+                            : ((Panel) listItem).GetNameOfProfileItemType()),
                     Tag = listItem
                 };
                 _accessDescriptorsToCreateList.Items.Add(comboboxItem);
@@ -424,14 +448,13 @@ namespace FlexRouter
 
         private void CreateAccessDescriptorClick(object sender, RoutedEventArgs e)
         {
-            var accessDescriptor = GetObjectToCreateFromCombobox(_accessDescriptorsToCreateList, _variablesPanel);
+            var accessDescriptor = GetObjectToCreateFromCombobox(_accessDescriptorsToCreateList,_accessDescriptorPanel);
             if ((accessDescriptor as DescriptorBase) != null)
                 //ToDo: Добавить IsNew
                 ShowAccessDescriptorEditors((DescriptorBase) accessDescriptor);
             if ((accessDescriptor as Panel) != null)
                 ShowPanel((Panel) accessDescriptor, _accessDescriptorPanel, true);
             FillAccessDescriptorsToCreateList();
-
         }
 
         private void ShowAccessDescriptorEditors(DescriptorBase ad)
@@ -680,7 +703,7 @@ namespace FlexRouter
             {
                 var item = new ComboBoxItem
                 {
-                    Content = (variable is IVariable ? ((IVariable) variable).GetName() : ((Panel) variable).GetName()),
+                    Content = (variable is IVariable ? ((IVariable)variable).GetName() : ((Panel)variable).GetNameOfProfileItemType()),
                     Tag = variable
                 };
                 _accessMethods.Items.Add(item);
@@ -721,14 +744,14 @@ namespace FlexRouter
                     var ad = Profile.GetAccessDesciptorById(vl);
                     if (ad != null)
                     {
-                        var adName = Profile.GetPanelById(ad.GetAssignedPanelId()).GetName() + "." + ad.GetName();
+                        var adName = Profile.GetPanelById(ad.GetAssignedPanelId()).GetNameOfProfileItemType() + "." + ad.GetName();
                         message += LanguageManager.GetPhrase(Phrases.EditorAccessDescriptor) + " '" + adName + "'" +
                                    "\n";
                     }
                     var panel = Profile.GetPanelById(vl);
                     if (panel != null)
                     {
-                        var panelName = panel.GetName();
+                        var panelName = panel.GetNameOfProfileItemType();
                         message += LanguageManager.GetPhrase(Phrases.EditorPanel) + " '" + panelName + "'" + "\n";
                     }
                 }
@@ -748,6 +771,15 @@ namespace FlexRouter
                 Profile.SaveCurrentProfile();
                 RenewVariablesTrees();
             }
+        }
+
+        private void _varAndPanelNameToClipboard_Click(object sender, RoutedEventArgs e)
+        {
+            var item = GetTreeSelectedItem(_variablesTree);
+            if (item == null || item.Type == TreeItemType.Panel)
+                return;
+            var varPanelAndName = VariableManager.GetVariableAndPanelNameById(((IVariable) item.Object).Id);
+            Clipboard.SetText("[" + varPanelAndName + "]");
         }
 
         #endregion
@@ -1122,13 +1154,6 @@ namespace FlexRouter
             return item == null ? null : ((ComboBoxItem) combobox.SelectedItem).Tag;
         }
 
-        //private static void ShowTree1(TreeView tree, TreeItemType tit)
-        //{
-        //    foreach (var item in tree.Items)
-        //    {
-        //        ((TreeViewItem)item).
-        //    }
-        //}
         private static void ShowTree(TreeView tree, TreeItemType tit)
         {
             var vtk = new TreeViewStateKeeper();

@@ -295,18 +295,7 @@ namespace FlexRouter.CalculatorRelated
             double mathResult;
             var n1 = ((CalcTokenNumber)token1).Value;
             var n2 = ((CalcTokenNumber)token2).Value;
-            if (n1 < 360 && n1 > 350)
-                n1 = n1;
-/*            var n1s = n1.ToString(CultureInfo.InvariantCulture);
-            var dotIndex = n1s.IndexOf('.');
-            if (dotIndex != -1 && n1s.Length > dotIndex + 5)
-            {
-                if (n1s[dotIndex+5] == '9')
-                {
-                    n1s = n1s.Remove(n1s[dotIndex + 5]);
-                    n1 = double.Parse(n1s) + 0.00001;
-                }
-            }*/
+
             var n1s = n1.ToString(CultureInfo.InvariantCulture);
             n1 = double.Parse(n1s, CultureInfo.InvariantCulture);
             var n2s = n2.ToString(CultureInfo.InvariantCulture);

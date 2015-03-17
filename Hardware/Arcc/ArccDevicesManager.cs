@@ -12,7 +12,7 @@ namespace FlexRouter.Hardware.Arcc
 {
     internal class ArccDevicesManager : DeviceManagerBase
     {
-        private volatile bool _quit = false;
+        private volatile bool _quit;
         /// <summary>
         /// Префикс, который в паре с идентификатором формирует уникальный идентификатор устройства
         /// </summary>
@@ -45,7 +45,7 @@ namespace FlexRouter.Hardware.Arcc
             switch (cph.ModuleType)
             {
                 case HardwareModuleType.Axis:
-                        return Enumerable.Range(0, 7).ToArray();
+                        return Enumerable.Range(1, 8).ToArray();
                 case HardwareModuleType.BinaryOutput:
                         return Enumerable.Range(1, 29).ToArray();
                 case HardwareModuleType.Button:
@@ -93,14 +93,10 @@ namespace FlexRouter.Hardware.Arcc
                     FTChipID.ChipID.GetDeviceChipID(i, ref chipId);
                     var id = DevicePrefix + ":" + chipId.ToString("X");
                     var device = new ArccDevice(id, comPort);
-                    //var device = new ArccDevice(id, comPort);
-                    //if (device.Connect())
-                    //    Devices.Add(id, device);
-
                     foundDevices.Add(id, device);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
@@ -126,6 +122,7 @@ namespace FlexRouter.Hardware.Arcc
             foreach (var device in Devices)
                 device.Value.Disconnect();
             Devices.Clear();
+            ClearCaches();
         }
         /// <summary>
         /// Получить входящие события (нажатие кнопки, вращение энкодера и т.д.)
@@ -179,8 +176,15 @@ namespace FlexRouter.Hardware.Arcc
             Button,
             BinaryInput
         }
-        private readonly bool[] _buttonDumpState = new bool[168];
-        private readonly bool[] _binaryInputDumpState = new bool[28];
+
+        private void ClearCaches()
+        {
+            _buttonDumpState = new bool[168];
+            _binaryInputDumpState = new bool[28];
+            _moduleTypeInDump = ModuleTypeInDump.None;
+        }
+        private bool[] _buttonDumpState = new bool[168];
+        private bool[] _binaryInputDumpState = new bool[28];
         private ModuleTypeInDump _moduleTypeInDump = ModuleTypeInDump.None;
 
         public override void Dump(ControlProcessorHardware[] allHardwareInUse)
@@ -196,6 +200,7 @@ namespace FlexRouter.Hardware.Arcc
         /// </summary>
         private void DumpLoop()
         {
+            Thread.Sleep(2000);
             _inDump = true;
             var hardwareArray = new ControlProcessorHardware[1];
             var dumpQueueHashes = new List<string>();
@@ -209,7 +214,7 @@ namespace FlexRouter.Hardware.Arcc
                 var hash = controlProcessorHardware.MotherBoardId + "|" + controlProcessorHardware.ModuleId + "|" + controlProcessorHardware.ModuleType;
                 if(dumpQueueHashes.Contains(hash))
                     continue;
-                System.Diagnostics.Debug.Print("Dumping: " + hash);
+                System.Diagnostics.Debug.Print("Dumping: " + controlProcessorHardware.MotherBoardId);//+ hash);
                 lock (_dumpSyncRoot)
                 {
                     // Очищаем массивы сработавших событий

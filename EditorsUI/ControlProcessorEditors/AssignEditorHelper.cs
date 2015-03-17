@@ -2,6 +2,7 @@
 using FlexRouter.ControlProcessors;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.Hardware;
+using FlexRouter.Hardware.Helpers;
 using FlexRouter.Localizers;
 
 namespace FlexRouter.EditorsUI.ControlProcessorEditors

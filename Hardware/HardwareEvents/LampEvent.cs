@@ -1,6 +1,6 @@
 ﻿namespace FlexRouter.Hardware.HardwareEvents
 {
-    class LampEvent : ControlEventBase
+    public class LampEvent : ControlEventBase
     {
         /// <summary>
         /// Горит ли лампа

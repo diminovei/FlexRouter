@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using FlexRouter.Hardware;
 using FlexRouter.Hardware.HardwareEvents;
+using FlexRouter.Hardware.Helpers;
 using FlexRouter.Helpers;
 using FlexRouter.MessagesToMainForm;
 using FlexRouter.ProfileItems;
@@ -105,6 +106,12 @@ namespace FlexRouter
         }
         private void Work()
         {
+            if (!_isDumpedOnce)
+            {
+                Dump();
+                _isDumpedOnce = true;
+            }
+
             var events = HardwareManager.GetIncomingEvents();
 
             // Обрабатываем все события
@@ -141,11 +148,6 @@ namespace FlexRouter
             _outputWasOn.Clear();
             HardwareManager.PostOutgoingEvents(outgoing);
             Profile.TickControlProcessors();
-            if (!_isDumpedOnce)
-            {
-                Dump();
-                _isDumpedOnce = true;
-            }
         }
         /// <summary>
         /// Гасим все лампы и индикаторы, присутствующие в профиле

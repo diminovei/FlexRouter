@@ -1,4 +1,4 @@
-﻿namespace FlexRouter.Hardware
+﻿namespace FlexRouter.Hardware.Helpers
 {
     /// <summary>
     /// Поддерживаемые типы модулей железа
@@ -10,6 +10,7 @@
         Button,
         Encoder,
         BinaryOutput,
-        Indicator
+        Indicator,
+        SteppingMotor
     }
 }

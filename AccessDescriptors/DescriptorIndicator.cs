@@ -1,6 +1,5 @@
 ﻿using System.Drawing;
 using System.Globalization;
-using System.Windows.Controls;
 using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.AccessDescriptors.Helpers;
@@ -10,7 +9,47 @@ using FlexRouter.Localizers;
 
 namespace FlexRouter.AccessDescriptors
 {
-    public class DescriptorIndicator : DescriptorOutputBase, IIndicatorMethods
+    // <summary>
+    // Тип стрелочного прибора
+    // </summary>
+    //public enum PointerInstrumentType
+    //{
+    //     <summary>
+    //     Выключен
+    //     </summary>
+    //    None,           
+    //     <summary>
+    //     Не полный оборот - Амперметр (возврат через 0 не возможнен)
+    //     </summary>
+    //    IncompleteTurn,
+    //     <summary>
+    //     Полный оборот с возвратом через 0 (компас)
+    //     </summary>
+    //    FullTurn,
+    //     <summary>
+    //     Многооборотный (альтиметр)
+    //     </summary>
+    //    MultiTurn
+    //}
+
+    //     <summary>
+    //     Тип стрелочного прибора
+    //     </summary>
+    //    private PointerInstrumentType _pointerInstrumentType;
+    //     <summary>
+    //     Минимальное (принимамое переменной значение) число делений для стрелочных приборов
+    //     </summary>
+    //    private int _pointerInstrumentMinimum;
+    //     <summary>
+    //     Максимальное (принимамое переменной значение) число делений (для стрелочных приборов)
+    //     </summary>
+    //    private int _pointerInstrumentMaximum;
+    //     <summary>
+    //     Полный оборот стрелочного прибора - это какой промежуток от минимума до максимума? (для многооборотных стрелочных приборов)
+    //     </summary>
+    //    private int _pointerInstrumentOneTurnRange;
+
+public class DescriptorIndicator : DescriptorOutputBase, IIndicatorMethods
     {
         public override string GetDescriptorType()
         {
@@ -21,7 +60,6 @@ namespace FlexRouter.AccessDescriptors
         {
             return Properties.Resources.Indicator;
         }
-
         /// <summary>
         /// Количество цифр после запятой в тексте, передаваемом на индикатор
         /// </summary>
@@ -63,13 +101,30 @@ namespace FlexRouter.AccessDescriptors
             return _digitsNumber;
         }
 
+
+        /// <summary>
+        /// ToDo: костыль для шагового двигателя
+        /// Получить текст для вывода на индикатор
+        /// </summary>
+        /// <returns>Значение для установки на двигателе</returns>
+        public double? GetIndicatorValue()
+        {
+            if (!IsPowerOn())
+                return null;
+            var formulaResult = CalculatorE.ComputeFormula(GetFormula());
+
+            return formulaResult.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.DoubleResult
+                ? (double?) formulaResult.CalculatedDoubleValue
+                : null;
+        }
+
         /// <summary>
         /// Получить текст для вывода на индикатор
         /// </summary>
         /// <returns>Текст для индикатора</returns>
         public string GetIndicatorText()
         {
-            string res = string.Empty;
+            var res = string.Empty;
             if (!IsPowerOn())
             {
                 res = res.PadRight(_digitsNumber, ' ');
@@ -106,13 +161,6 @@ namespace FlexRouter.AccessDescriptors
             res = beforePointText + (_digitsAfterPoint == 0 ? "" : "." + afterPointText);
 
             return res;
-            //var mask = "{0:0.";
-
-            //for (var i = 0; i < _digitsAfterPoint; i++)
-            //    mask += "0";
-            //mask += "}";
-            //var result = string.Format(mask, formulaResult.CalculatedDoubleValue);
-            //return result;
         }
 
         public override void SaveAdditionals(XmlWriter writer)

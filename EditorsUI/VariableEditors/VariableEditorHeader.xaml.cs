@@ -1,9 +1,7 @@
 ﻿using System;
-using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.EditorsUI.Helpers;
 using FlexRouter.Localizers;
 using FlexRouter.ProfileItems;
-using FlexRouter.VariableSynchronization;
 using FlexRouter.VariableWorkerLayer;
 
 namespace FlexRouter.EditorsUI.VariableEditors

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Runtime;
+﻿using System.IO;
 using System.Threading;
 using FlexRouter.AccessDescriptors;
 using FlexRouter.CalculatorRelated;
@@ -9,7 +6,6 @@ using FlexRouter.CalculatorRelated.Tokens;
 using FlexRouter.ProfileItems;
 using FlexRouter.VariableWorkerLayer;
 using FlexRouter.VariableWorkerLayer.MethodFakeVariable;
-using FlexRouter.VariableWorkerLayer.MethodMemoryPatch;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace FlexRouterUnitTests

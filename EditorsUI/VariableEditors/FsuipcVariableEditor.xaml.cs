@@ -1,4 +1,6 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
+using System.Windows;
 using FlexRouter.EditorsUI.Helpers;
 using FlexRouter.Localizers;
 using FlexRouter.VariableWorkerLayer;
@@ -51,7 +53,6 @@ namespace FlexRouter.EditorsUI.VariableEditors
         public void Save()
         {
             _editableVariable.Offset = int.Parse(_offset.Text, NumberStyles.HexNumber);
-            VariableManager.RegisterVariable(_editableVariable, false);
         }
 
         public void Localize()

@@ -14,22 +14,22 @@ namespace FlexRouter.Hardware
     static class HardwareManager
     {
         static private readonly List<IHardware> Hardwares = new List<IHardware>();
-
+        /// <summary>
+        /// В конструкторе добавляются классы железа, которое будет обрабатываться роутром
+        /// </summary>
+        static HardwareManager()
+        {
+            _searchTimer = new Timer(_ => OnTimedEvent(null, null), null, 500, 500);
+            Hardwares.Add(new ArccDevicesManager());
+            Hardwares.Add(new JoystickDevicesManager());
+            Hardwares.Add(new KeyboardDevicesManager());
+            Hardwares.Add(new F3DevicesManager());
+        }
+        #region Поиск компонентов
         /// <summary>
         /// Таймер для смены фазы поиска компонентов
         /// </summary>
-        private static Timer _timer;
-
-//        private static readonly object ObjectToLock = new object();
-        static HardwareManager()
-        {
-            _timer = new Timer(_ => OnTimedEvent(null, null), null, 500, 500);
-            AddHardwareClass(new ArccDevicesManager());
-            AddHardwareClass(new JoystickDevicesManager());
-            AddHardwareClass(new KeyboardDevicesManager());
-            AddHardwareClass(new F3DevicesManager());
-        }
-        #region Поиск компонентов
+        private static Timer _searchTimer;
         /// <summary>
         /// Guid компонента, который находится в поиске (индикатор, светодиод).
         /// Когда компонент в поиске, вывод на него от роутера игнорируется, компонент моргает, чтобы пользователь понимал, какой контрол он выбрал.
@@ -79,7 +79,11 @@ namespace FlexRouter.Hardware
             PostOutgoingSearchEvent(ev);
             _contolInSearchGuid = string.Empty;
         }
-
+        /// <summary>
+        /// Событие таймера при котором меняется фаза поиска (погасить контрол/включить контрол)
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private static void OnTimedEvent(object sender, EventArgs e)
         {
             _searchPhase = !_searchPhase;
@@ -106,13 +110,6 @@ namespace FlexRouter.Hardware
             }
         }
         #endregion
-        static private void AddHardwareClass(IHardware hardware)
-        {
-            lock(hardware)
-            {
-                Hardwares.Add(hardware);
-            }
-        }
         /// <summary>
         /// Подключить все устройства
         /// </summary>
@@ -129,7 +126,6 @@ namespace FlexRouter.Hardware
             System.Diagnostics.Debug.Print("Connected");
             return result;
         }
-
         /// <summary>
         /// Отключить все устройства
         /// </summary>
@@ -137,6 +133,7 @@ namespace FlexRouter.Hardware
         {
             foreach (var hardware in Hardwares)
                 hardware.Disconnect();
+            ClearEventsCache();
         }
         static public void Dump(ControlProcessorHardware[] hardware)
         {
@@ -158,7 +155,6 @@ namespace FlexRouter.Hardware
             }
             return allDevices.ToArray();
         }
-
         /// <summary>
         /// Получить информацию о возможностях устройства
         /// </summary>
@@ -173,7 +169,6 @@ namespace FlexRouter.Hardware
             }
             return null;
         }
-
         /// <summary>
         /// Получить входящие событиея (нажатие кнопки, вращение энкодера и т.д.)
         /// </summary>
@@ -241,6 +236,12 @@ namespace FlexRouter.Hardware
         #region Код, запоминающий состояния всех контролов и позволяющий отправить фэйковое сообщение, "сдампить" контролы
         private static readonly Queue<ControlEventBase> IncomingEvents = new Queue<ControlEventBase>();
         private static readonly Dictionary<string, ControlEventBase> LastControlEvents = new Dictionary<string, ControlEventBase>();
+
+        private static void ClearEventsCache()
+        {
+            IncomingEvents.Clear();
+            LastControlEvents.Clear();
+        }
         /// <summary>
         /// Мягкий дамп нужен для того, чтобы привести виртуальные тумблеры в соответствие с железячными сразу после загрузки самолёта
         /// А также поддерживать их в согласованном состоянии в случае, если пользователь переключает их в симуляторе мышью

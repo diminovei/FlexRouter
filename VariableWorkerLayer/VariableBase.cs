@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Globalization;
 using System.Xml;
 using System.Xml.XPath;
@@ -58,5 +59,6 @@ namespace FlexRouter.VariableWorkerLayer
 
         public abstract string GetName();
         public abstract Bitmap GetIcon();
+        public abstract bool IsEqualTo(object obj);
     }
 }

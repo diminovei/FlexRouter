@@ -1,23 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Xml;
+﻿using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.AccessDescriptors.Helpers;
-using FlexRouter.Hardware.HardwareEvents;
 
 namespace FlexRouter.ControlProcessors.Helpers
 {
-    /// <summary>
-    /// Интерфейс для ControlProcessor с многими состояниями
-    /// </summary>
-    public interface IControlProcessorMultistate
-    {
-        /// <summary>
-        /// Список состояний изменился, нужно удалить назначения для несуществующих состояний, добавить новые и обновить существующие
-        /// </summary>
-        /// <param name="states"></param>
-        void RenewStatesInfo(IEnumerable<AccessDescriptorState> states);
-    }
-
     /// <summary>
     /// Интерфейс ControlProcessor'ов 
     /// </summary>
@@ -55,39 +41,5 @@ namespace FlexRouter.ControlProcessors.Helpers
         //ToDo: temp
         int GetAssignedAccessDescriptor();
         void SetId(int id);
-    }
-    /// <summary>
-    /// Интерфейс ControlProcessor'ов 
-    /// </summary>
-    public interface IVisualizer
-    {
-        /// <summary>
-        /// Получить от роутера новое событие для визуализатора (индикатора, лампы, ...)
-        /// </summary>
-        /// <returns></returns>
-        IEnumerable<ControlEventBase> GetNewEvent();
-        /// <summary>
-        /// Получить от роутера событие "очистки" для визуализатора (индиктор, лампа, ...). Нужно гасить визуализаторы при выключении роутера
-        /// </summary>
-        /// <returns></returns>
-        IEnumerable<ControlEventBase> GetClearEvent();
-    }
-    /// <summary>
-    /// Интерфейс ControlProcessor'ов 
-    /// </summary>
-    public interface ICollector
-    {
-        /// <summary>
-        /// Обработать событие, поступившее от железа
-        /// </summary>
-        /// <param name="controlEvent"></param>
-        void ProcessControlEvent(ControlEventBase controlEvent);
-    }
-
-    public interface IRepeater
-    {
-        void Tick();
-//        bool IsRepeaterOn();
-//        void EnableRepeater(bool on);
     }
 }

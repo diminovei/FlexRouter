@@ -11,7 +11,6 @@ using System.Xml.XPath;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.EditorsUI.Dialogues;
-using FlexRouter.Hardware;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
 using FlexRouter.Helpers;
@@ -466,8 +465,7 @@ namespace FlexRouter.ProfileItems
             navPointer = nav.Select("/FlexRouterProfile/Aircraft/Panels/Panel");
             while (navPointer.MoveNext())
             {
-                var panel = new Panel();
-                panel.Load(navPointer.Current);
+                var panel = Panel.Load(navPointer.Current);
                 PanelsStorage.Add(panel.Id, panel);
             }
 
@@ -528,23 +526,6 @@ namespace FlexRouter.ProfileItems
                 Object[] args = { accessDescriptor };
                 var cp = Utils.FindAndCreate<IControlProcessor>(type, args);
 
-                //IControlProcessor cp = null;
-                //if (type == "AxisRangeProcessor")
-                //    cp = new AxisRangeProcessor(accessDescriptor);
-                //if (type == "LampProcessor")
-                //    cp = new LampProcessor(accessDescriptor);
-                //if (type == "IndicatorProcessor")
-                //    cp = new IndicatorProcessor(accessDescriptor);
-                //if (type == "LedMatrixIndicatorProcessor")
-                //    cp = new LedMatrixIndicatorProcessor(accessDescriptor);
-                //if (type == "EncoderProcessor")
-                //    cp = new EncoderProcessor(accessDescriptor);
-                //if (type == "ButtonProcessor")
-                //    cp = new ButtonProcessor(accessDescriptor);
-                //if (type == "ButtonPlusMinusProcessor")
-                //    cp = new ButtonPlusMinusProcessor(accessDescriptor);
-                //if (type == "ButtonBinaryInputProcessor")
-                //    cp = new ButtonBinaryInputProcessor(accessDescriptor);
                 if (cp != null)
                 {
                     cp.Load(navPointer.Current);
@@ -598,6 +579,7 @@ namespace FlexRouter.ProfileItems
             VariableManager.Clear();
             PanelsStorage.Clear();
             GlobalFormulaKeeper.Instance.ClearAll();
+            GlobalId.ClearAll();
             _mainSimulatorProcess = string.Empty;
             _moduleExtensionFilter = string.Empty;
             _currentProfileName = null;

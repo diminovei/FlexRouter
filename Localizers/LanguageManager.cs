@@ -67,6 +67,8 @@ namespace FlexRouter.Localizers
         EditorDependentDescriptorsList,
         EditorStartInitializeBinaryInputButtonsList,
         EditorStopInitializeBinaryInputButtonsList,
+        EditorVariableAndPanelNameToClipboard,
+        EditorMessageTheSameVariableIsExist,
         
         EditorMessageAbsoluteOffsetIsOutOfModule,
         EditorMessageAbsoluteIsNotAhexNumber,

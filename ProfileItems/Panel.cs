@@ -8,7 +8,7 @@ namespace FlexRouter.ProfileItems
 {
     public class Panel
     {
-        public string GetName()
+        public string GetNameOfProfileItemType()
         {
             return LanguageManager.GetPhrase(Phrases.EditorHeaderPanel);
         }
@@ -16,6 +16,14 @@ namespace FlexRouter.ProfileItems
         public string Name;
         private string _powerFormula;
 
+        private Panel(int id)
+        {
+            Id = id;
+        }
+        public Panel()
+        {
+            Id = GlobalId.GetNew();
+        }
         public string GetPowerFormula()
         {
             return _powerFormula;
@@ -33,13 +41,15 @@ namespace FlexRouter.ProfileItems
             writer.WriteEndElement();
             writer.WriteString("\n");
         }
-        public void Load(XPathNavigator reader)
+        public static Panel Load(XPathNavigator reader)
         {
-            Id = int.Parse(reader.GetAttribute("Id", reader.NamespaceURI));
-            GlobalId.RegisterExisting(Id);
-            Name = reader.GetAttribute("Name", reader.NamespaceURI);
+            var id = int.Parse(reader.GetAttribute("Id", reader.NamespaceURI));
+            var panel = new Panel(id);
+            GlobalId.RegisterExisting(id);
+            panel.Name = reader.GetAttribute("Name", reader.NamespaceURI);
             var powerFormula = reader.GetAttribute("PowerFormula", reader.NamespaceURI);
-            SetPowerFormula(powerFormula);
+            panel.SetPowerFormula(powerFormula);
+            return panel;
         }
     }
 }

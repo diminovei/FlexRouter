@@ -61,7 +61,6 @@ namespace FlexRouter.EditorsUI.VariableEditors
         {
             _editableVariable.ModuleName = _moduleName.Text;
             _editableVariable.Offset = uint.Parse(_relativeOffset.Text, NumberStyles.HexNumber);
-            VariableManager.RegisterVariable(_editableVariable, false);
         }
 
         public void Localize()

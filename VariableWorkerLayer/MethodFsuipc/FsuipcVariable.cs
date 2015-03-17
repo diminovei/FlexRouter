@@ -9,6 +9,13 @@ namespace FlexRouter.VariableWorkerLayer.MethodFsuipc
 {
     public class FsuipcVariable : MemoryVariableBase, IMemoryVariable
     {
+        public override bool IsEqualTo(object obj)
+        {
+            if (!(obj is FsuipcVariable))
+                return false;
+            var varToCompare = obj as FsuipcVariable;
+            return Offset == varToCompare.Offset;
+        }
         public override string GetName()
         {
             return LanguageManager.GetPhrase(Phrases.EditorHeaderFsuipc);
@@ -19,11 +26,7 @@ namespace FlexRouter.VariableWorkerLayer.MethodFsuipc
             return Properties.Resources.FsuipcVariable;
         }
 
-        //public bool IsInitialized = false;
         public int Offset;
-        //private MemoryVariableSize _size;
-        //public double ValueToSet;
-        //public double ValueInMemory;
         public override void SaveAdditionals(XmlTextWriter writer)
         {
             writer.WriteAttributeString("Offset", Offset.ToString("X"));
@@ -34,15 +37,5 @@ namespace FlexRouter.VariableWorkerLayer.MethodFsuipc
             Offset = int.Parse(reader.GetAttribute("Offset", reader.NamespaceURI), NumberStyles.HexNumber);
             Size = (MemoryVariableSize)Enum.Parse(typeof(MemoryVariableSize), reader.GetAttribute("Size", reader.NamespaceURI));
         }
-
-        //public MemoryVariableSize GetVariableSize()
-        //{
-        //    return _size;
-        //}
-
-        //public void SetVariableSize(MemoryVariableSize size)
-        //{
-        //    _size = size;
-        //}
     }
 }

@@ -33,7 +33,7 @@
                     <ScrollViewer Grid.Column="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Margin="0,0,0,37">
                         <StackPanel Grid.Column="1" x:Name="_accessDescriptorPanel" Margin="10" CanVerticallyScroll="True" VerticalAlignment="Stretch"/>
                     </ScrollViewer>
-                    <Button x:Name="_saveAccessDescriptor" Content="Save" Grid.Column="2" Margin="0,0,10,0" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="75" Click="SaveAccessDescriptorClick" />
+                    <Button x:Name="_saveAccessDescriptor" Content="Save" Grid.Column="2" Margin="0,214,10,0" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="75" Click="SaveAccessDescriptorClick" />
                     <Button x:Name="_createAccessDescriptor" Content="Create" Grid.Column="2" Margin="214,0,0,0" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="75" Click="CreateAccessDescriptorClick"/>
                     <ComboBox x:Name="_accessDescriptorsToCreateList" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Bottom" Width="199" Grid.Column="2" DropDownOpened="AccessDescriptorToCreateDropDownOpened"/>
                     <TextBox Text="{Binding ElementName=__accessDescriptorsToCreateList, Path=Text}" TextChanged="OnAccessDescriptorsToCreateTextChanged" Visibility="Hidden" Grid.ColumnSpan="2"/>
@@ -56,6 +56,7 @@
                     <ComboBox x:Name="_accessMethods" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Bottom" Width="199" Grid.Column="2" DropDownOpened="VariableToCreateDropDownOpened"/>
                     <TextBox Text="{Binding ElementName=_accessMethods, Path=Text}" TextChanged="OnVariablesToCreateTextChanged" Visibility="Hidden" Grid.ColumnSpan="2"/>
                     <Button x:Name="_removeVariable" Content="RemoveVariable" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="75" Click="RemoveVariableClick"/>
+                    <Button x:Name="_varAndPanelNameToClipboard" Content="Variable and panel name to clipboard" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="228" Click="_varAndPanelNameToClipboard_Click" Grid.Column="1" Margin="51,0,0,0"/>
                 </Grid>
             </TabItem>
             <TabItem Header="ControlProcessors" Name="tabControlProcessors" HorizontalAlignment="Left">
