@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Forms;
+using System.Windows.Forms.VisualStyles;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
@@ -25,7 +26,19 @@ namespace FlexRouter.ProfileItems
 {
     public static class Profile
     {
-        private static readonly Dictionary<int, Panel> PanelsStorage = new Dictionary<int, Panel>();
+        public static PanelStorage PanelStorage = new PanelStorage();
+        public static VariableManager VariableStorage = new VariableManager();
+
+        /// <summary>
+        /// Есть ли у панели дочерние элементы
+        /// </summary>
+        /// <param name="panelId"></param>
+        /// <returns></returns>
+        public static bool IsPanelInUse(int panelId)
+        {
+            return AccessDescriptorsStorage.Any(descriptorBase => descriptorBase.Value.GetAssignedPanelId() == panelId) ||
+                VariableStorage.GetAllVariables().Any(variable => variable.PanelId == panelId);
+        }
 
         private static readonly Dictionary<int, IControlProcessor> ControlProcessorsStorage =
             new Dictionary<int, IControlProcessor>();
@@ -34,17 +47,6 @@ namespace FlexRouter.ProfileItems
             new Dictionary<int, DescriptorBase>();
 
         private static string _mainSimulatorProcess;
-        private static string _moduleExtensionFilter;
-
-        public static string GetModuleExtensionFilter()
-        {
-            return _moduleExtensionFilter;
-        }
-
-        public static void SetModuleExtensionFilter(string moduleExtensionFilter)
-        {
-            _moduleExtensionFilter = moduleExtensionFilter;
-        }
 
         public static string GetMainManagedProcessName()
         {
@@ -56,62 +58,36 @@ namespace FlexRouter.ProfileItems
             _mainSimulatorProcess = processName;
         }
 
-        public static int RegisterPanel(Panel panel, bool isNewPanel)
+        /// <summary>
+        /// GetSameVariablesNames
+        /// </summary>
+        /// <param name="variable"></param>
+        /// <returns>null - такие же переменные не существуют</returns>
+        public static string GetSameVariablesNames(IVariable variable)
         {
-            var id = isNewPanel ? GlobalId.GetNew() : panel.Id;
-            if (isNewPanel)
-            {
-                panel.Id = id;
-                PanelsStorage.Add(id, panel);
-            }
-            else
-                PanelsStorage[id] = panel;
-            return id;
+            var variables = VariableStorage.GetAllVariables();
+            var varNames = variables.Where(v => v.IsEqualTo(variable) && v.Id != variable.Id).Aggregate(string.Empty, (current, v) => current + (GetVariableAndPanelNameById(v.Id) + Environment.NewLine));
+            return string.IsNullOrEmpty(varNames) ? null : varNames;
         }
 
-        public static void RemovePanel(int panelId)
+        public static string GetVariableAndPanelNameById(int id)
         {
-            if (IsPanelInUse(panelId) || !PanelsStorage.ContainsKey(panelId))
-                return;
-
-            PanelsStorage.Remove(panelId);
-        }
-
-        public static IOrderedEnumerable<Panel> GetPanelsList()
-        {
-            return PanelsStorage.Values.OrderBy(panel => panel.Name);
-        }
-
-        public static Panel GetPanelById(int id)
-        {
-            if (!PanelsStorage.ContainsKey(id))
-                return null;
-            return PanelsStorage[id];
-        }
-
-        public static int GetPanelIdByName(string name)
-        {
-            foreach (var p in PanelsStorage)
-            {
-                if (p.Value.Name == name)
-                    return p.Key;
-            }
-            return -1;
-        }
-
-        public static IVariable GetVariableById(int id)
-        {
-            return VariableManager.GetVariableById(id);
+            var variable = VariableStorage.GetVariableById(id);
+            var variableName = variable.Name;
+            var panel = PanelStorage.GetPanelById(variable.PanelId);
+            return panel.Name + "." + variableName;
         }
 
         public static int GetVariableByPanelAndName(string panelName, string variableName)
         {
-            var varList = VariableManager.GetVariablesList();
+            var varList = VariableStorage.GetAllVariables();
+            //var x = varList.FirstOrDefault(v => v.Name == variableName && PanelStorage.GetPanelById(v.PanelId).Name == panelName);
+            //return x == null ? -1 : x.Id;
             foreach (var v in varList)
             {
                 if (v.Name != variableName)
                     continue;
-                var panel = GetPanelById(v.PanelId);
+                var panel = PanelStorage.GetPanelById(v.PanelId);
                 if (panel.Name != panelName)
                     continue;
                 return v.Id;
@@ -119,14 +95,9 @@ namespace FlexRouter.ProfileItems
             return -1;
         }
 
-        public static int RegisterVariable(IVariable variable, bool isNew)
-        {
-            return VariableManager.RegisterVariable(variable, isNew);
-        }
-
         public static IOrderedEnumerable<IVariable> GetSortedVariablesListByPanelId(int panelId)
         {
-            var vars = VariableManager.GetVariablesList();
+            var vars = VariableStorage.GetAllVariables();
             return vars.Where(ad => ad.PanelId == panelId).OrderBy(ad => ad.Name);
         }
 
@@ -134,6 +105,17 @@ namespace FlexRouter.ProfileItems
         {
             AccessDescriptorsStorage[ad.GetId()] = ad;
             return ad.GetId();
+        }
+
+        public static void InitializeAccessDescriptors()
+        {
+            lock (AccessDescriptorsStorage)
+            {
+                foreach (var ad in AccessDescriptorsStorage)
+                {
+                    ad.Value.Initialize();
+                }
+            }
         }
 
         public static DescriptorBase GetAccessDesciptorById(int id)
@@ -152,10 +134,6 @@ namespace FlexRouter.ProfileItems
             return AccessDescriptorsStorage.Values.OrderBy(ad => ad.GetName());
         }
 
-        public static void RemoveVariable(int variableId)
-        {
-            VariableManager.RemoveVariable(variableId);
-        }
         public static void RemoveAccessDescriptor(int accessDescriptorId)
         {
             if (!AccessDescriptorsStorage.ContainsKey(accessDescriptorId))
@@ -215,10 +193,38 @@ namespace FlexRouter.ProfileItems
             {
                 foreach (var cp in ControlProcessorsStorage)
                 {
-                    if (cp.Value is IRepeater)
-                        ((IRepeater)cp.Value).Tick();
+                    var value = cp.Value as IRepeater;
+                    if (value != null)
+                        value.Tick();
                 }
             }
+        }
+        public static ControlProcessorHardware[] GetControlProcessorAssignments()
+        {
+            var modulesString = new List<string>();
+            var modules = new List<ControlProcessorHardware>();
+            foreach (var controlProcessor in ControlProcessorsStorage.Values)
+            {
+                var a = controlProcessor.GetUsedHardwareList();
+                foreach (var assignment in a)
+                {
+                    if (string.IsNullOrEmpty(assignment))
+                        continue;
+                    var cph = ControlProcessorHardware.GenerateByGuid(assignment);
+                    if (cph == null)
+                        continue;
+                    if (cph.ModuleType == HardwareModuleType.Button)
+                    {
+                        var module = cph.MotherBoardId + "|" + cph.ModuleType + "|" + cph.ModuleId;
+                        if (!modulesString.Contains(module))
+                        {
+                            modules.Add(cph);
+                            modulesString.Add(module);
+                        }
+                    }
+                }
+            }
+            return modules.ToArray();
         }
 
         public static IEnumerable<ControlEventBase> GetControlProcessorsNewEvents()
@@ -276,33 +282,6 @@ namespace FlexRouter.ProfileItems
         private const string ProfileType = "Aircraft";
         private const string ProfileFolder = "Profiles";
 
-        public static ControlProcessorHardware[] GetControlProcessorAssignments()
-        {
-            var modulesString = new List<string>();
-            var modules = new List<ControlProcessorHardware>();
-            foreach (var controlProcessor in ControlProcessorsStorage.Values)
-            {
-                var a = controlProcessor.GetUsedHardwareList();
-                foreach (var assignment in a)
-                {
-                    if(string.IsNullOrEmpty(assignment))
-                        continue;
-                    var cph = ControlProcessorHardware.GenerateByGuid(assignment);
-                    if(cph == null)
-                        continue;
-                    if (cph.ModuleType == HardwareModuleType.Button)
-                    {
-                        var module = cph.MotherBoardId + "|" + cph.ModuleType + "|" + cph.ModuleId;
-                        if (!modulesString.Contains(module))
-                        {
-                            modules.Add(cph);
-                            modulesString.Add(module);
-                        }
-                    }
-                }
-            }
-            return modules.ToArray();
-        }
         public static Dictionary<string, string> GetProfileList()
         {
             return Utils.GetXmlList(ProfileFolder, ProfileExtensionMask, ProfileHeader, ProfileType);
@@ -321,87 +300,66 @@ namespace FlexRouter.ProfileItems
         }
         private static void SaveProfile(string profileName, string profilePath)
         {
-            try
+            using (var sw = new StringWriter())
             {
-                using (var sw = new StringWriter())
+                using (var writer = new XmlTextWriter(sw))
                 {
-                    using (var writer = new XmlTextWriter(sw))
-                    {
-                        writer.Formatting = Formatting.Indented;
-                        writer.Indentation = 4;
-                        writer.WriteStartDocument();
-                            writer.WriteStartElement(ProfileHeader);
-                            writer.WriteAttributeString("Type", ProfileType);
-                            writer.WriteAttributeString("Name", profileName);
-                                writer.WriteStartElement(ProfileType);
+                    writer.Formatting = Formatting.Indented;
+                    writer.Indentation = 4;
+                    writer.WriteStartDocument();
+                        writer.WriteStartElement(ProfileHeader);
+                        writer.WriteAttributeString("Type", ProfileType);
+                        writer.WriteAttributeString("Name", profileName);
+                            writer.WriteStartElement(ProfileType);
 
-                                    // Panels
-                                    writer.WriteStartElement("Panels");
-                                    foreach (var panel in PanelsStorage)
-                                        panel.Value.Save(writer);                            
-                                    writer.WriteEndElement();
+                                // Panels
+                                writer.WriteStartElement("Panels");
+                                var panels = PanelStorage.GetAllPanels();
+                                foreach (var panel in panels)
+                                    panel.Save(writer);                            
+                                writer.WriteEndElement();
                                     
-                                    // Variables
-                                    writer.WriteStartElement("Variables");
-                                    writer.WriteAttributeString("ProcessToManage", _mainSimulatorProcess);
-                                    VariableManager.Save(writer);
-                                    writer.WriteEndElement();
-
-                                    // AccessDescriptors
-                                    writer.WriteStartElement("AccessDescriptors");
-                                    foreach (var ads in AccessDescriptorsStorage)
-                                    {
-                                        writer.WriteStartElement("AccessDescriptor");
-                                        ads.Value.Save(writer);
-                                        writer.WriteEndElement();
-                                    }
-                                    writer.WriteEndElement();
-
-                                    // ControlProcessors
-                                    writer.WriteStartElement("ControlProcessors");
-                                    foreach (var cp in ControlProcessorsStorage)
-                                    {
-                                        writer.WriteStartElement("ControlProcessor");
-                                        cp.Value.Save(writer);
-                                        writer.WriteEndElement();
-                                    }
-                                    writer.WriteEndElement();
-
+                                // Variables
+                                writer.WriteStartElement("Variables");
+                                writer.WriteAttributeString("ProcessToManage", _mainSimulatorProcess);
+                                VariableStorage.SaveAllVariables(writer);
                                 writer.WriteEndElement();
 
+                                // AccessDescriptors
+                                writer.WriteStartElement("AccessDescriptors");
+                                foreach (var ads in AccessDescriptorsStorage)
+                                {
+                                    writer.WriteStartElement("AccessDescriptor");
+                                    ads.Value.Save(writer);
+                                    writer.WriteEndElement();
+                                }
+                                writer.WriteEndElement();
+
+                                // ControlProcessors
+                                writer.WriteStartElement("ControlProcessors");
+                                foreach (var cp in ControlProcessorsStorage)
+                                {
+                                    writer.WriteStartElement("ControlProcessor");
+                                    cp.Value.Save(writer);
+                                    writer.WriteEndElement();
+                                }
+                                writer.WriteEndElement();
+
+                            writer.WriteEndElement();
+
                         
-                        writer.WriteEndElement();
-                        writer.WriteEndDocument();
-                    }
-                    if (File.Exists(profilePath))
-                        File.Copy(profilePath, profilePath + ".bak", true);
-                    using (var swToDisk = new StreamWriter(profilePath, false, Encoding.Unicode))
-                    {
-                        var parsedXml = XDocument.Parse(sw.ToString());
-                        swToDisk.Write(parsedXml.ToString());
-                    }
+                    writer.WriteEndElement();
+                    writer.WriteEndDocument();
+                }
+                if (File.Exists(profilePath))
+                    File.Copy(profilePath, profilePath + ".bak", true);
+                using (var swToDisk = new StreamWriter(profilePath, false, Encoding.Unicode))
+                {
+                    var parsedXml = XDocument.Parse(sw.ToString());
+                    swToDisk.Write(parsedXml.ToString());
                 }
             }
-            catch (Exception ex)
-            {
-                
-            }
         }
-
-/*        public static string GenerateProfileFileName()
-        {
-            var profileList = GetProfileList();
-            var folder = Utils.GetFullSubfolderPath("Profiles");
-            var index = 1;
-            while (true)
-            {
-                var fileName = "profile" + index.ToString("000") + ".ap";
-                fileName = Path.Combine(folder, fileName);
-                if (profileList.All(pair => pair.Value.ToLower() != fileName.ToLower()))
-                    return fileName;
-                index++;
-            }
-        }*/
 
         private static string CheckAndCorrectProfileFileName(string name)
         {
@@ -453,8 +411,6 @@ namespace FlexRouter.ProfileItems
         {
             Clear();
             // костыль для FS9
-            // _moduleExtensionFilter = ".gau";
-            _moduleExtensionFilter = "";
 
             var xp = new XPathDocument(profilePath);
             var nav = xp.CreateNavigator();
@@ -466,7 +422,7 @@ namespace FlexRouter.ProfileItems
             while (navPointer.MoveNext())
             {
                 var panel = Panel.Load(navPointer.Current);
-                PanelsStorage.Add(panel.Id, panel);
+                PanelStorage.StorePanel(panel);
             }
 
             navPointer = nav.Select("/FlexRouterProfile/Aircraft/Variables");
@@ -479,21 +435,15 @@ namespace FlexRouter.ProfileItems
                 var type = navPointer.Current.GetAttribute("Type", navPointer.Current.NamespaceURI);
                 IVariable variable = null;
                 if (type == "FsuipcVariable")
-                {
                     variable = new FsuipcVariable();
-                }
                 if (type == "MemoryPatchVariable")
-                {
                     variable = new MemoryPatchVariable();
-                }
                 if (type == "FakeVariable")
-                {
                     variable = new FakeVariable();
-                }
                 if (variable != null)
                 {
                     variable.Load(navPointer.Current);
-                    RegisterVariable(variable, false);
+                    VariableStorage.StoreVariable(variable);
                 }
             }
             navPointer = nav.Select("/FlexRouterProfile/Aircraft/AccessDescriptors/AccessDescriptor");
@@ -555,33 +505,15 @@ namespace FlexRouter.ProfileItems
             return true;
         }
 
-        public static void InitializeAccessDescriptors()
-        {
-            lock (AccessDescriptorsStorage)
-            {
-                foreach (var ad in AccessDescriptorsStorage)
-                {
-                    ad.Value.Initialize();
-                }
-            }
-        }
-
-        public static bool IsPanelInUse(int panelId)
-        {
-            return AccessDescriptorsStorage.Any(descriptorBase => descriptorBase.Value.GetAssignedPanelId() == panelId) ||
-                VariableManager.GetVariablesList().Any(variable => variable.PanelId == panelId);
-        }
-
         public static void Clear()
         {
             ControlProcessorsStorage.Clear();
             AccessDescriptorsStorage.Clear();
-            VariableManager.Clear();
-            PanelsStorage.Clear();
+            VariableStorage.Clear();
+            PanelStorage.Clear();
             GlobalFormulaKeeper.Instance.ClearAll();
             GlobalId.ClearAll();
             _mainSimulatorProcess = string.Empty;
-            _moduleExtensionFilter = string.Empty;
             _currentProfileName = null;
             _currentProfilePath = null;
         }

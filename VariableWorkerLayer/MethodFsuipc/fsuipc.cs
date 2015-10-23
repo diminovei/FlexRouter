@@ -911,13 +911,13 @@ namespace FsuipcSdk
 		public bool FSUIPC_Get(ref int Token, ref long Result) 
 		{
 			int Size = 8;    // 8 bytes in a Long Int
-			IntPtr heapbuf = Marshal.AllocHGlobal(Size);
 			if ((Token < 0) || (Token > IPC_BUFFER_SIZE - (4 + Size)) ) 
 			{ //Token out of range
 				Result = 0;
 				return false;
 			}
-			Marshal.Copy(IPC, Token + 4, heapbuf, 8);
+            IntPtr heapbuf = Marshal.AllocHGlobal(Size);
+            Marshal.Copy(IPC, Token + 4, heapbuf, 8);
 			Result = Marshal.ReadInt64(heapbuf);
 			Marshal.FreeHGlobal(heapbuf);
 			if (IPCdr[Token] ) 

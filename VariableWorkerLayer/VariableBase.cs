@@ -1,5 +1,4 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Globalization;
 using System.Xml;
 using System.Xml.XPath;
@@ -20,12 +19,13 @@ namespace FlexRouter.VariableWorkerLayer
             Id = GlobalId.GetNew();
             PanelId = -1;
         }
-
+        
         public void Save(XmlTextWriter writer)
         {
             SaveHeader(writer);
             SaveAdditionals(writer);
         }
+
         public void SaveHeader(XmlTextWriter writer)
         {
             writer.WriteAttributeString("Type", GetType().Name);
@@ -55,6 +55,13 @@ namespace FlexRouter.VariableWorkerLayer
         }
         public virtual void LoadAdditionals(XPathNavigator reader)
         {
+        }
+
+        public IVariable GetCopy()
+        {
+            var variable = (IVariable)MemberwiseClone();
+            //variable.Id = GlobalId.GetNew();
+            return variable;
         }
 
         public abstract string GetName();

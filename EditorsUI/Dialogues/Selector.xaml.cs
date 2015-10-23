@@ -26,7 +26,7 @@ namespace FlexRouter.EditorsUI.Dialogues
         public Selector(SelectedType selectedType, string panelName)
         {
             InitializeComponent();
-            _selectedPanelId = Profile.GetPanelIdByName(panelName);
+            _selectedPanelId = Profile.PanelStorage.GetPanelByName(panelName).Id;
             _selectedType = selectedType;
             ShowTree(selectedType);
         }
@@ -41,7 +41,7 @@ namespace FlexRouter.EditorsUI.Dialogues
         }
         private void ShowVariableTree()
         {
-            var panels = Profile.GetPanelsList();
+            var panels = Profile.PanelStorage.GetSortedPanelsList();
             _tree.Items.Clear();
             foreach (var panel in panels)
             {
@@ -58,7 +58,7 @@ namespace FlexRouter.EditorsUI.Dialogues
         }
         private void ShowAccessDecsriptorTree()
         {
-            var panels = Profile.GetPanelsList();
+            var panels = Profile.PanelStorage.GetSortedPanelsList();
             _tree.Items.Clear();
 //            var adAll = Profile.GetSortedAccessDesciptorList();
             foreach (var panel in panels)
@@ -134,7 +134,7 @@ namespace FlexRouter.EditorsUI.Dialogues
             }
             if (_selectedType == SelectedType.Variable)
             {
-                var selectedVariable = Profile.GetVariableById((int)((TreeViewItem)_tree.SelectedItem).Tag);
+                var selectedVariable = Profile.VariableStorage.GetVariableById((int)((TreeViewItem)_tree.SelectedItem).Tag);
                 _description.Text = selectedVariable.Description;
                 _selectedItemId = selectedVariable.Id;
             }

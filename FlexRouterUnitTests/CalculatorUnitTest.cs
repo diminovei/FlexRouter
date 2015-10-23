@@ -179,7 +179,7 @@ namespace FlexRouterUnitTests
                 PanelId = threePanelIds[0],
                 Description = "Тестовая переменная 1\nНовая строка"
             };
-            var firstTestVariableId = Profile.RegisterVariable(firstTestVariable, true);
+            var firstTestVariableId = Profile.StoreVariable(firstTestVariable, true);
             varibleIds.Add(firstTestVariableId);
             var secondTestVariable = new FakeVariable
             {
@@ -188,7 +188,7 @@ namespace FlexRouterUnitTests
                 PanelId = threePanelIds[1],
                 Description = "Тестовая переменная 2\nНовая строка"
             };
-            var secondTestVariableId = Profile.RegisterVariable(secondTestVariable, true);
+            var secondTestVariableId = Profile.StoreVariable(secondTestVariable, true);
             varibleIds.Add(secondTestVariableId);
             var thirdTestVariable = new FakeVariable
             {
@@ -197,7 +197,7 @@ namespace FlexRouterUnitTests
                 PanelId = threePanelIds[2],
                 Description = "Тестовая переменная 3\nНовая строка"
             };
-            var thirdTestVariableId = Profile.RegisterVariable(thirdTestVariable, true);
+            var thirdTestVariableId = Profile.StoreVariable(thirdTestVariable, true);
             varibleIds.Add(thirdTestVariableId);
             return varibleIds.ToArray();
         }*/
@@ -206,9 +206,19 @@ namespace FlexRouterUnitTests
         {
             Profile.Clear();
             // Создание трёх панелей
-            var panelId1 = Profile.RegisterPanel(new Panel { Name = "Panel1" }, true);
-            var panelId2 = Profile.RegisterPanel(new Panel { Name = "Panel2" }, true);
-            var panelId3 = Profile.RegisterPanel(new Panel { Name = "Panel3" }, true);
+            var p1 = new Panel {Name = "Panel1"};
+            Profile.PanelStorage.StorePanel(p1);
+            var panelId1 = p1.Id;
+
+
+            var p2 = new Panel { Name = "Panel2" };
+            Profile.PanelStorage.StorePanel(p2);
+            var panelId2 = p2.Id;
+
+            var p3 = new Panel { Name = "Panel3" };
+            Profile.PanelStorage.StorePanel(p3);
+            var panelId3 = p3.Id;
+
 
             // Создание трёх переменных. Одна в первой панели, вторая и третья во второй
             var firstTestVariable = new FakeVariable
@@ -218,7 +228,8 @@ namespace FlexRouterUnitTests
                 PanelId = panelId1,
                 Description = "Тестовая переменная 1\nНовая строка"
             };
-            var firstTestVariableId = Profile.RegisterVariable(firstTestVariable, true);
+            var firstTestVariableId = firstTestVariable.Id;
+            Profile.VariableStorage.StoreVariable(firstTestVariable);
             
             var secondTestVariable = new FakeVariable
             {
@@ -227,7 +238,8 @@ namespace FlexRouterUnitTests
                 PanelId = panelId2,
                 Description = "Тестовая переменная 2\nНовая строка"
             };
-            var secondTestVariableId = Profile.RegisterVariable(secondTestVariable, true);
+            var secondTestVariableId = secondTestVariable.Id;
+            Profile.VariableStorage.StoreVariable(secondTestVariable);
             
             var thirdTestVariable = new FakeVariable
             {
@@ -236,14 +248,15 @@ namespace FlexRouterUnitTests
                 PanelId = panelId2,
                 Description = "Тестовая переменная 3\nНовая строка"
             };
-            var thirdTestVariableId = Profile.RegisterVariable(thirdTestVariable, true);
+            var thirdTestVariableId = thirdTestVariable.Id;
+            Profile.VariableStorage.StoreVariable(thirdTestVariable);
             
             // Создание описателей доступа
             
             // Button
             var valueAccessDescriptor = new DescriptorValue();
 
-            var powerFormula = "[" + Profile.GetPanelById(Profile.GetVariableById(firstTestVariableId).PanelId).Name + "." + Profile.GetVariableById(firstTestVariableId).Name + "]";
+            var powerFormula = "[" + Profile.PanelStorage.GetPanelById(Profile.VariableStorage.GetVariableById(firstTestVariableId).PanelId).Name + "." + Profile.VariableStorage.GetVariableById(firstTestVariableId).Name + "]";
             valueAccessDescriptor.SetPowerFormula(powerFormula);
             valueAccessDescriptor.AssignDefaultStateId(0);
             valueAccessDescriptor.AddState("Off");
@@ -265,7 +278,7 @@ namespace FlexRouterUnitTests
 
             // Encoder
             var rangeAccessDescriptor = new DescriptorRange();
-            rangeAccessDescriptor.SetReceiveValueFormula("[" + Profile.GetPanelById(panelId2).Name+"."+Profile.GetVariableById(secondTestVariableId).Name + "]");
+            rangeAccessDescriptor.SetReceiveValueFormula("[" + Profile.PanelStorage.GetPanelById(panelId2).Name + "." + Profile.VariableStorage.GetVariableById(secondTestVariableId).Name + "]");
             rangeAccessDescriptor.AddVariable(secondTestVariableId);
             rangeAccessDescriptor.AddVariable(firstTestVariableId);
             rangeAccessDescriptor.SetAssignedPanelId(panelId3);
@@ -282,34 +295,32 @@ namespace FlexRouterUnitTests
             Profile.SaveProfileAs(tempFile);
             Profile.Clear();
             Profile.LoadProfile(tempFile);
-            VariableManager.Start();
 
             var valueDescriptor = (DescriptorValue)Profile.GetAccessDesciptorById(valueAccessDescriptorId);
-            VariableManager.WriteValue(firstTestVariableId, 0);
-            VariableManager.WriteValue(secondTestVariableId, 0);
-            VariableManager.WriteValue(thirdTestVariableId, 0);
+            Profile.VariableStorage.WriteValue(firstTestVariableId, 0);
+            Profile.VariableStorage.WriteValue(secondTestVariableId, 0);
+            Profile.VariableStorage.WriteValue(thirdTestVariableId, 0);
             Thread.Sleep(200);
             valueDescriptor.SetState(1);
             Thread.Sleep(200);
-            Assert.AreEqual(0, VariableManager.ReadValue(firstTestVariableId).Value);
-            Assert.AreEqual(0, VariableManager.ReadValue(secondTestVariableId).Value);
-            Assert.AreEqual(0, VariableManager.ReadValue(thirdTestVariableId).Value);
-            VariableManager.WriteValue(firstTestVariableId, 1);
+            Assert.AreEqual(0, Profile.VariableStorage.ReadValue(firstTestVariableId).Value);
+            Assert.AreEqual(0, Profile.VariableStorage.ReadValue(secondTestVariableId).Value);
+            Assert.AreEqual(0, Profile.VariableStorage.ReadValue(thirdTestVariableId).Value);
+            Profile.VariableStorage.WriteValue(firstTestVariableId, 1);
             Thread.Sleep(200);
             valueDescriptor.SetState(1);
             Thread.Sleep(200);
-            Assert.AreEqual(1, VariableManager.ReadValue(firstTestVariableId).Value);
-            Assert.AreEqual(2.58, VariableManager.ReadValue(secondTestVariableId).Value);
-            Assert.AreEqual(-3, VariableManager.ReadValue(thirdTestVariableId).Value);
+            Assert.AreEqual(1, Profile.VariableStorage.ReadValue(firstTestVariableId).Value);
+            Assert.AreEqual(2.58, Profile.VariableStorage.ReadValue(secondTestVariableId).Value);
+            Assert.AreEqual(-3, Profile.VariableStorage.ReadValue(thirdTestVariableId).Value);
             valueAccessDescriptor.SetDefaultState();
             Thread.Sleep(200);
-            Assert.AreEqual(0, VariableManager.ReadValue(firstTestVariableId).Value);
-            Assert.AreEqual(0, VariableManager.ReadValue(secondTestVariableId).Value);
-            Assert.AreEqual(0, VariableManager.ReadValue(thirdTestVariableId).Value);
+            Assert.AreEqual(0, Profile.VariableStorage.ReadValue(firstTestVariableId).Value);
+            Assert.AreEqual(0, Profile.VariableStorage.ReadValue(secondTestVariableId).Value);
+            Assert.AreEqual(0, Profile.VariableStorage.ReadValue(thirdTestVariableId).Value);
             
             
             File.Delete(tempFile);
-            VariableManager.Stop();
         }
 //    private static void TestInit()
 //    {

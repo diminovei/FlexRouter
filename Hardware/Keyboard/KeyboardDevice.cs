@@ -101,6 +101,8 @@ namespace FlexRouter.Hardware.Keyboard
                 }
                 _thread.Join();
                 _device.Unacquire();
+                _device.Dispose();
+                _directInput.Dispose();
             }
             catch (Exception)
             {

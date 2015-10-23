@@ -1,28 +1,41 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using FlexRouter.ProfileItems;
 
-namespace FlexRouter
+namespace FlexRouter.ProfileItems
 {
+    /// <summary>
+    /// Класс для хранения панелей 
+    /// </summary>
     public class PanelStorage
     {
         private readonly Dictionary<int, Panel> _panelsStorage = new Dictionary<int, Panel>();
 
-        public void RegisterOrUpdaterPanel(Panel panel)
+        //public delegate void OnChangeDelegate();
+        //private event OnChangeDelegate OnChange;
+        //public PanelStorage(OnChangeDelegate onChangeDelegate)
+        //{
+        //    OnChange += onChangeDelegate;
+        //}
+        public void StorePanel(Panel panel)
         {
             var id = panel.Id;
             _panelsStorage[id] = panel;
+            //OnChange();
         }
 
-        public void RemovePanel(int panelId)
+        public Panel[] GetAllPanels()
         {
-            if (!_panelsStorage.ContainsKey(panelId))
+            return _panelsStorage.Values.ToArray();
+        }
+        public void RemovePanel(Panel panel)
+        {
+            if (!_panelsStorage.ContainsKey(panel.Id))
                 return;
-
-            _panelsStorage.Remove(panelId);
+            _panelsStorage.Remove(panel.Id);
+            //OnChange();
         }
 
-        public IOrderedEnumerable<Panel> GetPanelsList()
+        public IOrderedEnumerable<Panel> GetSortedPanelsList()
         {
             return _panelsStorage.Values.OrderBy(panel => panel.Name);
         }

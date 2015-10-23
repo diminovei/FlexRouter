@@ -68,7 +68,7 @@ namespace FlexRouter.ControlProcessors.Helpers
         /// <summary>
         /// После редактирования AccessDescriptor обновить информацию о состояниях
         /// </summary>
-        public void RenewStatesInfo(IEnumerable<AccessDescriptorState> states)
+        public void RenewStatesInfo(IEnumerable<Connector> states)
         {
             // Ищем новые State'ы и добавляем, если такие есть
             // ToDo: не забыть сохранить из AccessDescriptor

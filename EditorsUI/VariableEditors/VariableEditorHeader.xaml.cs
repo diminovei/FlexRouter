@@ -1,5 +1,6 @@
 ﻿using System;
 using FlexRouter.EditorsUI.Helpers;
+using FlexRouter.Helpers;
 using FlexRouter.Localizers;
 using FlexRouter.ProfileItems;
 using FlexRouter.VariableWorkerLayer;
@@ -23,7 +24,7 @@ namespace FlexRouter.EditorsUI.VariableEditors
             Localize();
             FillPanelsList();
             _variableName.Text = _editableVariable.Name;
-            var panel = Profile.GetPanelById(_editableVariable.PanelId);
+            var panel = Profile.PanelStorage.GetPanelById(_editableVariable.PanelId);
             if(panel != null)
                 _panel.Text = panel.Name;
             else
@@ -37,9 +38,8 @@ namespace FlexRouter.EditorsUI.VariableEditors
             if (_isNewVariable)
                 return true;
             return !Utils.AreStringsEqual(_variableName.Text, _editableVariable.Name) ||
-                   !Utils.AreStringsEqual(_panel.Text, Profile.GetPanelById(_editableVariable.PanelId).Name);
+                   !Utils.AreStringsEqual(_panel.Text, Profile.PanelStorage.GetPanelById(_editableVariable.PanelId).Name);
         }
-
         /// <summary>
         /// Корректно ли заполнены поля
         /// </summary>
@@ -55,26 +55,23 @@ namespace FlexRouter.EditorsUI.VariableEditors
                 emptyField += "\n" + LanguageManager.GetPhrase(Phrases.EditorPanelName);
             return new EditorFieldsErrors(emptyField);
         }
-
         public void Save()
         {
             _editableVariable.Name = _variableName.Text;
-            _editableVariable.PanelId = Profile.GetPanelIdByName(_panel.Text);
-            if (_isNewVariable)
-            {
-                VariableManager.RegisterVariable(_editableVariable, _isNewVariable);
-                _isNewVariable = false;
-            }
+            _editableVariable.PanelId = Profile.PanelStorage.GetPanelByName(_panel.Text).Id;
+            //if (_isNewVariable)
+            //{
+                Profile.VariableStorage.StoreVariable(_editableVariable);
+            //    _isNewVariable = false;
+            //}
             
         }
-
         public void Localize()
         {
             _editorTypeLabel.Content = LanguageManager.GetPhrase(_variableType);
             _nameLabel.Content = LanguageManager.GetPhrase(Phrases.EditorName);
             _panelLabel.Content = LanguageManager.GetPhrase(Phrases.EditorPanelName);
         }
-
         private void PanelDropDownOpened(object sender, EventArgs e)
         {
             FillPanelsList();
@@ -82,7 +79,7 @@ namespace FlexRouter.EditorsUI.VariableEditors
         private void FillPanelsList()
         {
             var currentText = _panel.Text;
-            var panels = Profile.GetPanelsList();
+            var panels = Profile.PanelStorage.GetSortedPanelsList();
             _panel.Items.Clear();
             foreach (var p in panels)
                 _panel.Items.Add(p.Name);
@@ -90,7 +87,6 @@ namespace FlexRouter.EditorsUI.VariableEditors
                 _panel.Items.Add(currentText);
             _panel.Text = currentText;
         }
-
         private void _variableName_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
         {
             e.Handled = e.Text == ".";

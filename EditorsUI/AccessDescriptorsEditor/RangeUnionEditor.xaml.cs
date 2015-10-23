@@ -29,7 +29,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
 
         private void AddDescriptorToList(DescriptorBase accessDescriptor)
         {
-            var lbi = new ListBoxItem { Content = Profile.GetPanelById(accessDescriptor.GetAssignedPanelId()).Name + "." + accessDescriptor.GetName(), Tag = accessDescriptor };
+            var lbi = new ListBoxItem { Content = Profile.PanelStorage.GetPanelById(accessDescriptor.GetAssignedPanelId()).Name + "." + accessDescriptor.GetName(), Tag = accessDescriptor };
             _dependendDescriptorList.Items.Add(lbi);
         }
 

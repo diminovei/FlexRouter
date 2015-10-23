@@ -33,7 +33,7 @@ namespace FlexRouter.CalculatorRelated
             var varId = Profile.GetVariableByPanelAndName(varAndPanelName[0], varAndPanelName[1]);
             if (varId == -1)
                 return tokenToPreprocess;
-            var readResult = _readCachedValues ? VariableManager.ReadCachedValue(varId) : VariableManager.ReadValue(varId);
+            var readResult = _readCachedValues ? Profile.VariableStorage.ReadCachedValue(varId) : Profile.VariableStorage.ReadValue(varId);
             if (readResult.Error != ProcessVariableError.Ok)
                 return tokenToPreprocess;
             ((CalcTokenNumber)tokenToPreprocess).Value = readResult.Value;

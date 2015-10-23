@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.CalculatorRelated;
@@ -10,6 +11,9 @@ namespace FlexRouter.AccessDescriptors.Helpers
     public abstract class DescriptorBase : IAccessDescriptor, ITreeItem
     {
         private DescriptorBase _parentAccessDescriptorId;
+
+//        public abstract Connector[] GetConnectors();
+
         public void SetDependency(DescriptorBase parentAccessDescriptorId)
         {
             _parentAccessDescriptorId = parentAccessDescriptorId;
@@ -55,12 +59,6 @@ namespace FlexRouter.AccessDescriptors.Helpers
         /// </summary>
         protected readonly Calculator CalculatorE = new Calculator();
 
-/*        public DescriptorBase Copy()
-        {
-            var descriptor = MemberwiseClone();
-            ((DescriptorBase)descriptor).Id = GlobalId.GetNew();
-            return (DescriptorBase)descriptor;
-        }*/
         protected DescriptorBase()
         {
             Id = GlobalId.GetNew();
@@ -70,10 +68,22 @@ namespace FlexRouter.AccessDescriptors.Helpers
 
         public bool IsPowerOn()
         {
-            var result = CalculatorE.ComputeFormula(_usePanelPowerFormula ? Profile.GetPanelById(_panelId).GetPowerFormula() : GetPowerFormula());
-            if (result.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.FormulaWasEmpty)
+            if (_usePanelPowerFormula)
+            {
+                var panelFormulaResult = CalculatorE.ComputeFormula(Profile.PanelStorage.GetPanelById(_panelId).GetPowerFormula());
+                if (panelFormulaResult.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.BooleanResult && panelFormulaResult.CalculatedBoolBoolValue == false)
+                    return false;
+            }
+            var descriptorFormulaResult = CalculatorE.ComputeFormula(GetPowerFormula());
+            if (descriptorFormulaResult.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.FormulaWasEmpty)
                 return true;
-            return result.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.BooleanResult && result.CalculatedBoolBoolValue;
+            return descriptorFormulaResult.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.BooleanResult &&
+                   descriptorFormulaResult.CalculatedBoolBoolValue;
+
+            //var result = CalculatorE.ComputeFormula(_usePanelPowerFormula ? Profile.PanelStorage.GetPanelById(_panelId).GetPowerFormula() : GetPowerFormula());
+            //if (result.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.FormulaWasEmpty)
+            //    return true;
+            //return result.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.BooleanResult && result.CalculatedBoolBoolValue;
         }
 
         public void SetPowerFormula(string powerFormula)
@@ -106,11 +116,10 @@ namespace FlexRouter.AccessDescriptors.Helpers
         {
             return Id;
         }
-
-/*        public void SetId(int id)
+        public void SetId(int id)
         {
-            _id = id;
-        }*/
+            Id = id;
+        }
 
         public int GetAssignedPanelId()
         {
@@ -178,6 +187,13 @@ namespace FlexRouter.AccessDescriptors.Helpers
         public virtual void Initialize()
         {
         }
+
+        public virtual DescriptorBase GetCopy()
+        {
+            var item = (DescriptorBase)MemberwiseClone();
+            return item;
+        }
+
         public abstract string GetDescriptorType();
         public abstract System.Drawing.Bitmap GetIcon();
     }

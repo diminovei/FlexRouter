@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.AccessDescriptors.Helpers;
@@ -10,6 +11,8 @@ namespace FlexRouter.ControlProcessors.Helpers
     {
         protected readonly T AccessDescriptor;
 
+        Dictionary<Connector, object> _connectors = new Dictionary<Connector, object>();
+        
         protected ControlProcessorBase(DescriptorBase accessDescriptor)
         {
             AccessDescriptor = accessDescriptor as T;
@@ -20,12 +23,15 @@ namespace FlexRouter.ControlProcessors.Helpers
             return IsSuitable(accessDescriptor);
         }
 
-
         private static bool IsSuitable(DescriptorBase accessDescriptor)
         {
             return accessDescriptor is T;
         }
 
+        //private Connector[] GetConnectors()
+        //{
+        //    return (AccessDescriptor as DescriptorBase).GetConnectors();
+        //}
         public abstract string GetName();
         
         public abstract string[] GetUsedHardwareList();

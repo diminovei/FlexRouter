@@ -8,6 +8,7 @@ using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.EditorPanels;
 using FlexRouter.EditorsUI.Dialogues;
 using FlexRouter.EditorsUI.Helpers;
+using FlexRouter.Helpers;
 using FlexRouter.Localizers;
 using FlexRouter.ProfileItems;
 
@@ -27,7 +28,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
 
         private DataTable _dataTable = new DataTable();
         private readonly List<int> _usedVariables;
-        private readonly List<AccessDescriptorState> _stateList;
+        private readonly List<Connector> _stateList;
         private readonly FormulaKeeper _localFormulaKeeper = new FormulaKeeper();
 
         private int _defaultState = -1;
@@ -89,7 +90,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             _additionalColumnsCount = _dataTable.Columns.Count;
             // Добавляем колонки с именами переменных
             foreach (var v in _usedVariables)
-                _dataTable.Columns.Add(Profile.GetVariableById(v).Name);
+                _dataTable.Columns.Add(Profile.VariableStorage.GetVariableById(v).Name);
             // Добавляем строки. Первая колонка - наименование состояния, затем формулы для переменных
             foreach (var s in _stateList)
             {
@@ -189,7 +190,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             var stateNewName = SelectStateName();
             if (stateNewName == null)
                 return;
-            var ads = new AccessDescriptorState
+            var ads = new Connector
                 {
                     Id = _stateList.Count == 0 ? 0 : _stateList.Select(x => x.Id).Max() + 1,
                     Order = _stateList.Count == 0 ? 0 : _stateList.Select(x => x.Order).Max() + 1,
@@ -224,7 +225,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             if (selectedCellIndex < _additionalColumnsCount || selectedCellIndex - 1 > variables.Count())
                 return;
             var varId = _usedVariables[selectedCellIndex - _additionalColumnsCount];
-            var selectedVar = Profile.GetVariableById(varId);
+            var selectedVar = Profile.VariableStorage.GetVariableById(varId);
 
             if (MessageBox.Show(LanguageManager.GetPhrase(Phrases.EditorMessageRemoveVariableFromAccessDescriptor)+" '" + selectedVar.Name + "'?", LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader), MessageBoxButton.YesNo,MessageBoxImage.Question) ==
                 MessageBoxResult.Yes)

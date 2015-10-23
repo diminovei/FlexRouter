@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Xml.XPath;
 
-namespace FlexRouter
+namespace FlexRouter.Helpers
 {
     class Utils
     {

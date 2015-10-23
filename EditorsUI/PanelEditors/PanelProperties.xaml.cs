@@ -1,4 +1,5 @@
 ﻿using FlexRouter.EditorsUI.Helpers;
+using FlexRouter.Helpers;
 using FlexRouter.Localizers;
 using FlexRouter.ProfileItems;
 
@@ -10,16 +11,16 @@ namespace FlexRouter.EditorsUI.PanelEditors
     public partial class PanelProperties : IEditor
     {
         private readonly Panel _editablePanel;
-        private bool _isNewPanel;
+//        private bool _isNewPanel;
 /*        public PanelProperties()
         {
             InitializeComponent();
             Localize();
         }*/
-        public PanelProperties(Panel panel, bool isNewPanel)
+        public PanelProperties(Panel panel)//, bool isNewPanel)
         {
             _editablePanel = panel;
-            _isNewPanel = isNewPanel;
+//            _isNewPanel = isNewPanel;
             InitializeComponent();
             Localize();
             _panelName.Text = _editablePanel.Name;
@@ -33,8 +34,8 @@ namespace FlexRouter.EditorsUI.PanelEditors
                 _editablePanel = new Panel();*/
             _editablePanel.Name = _panelName.Text;
             _editablePanel.SetPowerFormula(_powerFormula.Text);
-            Profile.RegisterPanel(_editablePanel, _isNewPanel);
-            _isNewPanel = false;
+            Profile.PanelStorage.StorePanel(_editablePanel); //, _isNewPanel);
+//            _isNewPanel = false;
         }
 
         /// <summary>

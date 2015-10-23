@@ -1,5 +1,4 @@
-﻿
-//Не полный оборот (Амперметр)
+﻿//Не полный оборот (Амперметр)
 //    AD: значение
 //Полный оборот (Компас)
 //    AD: возможность перейти через 0
@@ -27,11 +26,11 @@
 // Автомат тяги работает не корректно. Не автоматит, не устанавливает в 2 "режим 2"
 // Стабилизация по высоте включается, а лампа не загорается. Нужно разбираться
 //  ***************************** Сделать
+//      При удалении элемента перестраивать дерево и переходить на следующий элемент
 //      Сделать умную синхронизацию деревьев (удалять то, что исчезло, добавлять то, что появилось вместо полной перерисовки)
 //      Пройтись по всем ToDo и доделать
 
 //      AD для управления яркостью
-//      Проверить корректность срабатывания "данные изменились, сохранить?" в переменных, AD, CP
 //      Контроль формул:
 //          Не позволять сохранять AD, если в формуле синтаксическая ошибка
 //          Если модули (dll) недоступны, в переменных показывать N/A и формулы не считать (для этого в обработке переменных нужно проверять, что модули загружены)
@@ -57,6 +56,7 @@
 //          Редактирование описателя "Клики мышью (Range)"
 //      Bug: биндинг не работает, если в названии переменной (колонки) "плохой" символ. Точка, слэш
 //  ***************************** Не срочно (или не нужно):
+//      Проверить корректность срабатывания "данные изменились, сохранить?" в переменных, AD, CP
 //      Возможность втыкать и вытыкать железо во время работы роутера
 //      При изменении имени переменной предупреждать, что нужно обновить данные в AD, если открытый AD использует эту переменную (узнать в FormulaKeeper)
 using System;
@@ -67,7 +67,6 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
-using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using FlexRouter.AccessDescriptors;
@@ -109,9 +108,6 @@ namespace FlexRouter
     /// </summary>
     public partial class MainWindow
     {
-        public const int WmDevicechange = 0x0219;
-//        public const int DbtDevicearrival = 0x8000; // system detected a new device        
-//        public const int DbtDeviceremovecomplete = 0x8004; // device is gone      
         private RouterState _routerState = RouterState.Stopped;
         private readonly Core _routerCore = new Core();
         private DispatcherTimer _timer;
@@ -119,21 +115,28 @@ namespace FlexRouter
         private readonly Calculator _calculator = new Calculator();
         readonly AxisDebouncer _axisDebouncer = new AxisDebouncer();
 
-
-        //protected override void OnStartup(StartupEventArgs e)
-        //{
-        //    // hook on error before app really starts
-        //    AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
-        //    base.OnStartup(e);
-        //}
-
-        //void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
-        //{
-        //    // put your tracing or logging code here (I put a message box as an example)
-        //    MessageBox.Show(e.ExceptionObject.ToString());
-        //}
         public MainWindow()
         {
+            //var v = new FsuipcVariable();
+            //v.Offset = 0xBDC;
+            //v.Size = MemoryVariableSize.FourBytes;
+            //v.Id = 3;
+            //var f = new FsuipcMethod();
+            //var r = f.Initialize();
+            //r = r;
+            //f.AddVariableToRead(v);
+            //f.Process();
+            //var x = f.GetValue(3);
+            //x = x;
+            //v.SetValueToSet(8196);
+            //f.AddVariableToWrite(v);
+            //f.AddVariableToRead(v);
+            //f.Process();
+            //var y = f.GetValue(3);
+            //y = y;
+            //f.UnInitialize();
+            //return;
+            
             InitializeComponent();
             ApplicationSettings.LoadSettings();
             LanguageManager.Initialize();
@@ -252,6 +255,8 @@ namespace FlexRouter
             _joystickBindByInstanceGuidLabel.Content = LanguageManager.GetPhrase(Phrases.SettingsJoystickBindByInstanceGuid);
             _dump.Content = LanguageManager.GetPhrase(Phrases.CommonDumpControls);
             _varAndPanelNameToClipboard.Content = LanguageManager.GetPhrase(Phrases.EditorVariableAndPanelNameToClipboard);
+            _cloneAccessDescriptor.Content = LanguageManager.GetPhrase(Phrases.EditorCloneAccessDescriptor);
+            _cloneVariable.Content = LanguageManager.GetPhrase(Phrases.EditorCloneVariable);
             VisualizeRouterState();
         }
         /// <summary>
@@ -319,7 +324,6 @@ namespace FlexRouter
             ApplicationSettings.SaveSettings();
             _routerCore.Stop();
             _timer.Stop();
-            VariableManager.Stop();
         }
         /// <summary>
         /// Обработать сообщения с данными для отображения, посланные главной форме внутренними компонентами роутера
@@ -348,7 +352,7 @@ namespace FlexRouter
                     var evButton = (((ControlEventBase) ((ObjectMessage) message).AnyObject)) as ButtonEvent;
                     if (evButton != null)
                     {
-                        string additionalInfo = evButton.IsPressed ? "vvv" : "^^^";
+                        var additionalInfo = evButton.IsPressed ? "vvv" : "^^^";
                         _incomingEvent.Text = ((ControlEventBase)((ObjectMessage)message).AnyObject).Hardware.GetHardwareGuid() + " " + additionalInfo;
                     }
                         
@@ -359,7 +363,7 @@ namespace FlexRouter
                         _incomingEvent.Text = ((ControlEventBase)((ObjectMessage)message).AnyObject).Hardware.GetHardwareGuid() + " " + additionalInfo;
                     }
                     var evAxis = (((ControlEventBase)((ObjectMessage)message).AnyObject)) as AxisEvent;
-                    if (evAxis != null && _axisDebouncer.IsNeedToProcessAxisEvent(evAxis,2))
+                    if (evAxis != null && _axisDebouncer.IsNeedToProcessAxisEvent(evAxis, 2))
                     {
                         string additionalInfo = evAxis.Position.ToString(CultureInfo.InvariantCulture);
                         _incomingEvent.Text = ((ControlEventBase)((ObjectMessage)message).AnyObject).Hardware.GetHardwareGuid() + " " + additionalInfo;
@@ -380,29 +384,8 @@ namespace FlexRouter
 
         private void AccessDescriptorsTreeSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            if (IsNeedToChangeItemInEditor(_accessDescriptorsTree, _accessDescriptorPanel, e,
-                _accessDescriptorTreeHelper))
-                ChangeAccessDescriptoriInEditor();
-        }
-
-        private void ChangeAccessDescriptoriInEditor()
-        {
-            var treeSelectedItem = GetTreeSelectedItem(_accessDescriptorsTree);
-            if (treeSelectedItem == null)
-                return;
-            _accessDescriptorPanel.Children.Clear();
-            if (treeSelectedItem.Type == TreeItemType.Panel)
-            {
-                var panel = new PanelProperties((Panel) treeSelectedItem.Object, false);
-                DockPanel.SetDock(panel, Dock.Top);
-                _accessDescriptorPanel.Children.Add(panel);
-            }
-            else
-            {
-                var ad = Profile.GetAccessDesciptorById(((DescriptorBase) treeSelectedItem.Object).GetId());
-                ShowAccessDescriptorEditors(ad);
-            }
-        }
+            ChangeInEditor(TreeItemType.AccessDescriptor, _accessDescriptorPanel, _accessDescriptorsTree, _accessDescriptorTreeHelper, e);
+       }
 
         private void SaveAccessDescriptorClick(object sender, RoutedEventArgs e)
         {
@@ -448,18 +431,17 @@ namespace FlexRouter
 
         private void CreateAccessDescriptorClick(object sender, RoutedEventArgs e)
         {
-            var accessDescriptor = GetObjectToCreateFromCombobox(_accessDescriptorsToCreateList,_accessDescriptorPanel);
-            if ((accessDescriptor as DescriptorBase) != null)
-                //ToDo: Добавить IsNew
-                ShowAccessDescriptorEditors((DescriptorBase) accessDescriptor);
-            if ((accessDescriptor as Panel) != null)
-                ShowPanel((Panel) accessDescriptor, _accessDescriptorPanel, true);
+            var itemToCreate = GetObjectToCreateFromCombobox(_accessDescriptorsToCreateList,_accessDescriptorPanel);
+            if ((itemToCreate as DescriptorBase) != null)
+                ShowAccessDescriptorEditors((DescriptorBase) itemToCreate);
+            if ((itemToCreate as Panel) != null)
+                ShowPanel((Panel) itemToCreate, _accessDescriptorPanel);
             FillAccessDescriptorsToCreateList();
         }
 
         private void ShowAccessDescriptorEditors(DescriptorBase ad)
         {
-            string selectedItemPanelName = GetSelectedItemPanelName(_accessDescriptorsTree);
+            var selectedItemPanelName = GetSelectedItemPanelName(_accessDescriptorsTree);
             _accessDescriptorPanel.Children.Clear();
             var editors = new List<UserControl>();
             editors.Add(new DescriptorCommonEditor(ad, selectedItemPanelName));
@@ -497,9 +479,7 @@ namespace FlexRouter
         {
             var item = GetTreeSelectedItem(_accessDescriptorsTree);
             if (item == null)
-            {
                 return;
-            }
             if (item.Type == TreeItemType.Panel)
             {
                 RemovePanel((Panel) item.Object);
@@ -536,7 +516,7 @@ namespace FlexRouter
                 MessageBoxImage.Question) ==
                 MessageBoxResult.Yes)
             {
-                Profile.RemovePanel(panel.Id);
+                Profile.PanelStorage.RemovePanel(panel);
                 Profile.SaveCurrentProfile();
                 RenewTrees();
             }
@@ -550,24 +530,42 @@ namespace FlexRouter
 
         private void VariablesTreeSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            if (IsNeedToChangeItemInEditor(_variablesTree, _variablesPanel, e, _variableTreeHelper))
-                ChangeVariableInEditor();
+            ChangeInEditor(TreeItemType.Variable, _variablesPanel, _variablesTree, _variableTreeHelper, e);
         }
 
-        private void ChangeVariableInEditor()
+        private void ChangeInEditor(TreeItemType treeItemType, StackPanel panel, TreeView tree, TreeViewHelper treeViewHelper, RoutedPropertyChangedEventArgs<object> e)
         {
-            _variablesPanel.Children.Clear();
-            if (((TreeViewItem) _variablesTree.SelectedItem).Name == TreeItemType.Panel.ToString())
+            if (!IsNeedToChangeItemInEditor(tree, panel, e, treeViewHelper))
+                return;
+
+            var treeSelectedItem = GetTreeSelectedItem(tree);
+            if (treeSelectedItem == null)
+                return;
+
+            panel.Children.Clear();
+            if (((TreeViewItem)tree.SelectedItem).Name == TreeItemType.Panel.ToString())
             {
-                IEditor ie = new PanelProperties((Panel) ((TreeViewItem) _variablesTree.SelectedItem).Tag, false);
-                DockPanel.SetDock((UserControl) ie, Dock.Top);
-                _variablesPanel.Children.Add((UserControl) ie);
+                IEditor ie = new PanelProperties((Panel)((TreeViewItem)tree.SelectedItem).Tag);
+                DockPanel.SetDock((UserControl)ie, Dock.Top);
+                panel.Children.Add((UserControl)ie);
+                return;
             }
-            else
+            var item = treeSelectedItem.Object;
+
+            if (treeItemType == TreeItemType.AccessDescriptor)
+                ShowAccessDescriptorEditors((DescriptorBase)item);
+
+            if (treeItemType == TreeItemType.ControlProcessor)
             {
-                var selectedVariable = (IVariable) ((TreeViewItem) _variablesTree.SelectedItem).Tag;
-                ShowVariable(selectedVariable, false);
+                FillCreateControlProcessorList();
+                var controlProcessor = Profile.GetControlProcessorByAccessDescriptorId(((DescriptorBase)item).GetId());
+                ShowControlProcessor(controlProcessor);
+                // ToDo: нужно не отсюда вызывать, а давать CP панелям знать, что выбран другой узел дерева и нужно завершать поиск
+                HardwareManager.StopComponentSearch();
             }
+
+            if (treeItemType == TreeItemType.Variable)
+                ShowVariable((IVariable)item, false);
         }
 
         private string GetSelectedItemPanelName(TreeView tree)
@@ -581,12 +579,12 @@ namespace FlexRouter
                 if (selectedItem.Tag is IVariable)
                 {
                     var selectedVariable = (IVariable) ((TreeViewItem) tree.SelectedItem).Tag;
-                    panel = Profile.GetPanelById(selectedVariable.PanelId);
+                    panel = Profile.PanelStorage.GetPanelById(selectedVariable.PanelId);
                 }
                 if (selectedItem.Tag is DescriptorBase)
                 {
                     var selectedDescriptor = (DescriptorBase) ((TreeViewItem) tree.SelectedItem).Tag;
-                    panel = Profile.GetPanelById(selectedDescriptor.GetAssignedPanelId());
+                    panel = Profile.PanelStorage.GetPanelById(selectedDescriptor.GetAssignedPanelId());
                 }
                 if (panel != null)
                     return panel.Name;
@@ -596,7 +594,7 @@ namespace FlexRouter
 
         private void ShowVariable(IVariable variable, bool isNew)
         {
-            string selectedItemPanelName = GetSelectedItemPanelName(_variablesTree);
+            var selectedItemPanelName = GetSelectedItemPanelName(_variablesTree);
             if (variable == null)
                 return;
             _variablesPanel.Children.Clear();
@@ -605,8 +603,7 @@ namespace FlexRouter
 
             if (variable is MemoryPatchVariable)
             {
-                editors.Add(new VariableEditorHeader(variable, Phrases.EditorHeaderMemoryPatch, isNew,
-                    selectedItemPanelName));
+                editors.Add(new VariableEditorHeader(variable, Phrases.EditorHeaderMemoryPatch, isNew, selectedItemPanelName));
                 editors.Add(new MemoryPatchVariableEditor(variable));
                 editors.Add(new VariableSizeEditor(variable as IMemoryVariable));
                 editors.Add(new VariableValueEditor(variable));
@@ -639,7 +636,7 @@ namespace FlexRouter
         {
             var vtk = new TreeViewStateKeeper();
             vtk.RememberState(ref tree);
-            var panels = Profile.GetPanelsList();
+            var panels = Profile.PanelStorage.GetSortedPanelsList();
             tree.Items.Clear();
             foreach (var panel in panels)
             {
@@ -664,13 +661,13 @@ namespace FlexRouter
             vtk.RestoreState(ref tree);
         }
 
-        private void ShowPanel(Panel item, StackPanel panel, bool isNew)
+        private void ShowPanel(Panel item, StackPanel panel)
         {
             if (item == null)
                 return;
             panel.Children.Clear();
 
-            var editors = new List<UserControl> {new PanelProperties(item, isNew)};
+            var editors = new List<UserControl> {new PanelProperties(item)};
             for (var i = 0; i < editors.Count; i++)
             {
                 DockPanel.SetDock(editors[i], i == 0 ? Dock.Top : Dock.Bottom);
@@ -680,6 +677,21 @@ namespace FlexRouter
 
         private void SaveVariableClick(object sender, RoutedEventArgs e)
         {
+            //var treeSelectedItem = GetTreeSelectedItem(_variablesTree);
+            //if (treeSelectedItem == null)
+            //    return;
+            //if ((treeSelectedItem.Object as IVariable) != null)
+            //{
+            //    var editableVariable = (IVariable)treeSelectedItem.Object;
+            //    var sameVarNames = Profile.GetSameVariablesNames(editableVariable);
+            //    if (sameVarNames != null)
+            //    {
+            //        var message = LanguageManager.GetPhrase(Phrases.EditorMessageTheSameVariableIsExist) + ": " + Environment.NewLine + Environment.NewLine + sameVarNames;
+            //        var header = LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader);
+            //        MessageBox.Show(message, header, MessageBoxButton.OK, MessageBoxImage.Stop);
+            //        return;
+            //    }
+            //}
             OnAnySaveButtonClicked(_variablesPanel, true);
         }
 
@@ -721,7 +733,7 @@ namespace FlexRouter
             if ((variable as IVariable) != null)
                 ShowVariable((IVariable) variable, true);
             if ((variable as Panel) != null)
-                ShowPanel((Panel) variable, _variablesPanel, true);
+                ShowPanel((Panel) variable, _variablesPanel);
             FillVariablesToCreateList();
         }
 
@@ -744,11 +756,11 @@ namespace FlexRouter
                     var ad = Profile.GetAccessDesciptorById(vl);
                     if (ad != null)
                     {
-                        var adName = Profile.GetPanelById(ad.GetAssignedPanelId()).GetNameOfProfileItemType() + "." + ad.GetName();
+                        var adName = Profile.PanelStorage.GetPanelById(ad.GetAssignedPanelId()).GetNameOfProfileItemType() + "." + ad.GetName();
                         message += LanguageManager.GetPhrase(Phrases.EditorAccessDescriptor) + " '" + adName + "'" +
                                    "\n";
                     }
-                    var panel = Profile.GetPanelById(vl);
+                    var panel = Profile.PanelStorage.GetPanelById(vl);
                     if (panel != null)
                     {
                         var panelName = panel.GetNameOfProfileItemType();
@@ -767,7 +779,7 @@ namespace FlexRouter
                 MessageBoxResult.Yes)
             {
                 _variablesPanel.Children.Clear();
-                Profile.RemoveVariable(((IVariable) item.Object).Id);
+                Profile.VariableStorage.RemoveVariable(((IVariable) item.Object).Id);
                 Profile.SaveCurrentProfile();
                 RenewVariablesTrees();
             }
@@ -778,7 +790,7 @@ namespace FlexRouter
             var item = GetTreeSelectedItem(_variablesTree);
             if (item == null || item.Type == TreeItemType.Panel)
                 return;
-            var varPanelAndName = VariableManager.GetVariableAndPanelNameById(((IVariable) item.Object).Id);
+            var varPanelAndName = Profile.GetVariableAndPanelNameById(((IVariable) item.Object).Id);
             Clipboard.SetText("[" + varPanelAndName + "]");
         }
 
@@ -795,9 +807,7 @@ namespace FlexRouter
 
         private void ControlProcessorsTreeSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            if (IsNeedToChangeItemInEditor(_controlProcessorsTree, _controlProcessorsPanel, e,
-                _controlProcessorTreeHelper))
-                ChangeControlProcessorInEditor();
+            ChangeInEditor(TreeItemType.ControlProcessor, _controlProcessorsPanel, _controlProcessorsTree, _controlProcessorTreeHelper, e);
         }
 
         private void FillCreateControlProcessorList()
@@ -880,29 +890,6 @@ namespace FlexRouter
                 DockPanel.SetDock(editors[i], i == 0 ? Dock.Top : Dock.Bottom);
                 _controlProcessorsPanel.Children.Add(editors[i]);
             }
-        }
-
-        private void ChangeControlProcessorInEditor()
-        {
-            var treeSelectedItem = GetTreeSelectedItem(_controlProcessorsTree);
-            if (treeSelectedItem == null)
-                return;
-
-            _controlProcessorsPanel.Children.Clear();
-
-            if (treeSelectedItem.Type == TreeItemType.Panel)
-            {
-                _controlProcessorsPanel.Children.Add(new PanelProperties((Panel) treeSelectedItem.Object, false));
-            }
-            else
-            {
-                FillCreateControlProcessorList();
-                var descriptor = (DescriptorBase) treeSelectedItem.Object;
-                var controlProcessor = Profile.GetControlProcessorByAccessDescriptorId(descriptor.GetId());
-                ShowControlProcessor(controlProcessor);
-            }
-            // ToDo: нужно не отсюда вызывать, а давать CP панелям знать, что выбран другой узел дерева и нужно завершать поиск
-            HardwareManager.StopComponentSearch();
         }
 
         private void CreateControlProcessorClick(object sender, RoutedEventArgs e)
@@ -1100,13 +1087,11 @@ namespace FlexRouter
             if (!found)
                 return null;
             item.Object = ((TreeViewItem) tree.SelectedItem).Tag;
-//           item.Name = (string)((TreeViewItem)tree.SelectedItem).Header;
             item.Name = GetTreeItemText(tree.SelectedItem as TreeViewItem);
             if (item.Type != TreeItemType.Panel)
             {
                 var parentItem = ((TreeViewItem) ((TreeViewItem) tree.SelectedItem).Parent);
                 var parentText = GetTreeItemText(parentItem as TreeViewItem);
-//                item.FullName = (string)parentItem.Header + "." + item.Name;
                 item.FullName = parentText + "." + item.Name;
             }
             else
@@ -1153,12 +1138,12 @@ namespace FlexRouter
             var item = combobox.SelectedItem as ComboBoxItem;
             return item == null ? null : ((ComboBoxItem) combobox.SelectedItem).Tag;
         }
-
+        //private static Dictionary<int, TreeViewItem> _tviCache = new Dictionary<int, TreeViewItem>();
         private static void ShowTree(TreeView tree, TreeItemType tit)
         {
             var vtk = new TreeViewStateKeeper();
             vtk.RememberState(ref tree);
-            var panels = Profile.GetPanelsList();
+            var panels = Profile.PanelStorage.GetSortedPanelsList();
             tree.Items.Clear();
             var adAll = Profile.GetSortedAccessDesciptorList();
             foreach (var panel in panels)
@@ -1175,10 +1160,24 @@ namespace FlexRouter
                 {
                     if (adesc.IsDependent())
                         continue;
-                    var icon = GetIcon(tit, adesc.GetId());
-                    var treeAdItem = CreateTreeViewItem(adesc.GetName(), adesc, tit, icon);
-                    treeAdItem.Tag = adesc;
-                    treeAdItem.Name = tit.ToString();
+
+                    //TreeViewItem treeAdItem = null;
+                    //if (
+                    //    _tviCache.ContainsKey(adesc.GetId())
+                    //    &&((DescriptorBase) _tviCache[adesc.GetId()].Tag).GetName() == adesc.GetName() 
+                    //    && ((DescriptorBase) _tviCache[adesc.GetId()].Tag).GetAssignedPanelId() == adesc.GetAssignedPanelId()
+                    //    )
+                    //{
+                    //        treeAdItem = _tviCache[adesc.GetId()];
+                    //}
+                    //else
+                    //{
+                        var icon = GetIcon(tit, adesc.GetId());
+                        var treeAdItem = CreateTreeViewItem(adesc.GetName(), adesc, tit, icon);
+                        treeAdItem.Tag = adesc;
+                        treeAdItem.Name = tit.ToString();
+                        //_tviCache[adesc.GetId()] = treeAdItem;
+                    //}
 
                     treeRootItem.Items.Add(treeAdItem);
                     if (tit == TreeItemType.ControlProcessor)
@@ -1191,7 +1190,7 @@ namespace FlexRouter
                             continue;
                         icon = GetIcon(tit, a.GetId());
                         var treeDependentItem =
-                            CreateTreeViewItem(Profile.GetPanelById(a.GetAssignedPanelId()).Name + "." + a.GetName(), a,
+                            CreateTreeViewItem(Profile.PanelStorage.GetPanelById(a.GetAssignedPanelId()).Name + "." + a.GetName(), a,
                                 tit, icon);
                         treeAdItem.Items.Add(treeDependentItem);
                     }
@@ -1219,7 +1218,7 @@ namespace FlexRouter
             }
             if (tit == TreeItemType.Variable)
             {
-                var variable = Profile.GetVariableById(itemId);
+                var variable = Profile.VariableStorage.GetVariableById(itemId);
                 return ((ITreeItem) variable).GetIcon();
             }
             if (tit == TreeItemType.AccessDescriptor)
@@ -1499,7 +1498,6 @@ namespace FlexRouter
         private void PauseRouterOnChangeProfile()
         {
             _routerCore.Stop();
-            VariableManager.Stop();
         }
 
         /// <summary>
@@ -1521,7 +1519,6 @@ namespace FlexRouter
                 _selectProfile.Text = string.Empty;
                 SetTitle();
             }
-            VariableManager.Start();
             _routerCore.Start();
             RenewTrees();
             RenewVariablesTrees();
@@ -1690,93 +1687,46 @@ namespace FlexRouter
                 _routerCore.Dump();
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private void _cloneVariable_Click(object sender, RoutedEventArgs e)
         {
-            HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
-            if (source != null) source.AddHook(new HwndSourceHook(WndProc));
-            // Adds the windows message processing hook and registers USB device add/removal notification.
-            //HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
-            //if (source != null)
-            //{
-            //    IntPtr windowHandle = source.Handle;
-            //    source.AddHook(HwndHandler);
-            //    UsbNotification.RegisterUsbDeviceNotification(windowHandle);
-            //}
+            var treeSelectedItem = GetTreeSelectedItem(_variablesTree);
+            if (treeSelectedItem == null)
+                return;
+            if ((treeSelectedItem.Object as IVariable) != null)
+            {
+                var newItem = ((VariableBase) treeSelectedItem.Object).GetCopy();
+                newItem.Name = newItem.Name + "(2)";
+                ShowVariable(newItem, true);
+                newItem.Id = GlobalId.GetNew();
+            }
+            if ((treeSelectedItem.Object as Panel) != null)
+            {
+                var newItem = ((Panel)treeSelectedItem.Object).GetCopy();
+                newItem.Name = newItem.Name + "(2)";
+                ShowPanel(newItem, _variablesPanel);
+                newItem.SetId(GlobalId.GetNew());
+            }
         }
 
-        //private readonly object locker = new object();
-        //private bool _locked;
-        //private DateTime? _deviceChanged = null;
-        //private readonly List<string> _usbDevicesId = new List<string>();
-
-        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        private void _cloneAccessDescriptor_Click(object sender, RoutedEventArgs e)
         {
-//            if (msg == WmDevicechange)
-  //          {
-                //               System.Diagnostics.Debug.Print(DateTime.Now + ": !!!WM_DEVICECHANGE");
-                //if (locked)
-                //{
-                //    System.Diagnostics.Debug.Print(DateTime.Now + ": Passed");
-                //    handled = true;
-                //    return IntPtr.Zero;
-                //}
-               //lock (locker)
-               //{
-                  // _locked = true;
-               //    _deviceChanged = DateTime.Now;
-               //    var devicesNewList = Invoke(GetUsbDevices();
-               //    if (devicesNewList.Any(d => !_usbDevicesId.Contains(d.DeviceID)))
-               //     {
-                        //System.Diagnostics.Debug.Print(DateTime.Now + ": WM_DEVICECHANGE");
-               //         //                System.Diagnostics.Debug.Print("WM_DEVICECHANGE");
-                        //PauseRouterOnChangeProfile();
-                        //System.Diagnostics.Debug.Print(DateTime.Now + ": ProfileStopped");
-                      //                  Thread.Sleep(500);
-                        //ResumeRouterOnChangeProfile();
-                        //System.Diagnostics.Debug.Print(DateTime.Now + ": ProfileResumed");
-               //         //MessageBox.Show("WM_DEVICECHANGE");
-               //         _usbDevicesId.Clear();
-               //         foreach (var d in devicesNewList)
-               //             _usbDevicesId.Add(d.DeviceID);
-               //     }
-                   // handled = true;
-                    //_locked = false;
-    //           }
-  //          }
-            return IntPtr.Zero;
+            var treeSelectedItem = GetTreeSelectedItem(_accessDescriptorsTree);
+            if (treeSelectedItem == null)
+                return;
+            if ((treeSelectedItem.Object as IAccessDescriptor) != null)
+            {
+                var newItem = ((DescriptorBase)treeSelectedItem.Object).GetCopy();
+                newItem.SetName(newItem.GetName() + "(2)");
+                ShowAccessDescriptorEditors(newItem);
+                newItem.SetId(GlobalId.GetNew());
+            }
+            if ((treeSelectedItem.Object as Panel) != null)
+            {
+                var newItem = ((Panel)treeSelectedItem.Object).GetCopy();
+                newItem.Name = newItem.Name + "(2)";
+                ShowPanel(newItem, _accessDescriptorPanel);
+                newItem.SetId(GlobalId.GetNew());
+            }
         }
-
-        //class USBDeviceInfo
-        //{
-        //    public USBDeviceInfo(string deviceID, string pnpDeviceID, string description)
-        //    {
-        //        this.DeviceID = deviceID;
-        //        this.PnpDeviceID = pnpDeviceID;
-        //        this.Description = description;
-        //    }
-        //    public string DeviceID { get; private set; }
-        //    public string PnpDeviceID { get; private set; }
-        //    public string Description { get; private set; }
-        //}
-        //private static List<USBDeviceInfo> GetUsbDevices()
-        //{
-        //    var devices = new List<USBDeviceInfo>();
-
-        //    ManagementObjectCollection collection;
-        //    using (var searcher = new ManagementObjectSearcher(@"Select * From Win32_USBHub"))
-        //        collection = searcher.Get();
-
-        //    foreach (var device in collection)
-        //    {
-        //        devices.Add(new USBDeviceInfo(
-        //            (string)device.GetPropertyValue("DeviceID"),
-        //            (string)device.GetPropertyValue("PNPDeviceID"),
-        //            (string)device.GetPropertyValue("Description")
-        //            ));
-        //    }
-
-        //    collection.Dispose();
-        //    return devices;
-        //}
     }
 }

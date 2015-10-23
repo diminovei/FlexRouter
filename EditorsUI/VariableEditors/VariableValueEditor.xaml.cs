@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Windows.Threading;
 using FlexRouter.EditorsUI.Helpers;
 using FlexRouter.Localizers;
+using FlexRouter.ProfileItems;
 using FlexRouter.VariableWorkerLayer;
 
 namespace FlexRouter.EditorsUI.VariableEditors
@@ -33,7 +34,7 @@ namespace FlexRouter.EditorsUI.VariableEditors
 
         private void OnTimedEvent(object sender, EventArgs e)
         {
-            var value = VariableManager.ReadValue(_editableVariable.Id);
+            var value = Profile.VariableStorage.ReadValue(_editableVariable.Id);
             _variableDecValue.Text = value.Value.ToString(CultureInfo.InvariantCulture);
             _variableHexValue.Text = ((long)value.Value).ToString("X");
         }

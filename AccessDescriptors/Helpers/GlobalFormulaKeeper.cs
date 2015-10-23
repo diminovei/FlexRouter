@@ -202,8 +202,8 @@ namespace FlexRouter.AccessDescriptors.Helpers
                             resultFormula += '[' + token + ']';
                             continue;
                         }
-                        var variable = Profile.GetVariableById(id);
-                        var panelName = Profile.GetPanelById(variable.PanelId).Name;
+                        var variable = Profile.VariableStorage.GetVariableById(id);
+                        var panelName = Profile.PanelStorage.GetPanelById(variable.PanelId).Name;
                         var name = variable.Name;
                         resultFormula += '[' + panelName + '.' + name + ']';
                         continue;

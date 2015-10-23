@@ -1,7 +1,6 @@
-﻿using System;
-using System.Globalization;
-using System.Windows;
+﻿using System.Globalization;
 using FlexRouter.EditorsUI.Helpers;
+using FlexRouter.Helpers;
 using FlexRouter.Localizers;
 using FlexRouter.VariableWorkerLayer;
 using FlexRouter.VariableWorkerLayer.MethodFsuipc;
@@ -25,19 +24,16 @@ namespace FlexRouter.EditorsUI.VariableEditors
             InitializeComponent();
             Localize();
         }
-        
         private void GetDataFromVariable()
         {
             _offset.Text = _editableVariable.Offset.ToString("X");
         }
-
         public bool IsDataChanged()
         {
             if (_editableVariable == null)
                 return true;
             return !Utils.AreStringsEqual(_offset.Text, _editableVariable.Offset.ToString("X"));
         }
-
         /// <summary>
         /// Корректно ли заполнены поля
         /// </summary>
@@ -49,12 +45,10 @@ namespace FlexRouter.EditorsUI.VariableEditors
                 emptyField += "\n" + LanguageManager.GetPhrase(Phrases.EditorVariableRelativeOffset);
             return new EditorFieldsErrors(emptyField);
         }
-
         public void Save()
         {
             _editableVariable.Offset = int.Parse(_offset.Text, NumberStyles.HexNumber);
         }
-
         public void Localize()
         {
             _offsetLabel.Content = LanguageManager.GetPhrase(Phrases.EditorVariableRelativeOffset);

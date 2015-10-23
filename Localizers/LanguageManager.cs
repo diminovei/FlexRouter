@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.XPath;
+using FlexRouter.Helpers;
 
 namespace FlexRouter.Localizers
 {
@@ -87,6 +88,8 @@ namespace FlexRouter.Localizers
         EditorAccessDescriptorIsAlreadyInList,
         EditorSelectAnItemFirst,
         EditorDependentAssignmentWasRemoved,
+        EditorCloneAccessDescriptor,
+        EditorCloneVariable,
 
         EditorTypeMemoryMultistate,
         EditorTypeMemoryIndicator,

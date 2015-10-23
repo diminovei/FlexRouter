@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Drawing.Printing;
+using System.Globalization;
 using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.Helpers;
@@ -6,6 +7,9 @@ using FlexRouter.Localizers;
 
 namespace FlexRouter.ProfileItems
 {
+    /// <summary>
+    /// Панель (объединяющая сущность)
+    /// </summary>
     public class Panel
     {
         public string GetNameOfProfileItemType()
@@ -15,14 +19,29 @@ namespace FlexRouter.ProfileItems
         public int Id;
         public string Name;
         private string _powerFormula;
-
+        /// <summary>
+        /// Конструктор, вызывамый при загрузке панели из профиля
+        /// </summary>
+        /// <param name="id">идентификатор панели</param>
         private Panel(int id)
         {
             Id = id;
         }
+        /// <summary>
+        /// Конструктор, вызываемый при создании новой панели
+        /// </summary>
         public Panel()
         {
             Id = GlobalId.GetNew();
+        }
+
+        public int GetId()
+        {
+            return Id;
+        }
+        public void SetId(int id)
+        {
+            Id = id;
         }
         public string GetPowerFormula()
         {
@@ -50,6 +69,12 @@ namespace FlexRouter.ProfileItems
             var powerFormula = reader.GetAttribute("PowerFormula", reader.NamespaceURI);
             panel.SetPowerFormula(powerFormula);
             return panel;
+        }
+
+        public Panel GetCopy()
+        {
+            var item = (Panel)MemberwiseClone();
+            return item;
         }
     }
 }

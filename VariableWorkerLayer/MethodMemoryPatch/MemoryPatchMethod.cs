@@ -1,45 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
-using FlexRouter.VariableSynchronization;
 
 namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
 {
-    /// <summary>
-    /// Коды ошибок при установке/чтении переменной в памяти
-    /// </summary>
-    public enum MemoryVariableGetSetErrorCode
-    {
-        Ok,                     // Операция прошла успешно
-        ModuleNotFound,         // Модуль, в котором находится переменная не найден
-        OffsetIsOutOfModule,    // Смещение выходит за размеры модуля
-        SetError,               // Не удалось установить переменную
-        Unknown                 // Неизвестная ошибка
-    }
-    /// <summary>
-    /// Результат установки значения переменной или получения значения переменной в памяти
-    /// </summary>
-    public struct ManageMemoryVariableResult
-    {
-        public MemoryVariableGetSetErrorCode Code;  // Код ошибки
-        public string ErrorMessage;                 // Текст ошибки/исключения
-        public double Value;                        // Полученое/установленное значение
-    }
-    /// <summary>
-    /// Возвращаемое значение для преобразования абсолютного смещения в относительное
-    /// </summary>
-    public struct ModuleAndOffset
-    {
-        public string ModuleName;   // Имя модуля
-        public uint Offset;         // Смещение в модуле
-    }
     /// <summary>
     /// Класс для чтения/установки значений в памяти процесса
     /// </summary>
     public class MemoryPatchMethod
     {
-        #region Imports
         [DllImport("Kernel32.dll")]
         public static extern IntPtr OpenProcess(ProcessAccessFlags dwDesiredAccess, bool bInheritHandle, Int32 dwProcessId);
 
@@ -58,64 +29,26 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
         [return: MarshalAs(UnmanagedType.I1)]
         static extern bool CloseHandle(IntPtr hObject);
 
-
-        [Flags]
-        public enum ProcessAccessFlags : uint
-        {
-            All = 0x001F0FFF,
-            Terminate = 0x00000001,
-            CreateThread = 0x00000002,
-            VmOperation = 0x00000008,
-            VmRead = 0x00000010,
-            VmWrite = 0x00000020,
-            DupHandle = 0x00000040,
-            SetInformation = 0x00000200,
-            QueryInformation = 0x00000400,
-            Synchronize = 0x00100000
-        }
-        #endregion
         /// <summary>
-        /// Информация о модуле симулятора для метода MemoryPatch
+        /// Список найденных в процессе модулей
         /// </summary>
-        internal struct ModuleInfo
-        {
-            public string Name;         // Имя модуля (gau)
-            public IntPtr BaseAddress;  // Адрес, куда загружен модуль
-            public uint Size;            // Размер модуля в памяти
-        }
         private readonly Dictionary<string, ModuleInfo> _modules = new Dictionary<string, ModuleInfo>();
-        private int _mainModuleProcessId;
-        private string _moduleExtensionFilter;
-        private DateTime _lastTimeTryToInitialize = DateTime.Now;
-/*        /// <summary>
-        /// Загружен ли модуль (для проверки загружен ли самолёт)
+        /// <summary>
+        /// ID процесса с которым работет класс
         /// </summary>
-        /// <param name="mainModuleName"></param>
-        /// <param name="moduleToCheckName"></param>
-        /// <returns></returns>
-        public bool CheckModulePresence(string mainModuleName, string moduleToCheckName)
-        {
-            if (_modules.ContainsKey(moduleToCheckName))
-                return true;
-            return Initialize(mainModuleName, _moduleExtensionFilter) && _modules.ContainsKey(moduleToCheckName);
-        }*/
+        private int _mainModuleProcessId;
+        /// <summary>
+        /// Дата и время последней попытки инициализации. Защита от слишком частых попыток
+        /// </summary>
+        private DateTime _lastTimeTryToInitialize = DateTime.MinValue;
 
-        public enum InitializationStatus
-        {
-            Ok,
-            AttemptToInitializeTooOften,
-            ModuleToPatchWasNotFound,
-            Exception
-        }
-
-        private InitializationState _lastInitStatus = null;
+        private InitializationState _lastInitStatus;
         /// <summary>
         /// Инициализация информации о модулях
         /// </summary>
         /// <param name="mainModuleName">главный модуль симулятора (fs9.exe)</param>
-        /// <param name="moduleExtensionFilter">расширение, которое соответствует приборам</param>
         /// <returns>true - simulator was found</returns>
-        public InitializationState Initialize(string mainModuleName, string moduleExtensionFilter)
+        public InitializationState Initialize(string mainModuleName)
         {
             const string systemName = "MemoryPatcher";
             // Без этого процессор грузится на 50%, пока симулятор не загружен
@@ -137,7 +70,6 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
             {
                 lock (_modules)
                 {
-                    _moduleExtensionFilter = moduleExtensionFilter;
                     _modules.Clear();
                     var runningProcesses = Process.GetProcesses();
                     foreach (var process in runningProcesses)
@@ -147,15 +79,14 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
                         _mainModuleProcessId = process.Id;
                         for (var i = 0; i < process.Modules.Count; i++)
                         {
-                            if (!process.Modules[i].ModuleName.ToLower().EndsWith(_moduleExtensionFilter.ToLower()))
-                                continue;
                             var info = new ModuleInfo
                             {
                                 BaseAddress = process.Modules[i].BaseAddress,
                                 Size = (uint)process.Modules[i].ModuleMemorySize,
                                 Name = process.Modules[i].ModuleName
                             };
-                            _modules.Add(info.Name, info);
+                            if(!_modules.ContainsKey(info.Name))
+                                _modules.Add(info.Name, info);
                         }
                         process.Close();
                         
@@ -190,16 +121,15 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
                 return _lastInitStatus;
             }
         }
+        /// <summary>
+        /// Получить список найденных модулей
+        /// </summary>
+        /// <returns></returns>
         public string[] GetModulesList()
         {
             lock (_modules)
             {
-                var modules = new List<string>();
-                foreach (var moduleInfo in _modules)
-                {
-                    modules.Add(moduleInfo.Value.Name);
-                }
-                return modules.ToArray();
+                return _modules.Select(moduleInfo => moduleInfo.Value.Name).ToArray();
             }
         }
         /// <summary>
@@ -239,25 +169,23 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
                 if (!_modules.ContainsKey(moduleName))
                     return new ManageMemoryVariableResult
                     {
-                        Code = MemoryVariableGetSetErrorCode.ModuleNotFound,
+                        Code = MemoryPatchVariableErrorCode.ModuleNotFound,
                         ErrorMessage = moduleName
                     };
                 if ((int)_modules[moduleName].BaseAddress + _modules[moduleName].Size < moduleOffset)
                     return new ManageMemoryVariableResult
                     {
-                        Code = MemoryVariableGetSetErrorCode.OffsetIsOutOfModule
+                        Code = MemoryPatchVariableErrorCode.OffsetIsOutOfModule
                     };
                 try
                 {
                     var baseOffset = (IntPtr)((int)_modules[moduleName].BaseAddress + moduleOffset);
-                    var hProcess = OpenProcess(
-                            ProcessAccessFlags.VmOperation | ProcessAccessFlags.QueryInformation | ProcessAccessFlags.VmRead |
-                            ProcessAccessFlags.VmWrite, false, _mainModuleProcessId);
+                    var hProcess = OpenProcess(ProcessAccessFlags.VmOperation | ProcessAccessFlags.QueryInformation | ProcessAccessFlags.VmRead | ProcessAccessFlags.VmWrite, false, _mainModuleProcessId);
                     if (hProcess == IntPtr.Zero)
                     {
                         return new ManageMemoryVariableResult
                         {
-                            Code = MemoryVariableGetSetErrorCode.ModuleNotFound,
+                            Code = MemoryPatchVariableErrorCode.OpenProcessError,
                             Value = 0
                         };
                     }
@@ -270,7 +198,7 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
                     CloseHandle(hProcess);
                     return new ManageMemoryVariableResult
                     {
-                        Code = res ? MemoryVariableGetSetErrorCode.Ok : MemoryVariableGetSetErrorCode.SetError,
+                        Code = res ? MemoryPatchVariableErrorCode.Ok : MemoryPatchVariableErrorCode.WriteError,
                         Value = valueToSet
                     };
                 }
@@ -278,7 +206,7 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
                 {
                     return new ManageMemoryVariableResult
                     {
-                        Code = MemoryVariableGetSetErrorCode.Unknown,
+                        Code = MemoryPatchVariableErrorCode.Unknown,
                         ErrorMessage = ex.Message
                     };
                 }
@@ -296,16 +224,22 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
             lock (_modules)
             {
                 if (!_modules.ContainsKey(moduleName))
+                {
                     return new ManageMemoryVariableResult
                     {
-                        Code = MemoryVariableGetSetErrorCode.ModuleNotFound,
+                        Code = MemoryPatchVariableErrorCode.ModuleNotFound,
                         ErrorMessage = moduleName
                     };
-                if ((int)_modules[moduleName].BaseAddress + _modules[moduleName].Size < moduleOffset)
+                }
+                
+                if ((int) _modules[moduleName].BaseAddress + _modules[moduleName].Size < moduleOffset)
+                {
                     return new ManageMemoryVariableResult
                     {
-                        Code = MemoryVariableGetSetErrorCode.OffsetIsOutOfModule
+                        Code = MemoryPatchVariableErrorCode.OffsetIsOutOfModule
                     };
+                }
+
                 try
                 {
                     var baseOffset = (IntPtr)((int)_modules[moduleName].BaseAddress + moduleOffset);
@@ -314,7 +248,7 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
                     {
                         return new ManageMemoryVariableResult
                         {
-                            Code = MemoryVariableGetSetErrorCode.ModuleNotFound,
+                            Code = MemoryPatchVariableErrorCode.OpenProcessError,
                             Value = 0
                         };
                     }
@@ -327,14 +261,14 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
                     {
                         return new ManageMemoryVariableResult
                         {
-                            Code = MemoryVariableGetSetErrorCode.ModuleNotFound,
+                            Code = MemoryPatchVariableErrorCode.ReadError,
                             Value = 0
                         };
                     }
                     var result = varConverter.ArrayToValue(buffer, variableSize);
                     return new ManageMemoryVariableResult
                     {
-                        Code = MemoryVariableGetSetErrorCode.Ok,
+                        Code = MemoryPatchVariableErrorCode.Ok,
                         Value = result
                     };
                 }
@@ -342,7 +276,7 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
                 {
                     return new ManageMemoryVariableResult
                     {
-                        Code = MemoryVariableGetSetErrorCode.Unknown,
+                        Code = MemoryPatchVariableErrorCode.Unknown,
                         ErrorMessage = ex.Message
                     };
                 }

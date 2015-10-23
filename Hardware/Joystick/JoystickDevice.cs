@@ -112,6 +112,8 @@ namespace FlexRouter.Hardware.Joystick
                 }
                 _joystickThread.Join();
                 _joystick.Unacquire();
+                _joystick.Dispose();
+                _directInput.Dispose();
             }
             catch (Exception)
             {

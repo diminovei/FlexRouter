@@ -24,7 +24,7 @@ namespace FlexRouter
 //                                PanelId = panelId2,
 //                                Description = "Тестовая переменная 1\nНовая строка"
 //                            };
-//                        var var1Id = RegisterVariable(mpv, true);
+//                        var var1Id = StoreVariable(mpv, true);
 
 //                        var mpv1 = new MemoryPatchVariable
 //                            {
@@ -35,7 +35,7 @@ namespace FlexRouter
 //                                PanelId = panelId3,
 //                                Description = "Тестовая переменная 2\nНовая строка"
 //                            };
-//                        var var2Id = RegisterVariable(mpv1, true);
+//                        var var2Id = StoreVariable(mpv1, true);
 //                        var fv2 = new FsuipcVariable
 //                            {
 //                                Offset = 0x342,
@@ -44,7 +44,7 @@ namespace FlexRouter
 //                                PanelId = panelId3,
 //                                Description = "Тестовая переменная 3\nНовая строка"
 //                            };
-//                        var var3Id = RegisterVariable(fv2, true);
+//                        var var3Id = StoreVariable(fv2, true);
 
 //                        var mpv2 = new MemoryPatchVariable
 //                            {
@@ -65,8 +65,8 @@ namespace FlexRouter
 //                                Description = "111"
 //                            };
 
-//                        var var5Id = RegisterVariable(mpv3, true);
-//                        var var4Id = RegisterVariable(mpv2, true);
+//                        var var5Id = StoreVariable(mpv3, true);
+//                        var var4Id = StoreVariable(mpv2, true);
             
 
 //            // Button
@@ -167,8 +167,8 @@ namespace FlexRouter
 //                   mpv1.Size = MemoryVariableSize.EightByteFloat;
 
 
-//                   var id = variableMeanager.RegisterVariable(mpv, true);
-//                   var id1 = variableMeanager.RegisterVariable(mpv1, true);
+//                   var id = variableMeanager.StoreVariable(mpv, true);
+//                   var id1 = variableMeanager.StoreVariable(mpv1, true);
 
 //                   variableMeanager.Start();
 //                   double res = 0;

@@ -123,7 +123,6 @@ namespace FlexRouter.ControlProcessors
             };
             _assignments.Add(b);
         }
-
         internal enum LastState
         {
             None,

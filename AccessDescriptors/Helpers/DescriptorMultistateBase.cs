@@ -9,13 +9,13 @@ namespace FlexRouter.AccessDescriptors.Helpers
 {
     public abstract class DescriptorMultistateBase : DescriptorBase
     {
-        protected List<AccessDescriptorState> StateDescriptors = new List<AccessDescriptorState>();
+        protected List<Connector> StateDescriptors = new List<Connector>();
         protected List<int> UsedVariables = new List<int>();
         /// <summary>
         /// Перезаписать состояния после изменений в редакторе
         /// </summary>
         /// <param name="states"></param>
-        public void OverwriteStates(List<AccessDescriptorState> states)
+        public void OverwriteStates(List<Connector> states)
         {
             StateDescriptors = states;
             //ToDo: renew states in control Processor
@@ -52,7 +52,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
             var readerAdd = reader.Select("States/State");
             while (readerAdd.MoveNext())
             {
-                var ads = new AccessDescriptorState();
+                var ads = new Connector();
                 ads.Id = int.Parse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI));
                 ads.Name = readerAdd.Current.GetAttribute("Name", readerAdd.Current.NamespaceURI);
                 ads.Order = int.Parse(readerAdd.Current.GetAttribute("Order", readerAdd.Current.NamespaceURI));
@@ -128,13 +128,13 @@ namespace FlexRouter.AccessDescriptors.Helpers
         /// Добавить состояние
         /// </summary>
         /// <param name="name">Имя состояния</param>
-        public AccessDescriptorState AddState(string name)
+        public Connector AddState(string name)
         {
             if (StateDescriptors.Any(s => s.Name == name))
                 return null;
             var nextOrder = StateDescriptors.Count == 0 ? 0 : StateDescriptors.Select(i => i.Order).OrderBy(i => i).Max() + 1;
             var nextKey = StateDescriptors.Count == 0 ? 0 : StateDescriptors.Select(i => i.Id).OrderBy(i => i).Max() + 1;
-            var accessDescriptorState = new AccessDescriptorState
+            var accessDescriptorState = new Connector
             {
                 Id = nextKey,
                 Name = name,
@@ -190,7 +190,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
         /// Получить все состояния
         /// </summary>
         /// <returns></returns>
-        public AccessDescriptorState[] GetStateDescriptors()
+        public Connector[] GetStateDescriptors()
         {
             return StateDescriptors.ToArray();
         }

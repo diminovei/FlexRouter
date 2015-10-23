@@ -1,7 +1,8 @@
 ﻿namespace FlexRouter.AccessDescriptors.Helpers
 {
-    interface IAccessDescriptor
+    public interface IAccessDescriptor
     {
         string GetDescriptorType();
+        DescriptorBase GetCopy();
     }
 }

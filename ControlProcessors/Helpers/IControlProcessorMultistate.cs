@@ -12,6 +12,6 @@ namespace FlexRouter.ControlProcessors.Helpers
         /// Список состояний изменился, нужно удалить назначения для несуществующих состояний, добавить новые и обновить существующие
         /// </summary>
         /// <param name="states"></param>
-        void RenewStatesInfo(IEnumerable<AccessDescriptorState> states);
+        void RenewStatesInfo(IEnumerable<Connector> states);
     }
 }

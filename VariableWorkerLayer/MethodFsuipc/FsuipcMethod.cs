@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using FsuipcSdk;
 
 namespace FlexRouter.VariableWorkerLayer.MethodFsuipc
@@ -25,7 +24,7 @@ namespace FlexRouter.VariableWorkerLayer.MethodFsuipc
         private readonly Fsuipc _fsuipc = new Fsuipc();	// Our main fsuipc object!
         private int _dwResult = -1;				// Variable to hold returned results
         private InitializationState _lastInitStatus;
-        private DateTime _lastTimeTryToInitialize = DateTime.Now;
+        private DateTime _lastTimeTryToInitialize = DateTime.MinValue;
         public InitializationState Initialize()
         {
             const string systemName = "FSUIPC";
@@ -113,7 +112,7 @@ namespace FlexRouter.VariableWorkerLayer.MethodFsuipc
         {
             _fsuipc.FSUIPC_Close();
         }
-        
+
         public bool AddVariableToRead(FsuipcVariable variable)
         {
             var varConverter = new VariableConverter();
@@ -128,7 +127,6 @@ namespace FlexRouter.VariableWorkerLayer.MethodFsuipc
             var varConverter = new VariableConverter();
             var convertedVariableSize = varConverter.ConvertSize(variable.GetVariableSize());
             _fsuipcVariablesForWrite[variable.Id] = new InternalVariableDesc(ref variable);
-
             _fsuipcVariablesForWrite[variable.Id].Buffer = varConverter.ValueToArray((double)variable.GetValueToSet(), variable.GetVariableSize());
             var result = _fsuipc.FSUIPC_Write(variable.Offset, convertedVariableSize, ref _fsuipcVariablesForWrite[variable.Id].Buffer, ref _fsuipcVariablesForWrite[variable.Id].Token, ref _dwResult);
             return result;
@@ -144,6 +142,12 @@ namespace FlexRouter.VariableWorkerLayer.MethodFsuipc
                 _fsuipc.FSUIPC_Get(ref variable.Value.Token, convertedVariableSize, ref variable.Value.Buffer);
                 variable.Value.Variable.SetValueInMemory(varConverter.ArrayToValue(variable.Value.Buffer, variable.Value.Variable.GetVariableSize()));
             }
+        }
+
+        public void Prepare()
+        {
+            _fsuipcVariablesForRead.Clear();
+            _fsuipcVariablesForWrite.Clear();
         }
         public double? GetValue(int id)
         {

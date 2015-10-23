@@ -3,7 +3,9 @@ using System.Globalization;
 using System.Linq;
 using System.Windows;
 using FlexRouter.EditorsUI.Helpers;
+using FlexRouter.Helpers;
 using FlexRouter.Localizers;
+using FlexRouter.ProfileItems;
 using FlexRouter.VariableWorkerLayer;
 using FlexRouter.VariableWorkerLayer.MethodMemoryPatch;
 
@@ -82,7 +84,7 @@ namespace FlexRouter.EditorsUI.VariableEditors
                 return;
             }
 
-            var result = VariableManager.ConvertAbsoleteOffsetToRelative(offset);
+            var result = Profile.VariableStorage.ConvertAbsoleteOffsetToRelative(offset);
             if(result == null)
             {
                 var message = LanguageManager.GetPhrase(Phrases.EditorMessageAbsoluteOffsetIsOutOfModule);
@@ -104,7 +106,7 @@ namespace FlexRouter.EditorsUI.VariableEditors
         private void FillModulesList()
         {
             var currentText = _moduleName.Text;
-            var modules = VariableManager.GetModulesList().OrderBy(x => x);
+            var modules = Profile.VariableStorage.GetModulesList().OrderBy(x => x);
             _moduleName.Items.Clear();
             foreach (var m in modules)
                 _moduleName.Items.Add(m);

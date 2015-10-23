@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using FlexRouter.Hardware;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
-using FlexRouter.Helpers;
 using FlexRouter.MessagesToMainForm;
 using FlexRouter.ProfileItems;
 
@@ -80,20 +81,32 @@ namespace FlexRouter
         }
         private void ThreadLoop()
         {
-            var counter = 0;
+            //var counter = 0;
+            var stopwatch = new Stopwatch();
             while (true)
             {
                 if (_mode == Mode.Stop || _mode == Mode.Pause)
                     return;
+                stopwatch.Start();
+                Profile.VariableStorage.SynchronizeVariables();
                 Work();
-                counter++;
-                if (counter > 30)
+                //counter++;
+                //if (counter > 30)
+                //{
+                //    counter = 0;
+                //    if (!ApplicationSettings.ControlsSynchronizationIsOff)
+                //        SoftDump();
+                //}
+                if ((!ApplicationSettings.ControlsSynchronizationIsOff) != Profile.VariableStorage.IsResistVariableChangesFromOutsideModeOn())
                 {
-                    counter = 0;
+                    Profile.VariableStorage.SetResistVariableChangesFromOutsideMode(!ApplicationSettings.ControlsSynchronizationIsOff);
                     if (!ApplicationSettings.ControlsSynchronizationIsOff)
                         SoftDump();
                 }
-                Thread.Sleep(100);
+                    
+                stopwatch.Stop();
+                if(stopwatch.ElapsedMilliseconds < 200)
+                    Thread.Sleep(200-(int)stopwatch.ElapsedMilliseconds);
             }
         }
         private void SoftDump()

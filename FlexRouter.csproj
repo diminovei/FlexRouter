@@ -89,7 +89,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="AccessDescriptors\Helpers\AccessDescriptorState.cs" />
+    <Compile Include="AccessDescriptors\Helpers\Connector.cs" />
     <Compile Include="AccessDescriptors\Helpers\DescriptorBase.cs" />
     <Compile Include="AccessDescriptors\DescriptorBinaryOutput.cs" />
     <Compile Include="AccessDescriptors\DescriptorRange.cs" />
@@ -231,12 +231,11 @@
     <Compile Include="MessagesToMainForm\ObjectMessage.cs" />
     <Compile Include="MessagesToMainForm\SimpleMessage.cs" />
     <Compile Include="MessagesToMainForm\TextMessage.cs" />
-    <Compile Include="PanelStorage.cs" />
+    <Compile Include="ProfileItems\PanelStorage.cs" />
     <Compile Include="Problems\Problem.cs" />
     <Compile Include="Problems\ProblemHideOnFixOptions.cs" />
     <Compile Include="Problems\Problems.cs" />
     <Compile Include="Helpers\WpfBitmapConverter.cs" />
-    <Compile Include="ProfileClasses.cs" />
     <Compile Include="ProfileItems\ITreeItem.cs" />
     <Compile Include="ProfileItems\Panel.cs" />
     <Compile Include="EditorsUI\AccessDescriptorsEditor\DescriptorFormulaEditor.xaml.cs">
@@ -283,6 +282,7 @@
     <Compile Include="RouterState.cs" />
     <Compile Include="TreeItem.cs" />
     <Compile Include="TreeItemType.cs" />
+    <Compile Include="VariableWorkerLayer\InitializationState.cs" />
     <Compile Include="VariableWorkerLayer\MemoryVariableBase.cs" />
     <Compile Include="VariableWorkerLayer\MethodClick\ClickMacroProcessor.cs" />
     <Compile Include="VariableWorkerLayer\MethodClick\ClickMethodForFs2004.cs" />
@@ -293,10 +293,18 @@
     <Compile Include="VariableWorkerLayer\MethodFsuipc\FsuipcVariable.cs" />
     <Compile Include="VariableWorkerLayer\IVariable.cs" />
     <Compile Include="VariableWorkerLayer\IMemoryVariable.cs" />
+    <Compile Include="VariableWorkerLayer\MethodMemoryPatch\InitializationStatus.cs" />
+    <Compile Include="VariableWorkerLayer\MethodMemoryPatch\ManageMemoryVariableResult.cs" />
     <Compile Include="VariableWorkerLayer\MethodMemoryPatch\MemoryPatchMethod.cs" />
     <Compile Include="VariableWorkerLayer\MethodMemoryPatch\MemoryPatchVariable.cs" />
     <Compile Include="VariableWorkerLayer\MemoryVariableSize.cs" />
     <Compile Include="VariableWorkerLayer\MethodClick\FsWindow.cs" />
+    <Compile Include="VariableWorkerLayer\MethodMemoryPatch\MemoryPatchVariableErrorCode.cs" />
+    <Compile Include="VariableWorkerLayer\MethodMemoryPatch\ModuleAndOffset.cs" />
+    <Compile Include="VariableWorkerLayer\MethodMemoryPatch\ModuleInfo.cs" />
+    <Compile Include="VariableWorkerLayer\MethodMemoryPatch\ProcessAccessFlags.cs" />
+    <Compile Include="VariableWorkerLayer\ProcessVariableError.cs" />
+    <Compile Include="VariableWorkerLayer\ReadVariableResult.cs" />
     <Compile Include="VariableWorkerLayer\VariableBase.cs" />
     <Compile Include="VariableWorkerLayer\VariableConverter.cs" />
     <Compile Include="VariableWorkerLayer\VariableManager.cs" />

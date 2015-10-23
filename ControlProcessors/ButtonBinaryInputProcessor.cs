@@ -14,11 +14,10 @@ namespace FlexRouter.ControlProcessors
 {
     class ButtonBinaryInputProcessor : ControlProcessorBase<IDescriptorMultistate>, ICollector, IControlProcessorMultistate
     {
-       
         // ToDo: можно сделать Dictionary
         private class AccessDescriptorStateAssignment
         {
-            internal AccessDescriptorState State = new AccessDescriptorState();
+            internal Connector State = new Connector();
             internal string Assignment;
             public Assignment GetAsAssignment()
             {
@@ -94,12 +93,12 @@ namespace FlexRouter.ControlProcessors
             }
         }
 
-        public void RenewStatesInfo(IEnumerable<AccessDescriptorState> states)
+        public void RenewStatesInfo(IEnumerable<Connector> states)
         {
             // Обновляем изменившиеся состояния
             // Добавляем появившиеся состояния
             // ToDo: не забыть сохранить из AccessDescriptor
-            var accessDescriptorStates = states as AccessDescriptorState[] ?? states.ToArray();
+            var accessDescriptorStates = states as Connector[] ?? states.ToArray();
             foreach (var s in accessDescriptorStates)
             {
                 var found = false;

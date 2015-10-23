@@ -1,15 +1,13 @@
 ﻿using System.Drawing;
 using System.Globalization;
 using System.Linq;
-using System.Windows.Navigation;
 using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.CalculatorRelated;
-using FlexRouter.CalculatorRelated.Tokens;
 using FlexRouter.Localizers;
-using FlexRouter.VariableWorkerLayer;
+using FlexRouter.ProfileItems;
 
 namespace FlexRouter.AccessDescriptors
 {
@@ -58,7 +56,7 @@ namespace FlexRouter.AccessDescriptors
                     return;
                 var formulaResult = CalculatorE.ComputeFormula(formula);
                 if (formulaResult.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.DoubleResult)
-                    VariableManager.WriteValue(varId, formulaResult.CalculatedDoubleValue);
+                    Profile.VariableStorage.WriteValue(varId, formulaResult.CalculatedDoubleValue);
             }
         }
         /// <summary>

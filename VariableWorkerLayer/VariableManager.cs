@@ -1,369 +1,282 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
-using System.Threading;
 using System.Xml;
 using FlexRouter.Helpers;
 using FlexRouter.ProfileItems;
 using FlexRouter.VariableWorkerLayer.MethodFakeVariable;
 using FlexRouter.VariableWorkerLayer.MethodFsuipc;
 using FlexRouter.VariableWorkerLayer.MethodMemoryPatch;
-using SlimDX.XInput;
 
 namespace FlexRouter.VariableWorkerLayer
 {
-    public class ReadVariableResult
+    public class VariableManager
     {
-        public double Value;
-        public ProcessVariableError Error;
-    }
+        private readonly Dictionary<int, IVariable> _variables = new Dictionary<int, IVariable>();
+        private readonly MemoryPatchMethod _memoryPatchMethodInstance = new MemoryPatchMethod();
+        private readonly FsuipcMethod _fsuipcMethodInstance = new FsuipcMethod();
+        private readonly List<string> _notFoundModules = new List<string>();
+        private bool _resistVariableChangesFromOutsideModeOn;
+        private InitializationState _memoryPatchState;
+        private InitializationState _fsuipcState;
 
-    public enum ProcessVariableError
-    {
-        Ok,
-        IdIsNotExist,
-        CantProcessWithThisVarType,
-        NotInitialized
-    }
-
-    public class InitializationState
-    {
-        public bool IsOk;
-        public string System;
-        public int ErrorCode;
-        public string ErrorMessage;
-    }
-    public static class VariableManager
-    {
-        private static readonly Dictionary<int, IVariable> Variables = new Dictionary<int, IVariable>();
-        private static readonly MemoryPatchMethod MemoryPatchMethodInstance = new MemoryPatchMethod();
-        private static readonly FsuipcMethod FsuipcMethodInstance = new FsuipcMethod();
-        private static Thread _syncThread;
-        private static bool _stopThread;
-        private static readonly object ThreadLocker = new object();
-        private static readonly ObservableCollection<InitializationState> InitializationStatus = new ObservableCollection<InitializationState>();
-
-        public static InitializationState[] GetInitializationStatus()
+        private void InitializeMemoryPatchMethod()
         {
-            lock (ThreadLocker)
-            {
-                return InitializationStatus.ToArray();    
-            }
-        }
-        public static void Initialize()
-        {
-            lock (ThreadLocker)
-            {
-                InitializationStatus.Clear();
-                var iStatus  = MemoryPatchMethodInstance.Initialize(Profile.GetMainManagedProcessName(), Profile.GetModuleExtensionFilter());
-                InitializationStatus.Add(iStatus);
-                Problems.AddOrUpdateProblem(iStatus.System, iStatus.ErrorMessage, ProblemHideOnFixOptions.HideDescription, iStatus.IsOk);
-                var fsuipcStatus = FsuipcMethodInstance.Initialize();
-                InitializationStatus.Add(fsuipcStatus);
-                Problems.AddOrUpdateProblem(fsuipcStatus.System, fsuipcStatus.ErrorMessage, ProblemHideOnFixOptions.HideDescription, fsuipcStatus.IsOk);
-            }
+            if (_memoryPatchState != null)
+                Problems.AddOrUpdateProblem(_memoryPatchState.System, _memoryPatchState.ErrorMessage, ProblemHideOnFixOptions.HideDescription, true);
+            _memoryPatchState = _memoryPatchMethodInstance.Initialize(Profile.GetMainManagedProcessName());
+            Problems.AddOrUpdateProblem(_memoryPatchState.System, _memoryPatchState.ErrorMessage, ProblemHideOnFixOptions.HideDescription, _memoryPatchState.IsOk);
         }
 
-        public static string GetVariableAndPanelNameById(int id)
+        private void InitializeFsuipcMethod()
         {
-            var variable = Profile.GetVariableById(id);
-            var variableName = variable.Name;
-            var panel = Profile.GetPanelById(variable.PanelId);
-            return panel.Name + "." + variableName;
+            if (_fsuipcState != null)
+                Problems.AddOrUpdateProblem(_fsuipcState.System, _fsuipcState.ErrorMessage, ProblemHideOnFixOptions.HideDescription, true);
+            _fsuipcState = _fsuipcMethodInstance.Initialize();
+            Problems.AddOrUpdateProblem(_fsuipcState.System, _fsuipcState.ErrorMessage, ProblemHideOnFixOptions.HideDescription, _fsuipcState.IsOk);
+        }
+
+        private void Initialize()
+        {
+            InitializeMemoryPatchMethod();
+            InitializeFsuipcMethod();
         }
         /// <summary>
-        /// GetSameVariablesNames
+        /// Сопротивляться ли изменению переменных извне
         /// </summary>
-        /// <param name="variable"></param>
-        /// <returns>null - такие же переменные не существуют</returns>
-        public static string GetSameVariablesNames(IVariable variable)
+        /// <param name="isOn">true - сопротивляться</param>
+        public void SetResistVariableChangesFromOutsideMode(bool isOn)
         {
-            var varNames = Variables.Where(v => v.Value.IsEqualTo(variable) && v.Key!=variable.Id).Aggregate(string.Empty, (current, v) => current + (GetVariableAndPanelNameById(v.Key) + Environment.NewLine));
-            return string.IsNullOrEmpty(varNames) ? null : varNames;
+            _resistVariableChangesFromOutsideModeOn = isOn;
         }
-
-/*        static ~VariableManager()
-        {
-            if (_initialized)
-                _fsuipcMethodInstance.UnInitialize();
-            _initialized = false;
-        }*/
-
         /// <summary>
-        /// Стартовать процесс синхронизации переменных
+        /// Сопротивляться ли изменению переменных извне
         /// </summary>
-        public static void Start()
+        public bool IsResistVariableChangesFromOutsideModeOn()
         {
-            if (_syncThread != null)
-                if (_syncThread.IsAlive)
-                    return;
-            lock (ThreadLocker)
-            {
-                _stopThread = false;
-            }
-            _syncThread = new Thread(SynchronizeVariables);
-            _syncThread.Start();
+            return _resistVariableChangesFromOutsideModeOn;
         }
-
+        public string[] GetModulesList()
+        {
+            return _memoryPatchMethodInstance.GetModulesList();
+        }
+        public ModuleAndOffset? ConvertAbsoleteOffsetToRelative(uint absoluteOffset)
+        {
+            return _memoryPatchMethodInstance.ConvertAbsoleteToModuleOffset(absoluteOffset);
+        }
         /// <summary>
-        /// Остановить процесс синхронизации переменных
+        /// Синхронизировать переменные (значения, предназначенные для записи записать, значения переменных прочитать)
         /// </summary>
-        public static void Stop()
+        public void SynchronizeVariables()
         {
-            if (_syncThread == null)
-                return;
-            if (!_syncThread.IsAlive)
-                return;
-            lock (ThreadLocker)
+            _notFoundModules.Clear();
+            _fsuipcMethodInstance.Prepare();
+            foreach (var variable in _variables.Values)
             {
-                _stopThread = true;
+                if (variable is FakeVariable)
+                    SynchronizeFakeVariable(variable as FakeVariable);
+                if (variable is MemoryPatchVariable)
+                    SynchronizeMemoryPatchVariable(variable as MemoryPatchVariable);
+                if (variable is FsuipcVariable)
+                    SynchronizeFsuipcVariable(variable as FsuipcVariable);
             }
-            _syncThread.Join();
-        }
-        public static string[] GetModulesList()
-        {
-            return MemoryPatchMethodInstance.GetModulesList();
-        }
-        public static ModuleAndOffset? ConvertAbsoleteOffsetToRelative(uint absoluteOffset)
-        {
-            return MemoryPatchMethodInstance.ConvertAbsoleteToModuleOffset(absoluteOffset);
-        }
-        private static readonly List<string> NotFoundModules = new List<string>();
-        private static void SynchronizeVariables()
-        {
-            while (true)
+            _fsuipcMethodInstance.Process();
+            foreach (var variable in _variables.Values.OfType<FsuipcVariable>())
             {
-                lock (ThreadLocker)
-                {
-                    if (_stopThread)
-                        return;
+                variable.SetValueInMemory(_fsuipcMethodInstance.GetValue(variable.Id));
+                //if (!_resistVariableChangesFromOutsideModeOn && variable.GetValueToSet() == variable.GetPrevValueToSet())
+                //{
+                //    variable.SetValueToSet(variable.GetValueInMemory());
+                //    variable.SetPrevValueToSet(variable.GetValueInMemory());
+                //}
+            }
+                
+            var modules = string.Empty;
+            foreach (var nfm in _notFoundModules)
+            {
+                if (modules.Length != 0)
+                    modules += ", ";
+                modules += nfm;
+            }
 
-                    NotFoundModules.Clear();
-                    foreach (var variable in Variables.Values)
-                    {
-                        if (variable is FakeVariable)
-                            SynchronizeFakeVariable(variable as FakeVariable);
-                        if (variable is MemoryPatchVariable)
-                            SynchronizeMemoryPatchVariable(variable as MemoryPatchVariable);
-                        if (variable is FsuipcVariable)
-                            SynchronizeFsuipcVariable(variable as FsuipcVariable);
-                    }
-                    FsuipcMethodInstance.Process();
-                    foreach (var variable in Variables.Values.OfType<FsuipcVariable>())
-                    {
-                        GetFsuipcVariableValue(variable);
-                    }
-                }
-                var modules = string.Empty;
-                foreach (var nfm in NotFoundModules)
-                {
-                    if (modules.Length != 0)
-                        modules += ", ";
-                    modules += nfm;
-                }
-
-                Problems.AddOrUpdateProblem("MemoryPatcherModules", "not found - " + modules, ProblemHideOnFixOptions.HideItemAndDescription, modules.Length == 0);
-                Thread.Sleep(100);
-            }
+            Problems.AddOrUpdateProblem("MemoryPatcherModules", "not found - " + modules, ProblemHideOnFixOptions.HideItemAndDescription, modules.Length == 0);
         }
-        public static IVariable GetVariableById(int id)
+        /// <summary>
+        /// Получить переменную по её идентификатору
+        /// </summary>
+        /// <param name="id">Иднтификатор переменной</param>
+        /// <returns></returns>
+        public IVariable GetVariableById(int id)
         {
-            lock (Variables)
-            {
-                return !Variables.ContainsKey(id) ? null : Variables[id];
-            }
+            return !_variables.ContainsKey(id) ? null : _variables[id];
         }
-        public static IEnumerable<IVariable> GetVariablesList()
+        /// <summary>
+        /// Получить все переменные
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<IVariable> GetAllVariables()
         {
-            lock (Variables)
-            {
-                return Variables.Select(v => v.Value);    
-            }
+            return _variables.Select(v => v.Value);    
         }
         /// <summary>
         /// Зарегистрировать переменную
         /// </summary>
         /// <param name="variable">Переменная</param>
-        /// <param name="generateNewId">Нужно ли генерировать новый идентификатор?</param>
-        /// <returns>идентификатор переменной или -1, если переменная с таким Id уже есть</returns>
-        public static int RegisterVariable(IVariable variable, bool generateNewId)
+        public void StoreVariable(IVariable variable)
         {
-            lock (Variables)
+            var id = variable.Id;
+            _variables[id] = variable;
+        }
+        /// <summary>
+        /// Удалить переменную
+        /// </summary>
+        /// <param name="variableId">Идентификатор переменной</param>
+        public void RemoveVariable(int variableId)
+        {
+            if (!_variables.ContainsKey(variableId))
+                return;
+            _variables.Remove(variableId);
+        }
+        public void SaveAllVariables(XmlTextWriter writer)
+        {
+            foreach (var v in _variables)
             {
-                var id = generateNewId ? Utils.GetNewId(Variables) : ((VariableBase) variable).Id;
-                if (generateNewId)
-                    ((VariableBase) variable).Id = id;
-
-                if (Variables.ContainsKey(id))
-                    return -1;
-                Variables.Add(id, variable);
-                return id;
+                writer.WriteStartElement("Variable");
+                v.Value.Save(writer);
+                writer.WriteEndElement();
+                writer.WriteString("\n");
             }
         }
-        public static void RemoveVariable(int variableId)
+        /// <summary>
+        /// Удалить все переменные
+        /// </summary>
+        public void Clear()
         {
-            lock (Variables)
-            {
-                if (!Variables.ContainsKey(variableId))
-                    return;
-                Variables.Remove(variableId);
-            }
+            _variables.Clear();
         }
-        public static void Save(XmlTextWriter writer)
+        /// <summary>
+        /// Передать значение, которое будет записано в переменную при следующей синхронизации
+        /// </summary>
+        /// <param name="varId">Идентификатор переменной</param>
+        /// <param name="value">значение</param>
+        /// <returns>Результат</returns>
+        public ProcessVariableError WriteValue(int varId, double value)
         {
-            lock (Variables)
-            {
-                foreach (var v in Variables)
-                {
-                    writer.WriteStartElement("Variable");
-                    v.Value.Save(writer);
-                    writer.WriteEndElement();
-                    writer.WriteString("\n");
-                }
-            }
+            if (!_variables.ContainsKey(varId))
+                return ProcessVariableError.IdIsNotExist;
+            var variable = (MemoryVariableBase) _variables[varId];
+            variable.SetValueToSet(value);
+            if(variable is FakeVariable)
+                variable.SetValueInMemory(value);
+            return ProcessVariableError.Ok;
         }
-        public static void Clear()
-        {
-            lock (Variables)
-            {
-                Variables.Clear();
-            }
-        }
-        public static ProcessVariableError WriteValue(int varId, double value)
-        {
-            lock (ThreadLocker)
-            {
-                if (!Variables.ContainsKey(varId))
-                    return ProcessVariableError.IdIsNotExist;
-                var variable = (MemoryVariableBase) Variables[varId];
-                variable.SetValueToSet(value);
-                if(variable is FakeVariable)
-                    variable.SetValueInMemory(value);
-                return ProcessVariableError.Ok;
-            }
-        }
-        public static ReadVariableResult ReadCachedValue(int varId)
+        /// <summary>
+        /// Прочитать значение, подготовленное к записи в переменную
+        /// </summary>
+        /// <param name="varId">Идентификатор переменной</param>
+        /// <returns></returns>
+        public ReadVariableResult ReadCachedValue(int varId)
         {
             return ReadValue(varId, true);
         }
-        public static ReadVariableResult ReadValue(int varId)
+        /// <summary>
+        /// Прочитать значение, которое было у переменной во время предыдущей синхронизации
+        /// </summary>
+        /// <param name="varId"></param>
+        /// <returns></returns>
+        public ReadVariableResult ReadValue(int varId)
         {
             return ReadValue(varId, false);
         }
-        private static ReadVariableResult ReadValue(int varId, bool getCachedValue)
+        private ReadVariableResult ReadValue(int varId, bool getCachedValue)
         {
-            lock (ThreadLocker)
+            var result = new ReadVariableResult();
+            if (!_variables.ContainsKey(varId))
             {
-                var result = new ReadVariableResult();
-                if (!Variables.ContainsKey(varId))
-                {
-                    result.Error = ProcessVariableError.IdIsNotExist;
-                    return result;
-                }
-                result.Error = ProcessVariableError.Ok;
-                var valueToSet = ((MemoryVariableBase)Variables[varId]).GetValueToSet();
-                var valueInMemory = ((MemoryVariableBase)Variables[varId]).GetValueInMemory();
-                
-                if (valueToSet == null)
-                    valueToSet = valueInMemory;
-
-                if (getCachedValue)
-                {
-                    if (valueToSet != null)
-                        result.Value = (double) valueToSet;
-                    else
-                        result.Error = ProcessVariableError.NotInitialized;
-                }
-                else
-                {
-                    if (valueInMemory != null)
-                        result.Value = (double) valueInMemory;
-                    else
-                        result.Error = ProcessVariableError.NotInitialized;
-                }
+                result.Error = ProcessVariableError.IdIsNotExist;
                 return result;
             }
+            result.Error = ProcessVariableError.Ok;
+            var valueToSet = ((MemoryVariableBase)_variables[varId]).GetValueToSet();
+            var valueInMemory = ((MemoryVariableBase)_variables[varId]).GetValueInMemory();
+                
+            if (valueToSet == null)
+                valueToSet = valueInMemory;
+
+            if (getCachedValue)
+            {
+                if (valueToSet != null)
+                    result.Value = (double) valueToSet;
+                else
+                    result.Error = ProcessVariableError.NotInitialized;
+            }
+            else
+            {
+                if (valueInMemory != null)
+                    result.Value = (double) valueInMemory;
+                else
+                    result.Error = ProcessVariableError.NotInitialized;
+            }
+            return result;
         }
-        private static void SynchronizeFakeVariable(FakeVariable fakeVariable)
+        private void SynchronizeFakeVariable(FakeVariable fakeVariable)
         {
             fakeVariable.SetValueInMemory(fakeVariable.GetValueToSet());
         }
-        private static void SynchronizeMemoryPatchVariable(MemoryPatchVariable mpv)
+        private void SynchronizeMemoryPatchVariable(MemoryPatchVariable mpv)
         {
-            lock (Variables)
+            // Если переменная не инициализирована или нет данных для записи, переменную нужно прочитать
+            if (mpv.GetValueInMemory() == null || mpv.GetValueToSet() == null)
             {
-                // Если переменная не инициализирована или нет данных для записи, переменную нужно прочитать
-                if (mpv.GetValueInMemory() == null || mpv.GetValueToSet() == null)
+                var readVarResult = _memoryPatchMethodInstance.GetVariableValue(mpv.ModuleName, mpv.Offset, mpv.GetVariableSize());
+                if (readVarResult.Code == MemoryPatchVariableErrorCode.ModuleNotFound)
                 {
-                    var readVarResult = MemoryPatchMethodInstance.GetVariableValue(mpv.ModuleName, mpv.Offset, mpv.GetVariableSize());
-                    if (readVarResult.Code == MemoryVariableGetSetErrorCode.ModuleNotFound)
-                    {
-                        if (!NotFoundModules.Contains(mpv.ModuleName))
-                            NotFoundModules.Add(mpv.ModuleName);
-                        //mpv.SetValueToSet(null);
-                        mpv.SetValueInMemory(null);
-                        Initialize();
-                    }
-                    else
-                        mpv.SetValueInMemory(readVarResult.Value);
-                }
-                else
-                {
-                    var valueToSet = mpv.GetValueToSet();
-                    if (valueToSet == null) 
-                        return;
-                    var writeVarResult = MemoryPatchMethodInstance.SetVariableValue(mpv.ModuleName, mpv.Offset, mpv.GetVariableSize(), (double)valueToSet);
-                    if (writeVarResult.Code == MemoryVariableGetSetErrorCode.ModuleNotFound)
-                    {
-                        if (!NotFoundModules.Contains(mpv.ModuleName))
-                            NotFoundModules.Add(mpv.ModuleName);
-                        Initialize();
-                    }
-                    else
-                    {
-                        mpv.SetValueInMemory(writeVarResult.Value);
-                        mpv.SetValueToSet(null);
-                    }
-                }
-            }
-        }
-        private static void SynchronizeFsuipcVariable(FsuipcVariable mpv)
-        {
-            lock (Variables)
-            {
-                // Если переменная не инициализирована или нет данных для записи, переменную нужно прочитать
-                if (mpv.GetValueInMemory() == null || mpv.GetValueToSet() == null)
-                {
-                    if (FsuipcMethodInstance.AddVariableToRead(mpv))
-                        return;
+                    if (!_notFoundModules.Contains(mpv.ModuleName))
+                        _notFoundModules.Add(mpv.ModuleName);
+                    //mpv.SetValueToSet(null);
                     mpv.SetValueInMemory(null);
                     Initialize();
                 }
                 else
+                    mpv.SetValueInMemory(readVarResult.Value);
+            }
+            else
+            {
+                var valueToSet = mpv.GetValueToSet();
+                if (valueToSet == null) 
+                    return;
+                var writeVarResult = _memoryPatchMethodInstance.SetVariableValue(mpv.ModuleName, mpv.Offset, mpv.GetVariableSize(), (double)valueToSet);
+                if (writeVarResult.Code == MemoryPatchVariableErrorCode.ModuleNotFound)
                 {
-                    var valueToSet = mpv.GetValueToSet();
-                    if (valueToSet == null)
-                        return;
-
-                    if (!FsuipcMethodInstance.AddVariableToWrite(mpv))
-                        Initialize();
-                    else
-                    {
-                        FsuipcMethodInstance.AddVariableToRead(mpv);
-                        mpv.SetValueInMemory(mpv.GetValueToSet());
-                        //ToDo: тут не правильно. Передаём инстанс класса, а потом в нём же зануляем значение.
-//                        mpv.SetValueToSet(null);
-                    }
+                    if (!_notFoundModules.Contains(mpv.ModuleName))
+                        _notFoundModules.Add(mpv.ModuleName);
+                    Initialize();
+                }
+                else
+                {
+                    mpv.SetValueInMemory(writeVarResult.Value);
+                    mpv.SetValueToSet(null);
                 }
             }
         }
-        private static void GetFsuipcVariableValue(FsuipcVariable fsuipcVariable)
+        private void SynchronizeFsuipcVariable(FsuipcVariable mpv)
         {
-            lock (Variables)
+            if (mpv.GetValueToSet() != null)
             {
-                fsuipcVariable.SetValueInMemory(FsuipcMethodInstance.GetValue(fsuipcVariable.Id));
+                if (
+                        (_resistVariableChangesFromOutsideModeOn && mpv.GetValueToSet() != mpv.GetValueInMemory())
+                        || (!_resistVariableChangesFromOutsideModeOn && mpv.GetValueToSet() != mpv.GetPrevValueToSet())
+                    )
+                {
+                    if (_fsuipcMethodInstance.AddVariableToWrite(mpv))
+                        mpv.SetPrevValueToSet(mpv.GetValueToSet());
+                    else
+                        InitializeFsuipcMethod();
+                }
             }
+            if (!_fsuipcMethodInstance.AddVariableToRead(mpv))
+                InitializeFsuipcMethod();
         }
     }
 }

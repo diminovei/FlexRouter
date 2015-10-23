@@ -45,7 +45,7 @@ namespace FlexRouter.ControlProcessors.Helpers
         /// </summary>
         /// <param name="state"></param>
         /// <returns></returns>
-        public bool CompareState(AccessDescriptorState state)
+        public bool CompareState(Connector state)
         {
             return state.Id == Id;
         }

@@ -3,7 +3,7 @@
     /// <summary>
     /// Класс описывает "торчок" (state) описателя доступа, на который можно повесить элемент управления
     /// </summary>
-    public class AccessDescriptorState
+    public class Connector
     {
         /// <summary>
         /// Идентификатор состояния AccessDescriptor

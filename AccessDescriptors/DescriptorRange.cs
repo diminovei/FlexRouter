@@ -5,11 +5,12 @@ using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.CalculatorRelated;
 using FlexRouter.CalculatorRelated.Tokens;
 using FlexRouter.Localizers;
+using FlexRouter.ProfileItems;
 using FlexRouter.VariableWorkerLayer;
 
 namespace FlexRouter.AccessDescriptors
 {
-    public class DescriptorRange : DescriptorRangeBase, IDescriptorPrevNext, IDescriptorRangeExt, IRepeaterInDescriptor
+    public class DescriptorRange : DescriptorRangeBase, IDescriptorPrevNext, IDescriptorRangeExt, IRepeaterInDescriptor, IDescriptorMultistate
     {
         private readonly CalculatorVariableAccessAddon _calculatorVariableAccessAddonCachedValues = new CalculatorVariableAccessAddon(true);
         /// <summary>
@@ -38,7 +39,7 @@ namespace FlexRouter.AccessDescriptors
         private readonly Calculator _inputValueCalculator = new Calculator();
         public DescriptorRange()
         {
-            StateDescriptors.Add(new AccessDescriptorState { Id = 0, Name = "*", Order = 0 });
+            StateDescriptors.Add(new Connector { Id = 0, Name = "*", Order = 0 });
             CalculatorE.RegisterTokenizer(FormulaResultTokenizer);
             CalculatorE.RegisterPreprocessor(FormulaResultProcessor);
             _inputValueCalculator.RegisterTokenizer(_calculatorVariableAccessAddonCachedValues.VariableTokenizer);
@@ -204,7 +205,7 @@ namespace FlexRouter.AccessDescriptors
                 var formula = GlobalFormulaKeeper.Instance.GetVariableFormulaText(GetId(), varId, 0);
                 var formulaForVar = CalculatorE.ComputeFormula(formula);
                 if (formulaForVar.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.DoubleResult)
-                    VariableManager.WriteValue(varId, formulaForVar.CalculatedDoubleValue);
+                    Profile.VariableStorage.WriteValue(varId, formulaForVar.CalculatedDoubleValue);
             }
         }
         /// <summary>
@@ -264,7 +265,7 @@ namespace FlexRouter.AccessDescriptors
             var maximumValue = CalculateFormulaIfPowerIsOn(GetMaximumValueFormula());
             if (maximumValue == null)
                 return;
-            
+
             double range;
             if (minimumValue > maximumValue)
                 range = (double)minimumValue - (double)maximumValue;
@@ -284,6 +285,43 @@ namespace FlexRouter.AccessDescriptors
             _currentFormulaResultForTokenizer = finalPosition;
 
             CalculateVariablesFormulaAndWriteValuesIfPowerIsOn();
+        }
+
+        public void SetState(int id)
+        {
+            var stepValue = CalculateFormulaIfPowerIsOn(GetStepFormula());
+            if (stepValue == null)
+                return;
+
+            var minimumValue = CalculateFormulaIfPowerIsOn(GetMinimumValueFormula());
+            if (minimumValue == null)
+                return;
+
+            var maximumValue = CalculateFormulaIfPowerIsOn(GetMaximumValueFormula());
+            if (maximumValue == null)
+                return;
+
+            double range;
+            if (minimumValue > maximumValue)
+                range = (double)minimumValue - (double)maximumValue;
+            else
+                range = (double)maximumValue - (double)minimumValue;
+
+            var finalPosition = range / stepValue *id;
+
+            if (minimumValue > maximumValue)
+                finalPosition = minimumValue - finalPosition;
+            else
+                finalPosition = minimumValue + finalPosition;
+
+            _currentFormulaResultForTokenizer = (double)finalPosition;
+
+            CalculateVariablesFormulaAndWriteValuesIfPowerIsOn();
+        }
+
+        public void SetDefaultState()
+        {
+            throw new NotImplementedException();
         }
     }
 }

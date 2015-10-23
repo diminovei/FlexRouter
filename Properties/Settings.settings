@@ -14,5 +14,11 @@
     <Setting Name="JoystickBindByInstanceGuid" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="F3Indicator1to7SegmentsOrder" Type="System.String" Scope="User">
+      <Value Profile="(Default)">0,1,2,3,4,5,6,7</Value>
+    </Setting>
+    <Setting Name="F3Indicator8to15SegmentsOrder" Type="System.String" Scope="User">
+      <Value Profile="(Default)">7,6,5,4,3,2,1,0</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
