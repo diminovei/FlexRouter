@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
+using FlexRouter.ControlProcessors.AssignedHardware;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
@@ -12,16 +14,22 @@ using FlexRouter.Localizers;
 
 namespace FlexRouter.ControlProcessors
 {
-    class ButtonPlusMinusProcessor : ControlProcessorMuitistateBase<IDescriptorPrevNext>, ICollector, IControlProcessorMultistate, IRepeater
+    class ButtonPlusMinusProcessor : ControlProcessorBase<IDescriptorPrevNext>, ICollector, IRepeater
     {
         public ButtonPlusMinusProcessor(DescriptorBase accessDescriptor) : base(accessDescriptor)
         {
-            PrepareAssignmentsList();
         }
 
-        readonly List<Assignment>_assignments = new List<Assignment>();
+        public override bool HasInvertMode()
+        {
+            return true;
+        }
+        protected override Type GetAssignmentsType()
+        {
+            return typeof(Assignment);
+        } 
 
-        public override string GetName()
+        public override string GetDescription()
         {
             return LanguageManager.GetPhrase(Phrases.HardwareButtonPlusMinus);
         }
@@ -34,13 +42,13 @@ namespace FlexRouter.ControlProcessors
             // Проверить, существует ли всё ещё такой ID контрола в AccessDescriptor
             // Как получить все состояния при загрузке ControlProcessor? Вызвать функцию в AccessDescriptor?
             var hardwareId = controlEvent.Hardware.GetHardwareGuid();
-            var button = _assignments.FirstOrDefault(hw => hw.AssignedItem == hardwareId);
+            var button = Connections.FirstOrDefault(hw => hw.GetAssignedHardware() == hardwareId);
             if (button == null)
                 return;
             if (!((DescriptorBase)AccessDescriptor).IsPowerOn())
                 return;
 
-            var direction = button.Inverse ? !ev.IsPressed : ev.IsPressed;
+            var direction = button.GetInverseState() ? !ev.IsPressed : ev.IsPressed;
             if (!direction)
             {
                 SetRepeaterState(LastState.None);
@@ -48,7 +56,7 @@ namespace FlexRouter.ControlProcessors
             }
                 
 
-            if (button.StateId == 1)
+            if (button.GetConnector().Id == 1)
             {
                 AccessDescriptor.SetNextState(1);
                 SetRepeaterState(LastState.Next);
@@ -64,13 +72,13 @@ namespace FlexRouter.ControlProcessors
         protected override void SaveAdditionals(XmlTextWriter writer)
         {
             writer.WriteStartElement("Connectors");
-            foreach (var buttonInfo in _assignments)
+            foreach (var c in Connections)
             {
                 writer.WriteStartElement("Connector");
-                writer.WriteAttributeString("Id", buttonInfo.StateId.ToString(CultureInfo.InvariantCulture));
-                writer.WriteAttributeString("Name", buttonInfo.StateName);
-                writer.WriteAttributeString("Invert", buttonInfo.Inverse.ToString());
-                writer.WriteAttributeString("AssignedHardware", buttonInfo.AssignedItem);
+                writer.WriteAttributeString("Id", c.GetConnector().Id.ToString(CultureInfo.InvariantCulture));
+                writer.WriteAttributeString("Name", c.GetConnector().Name);
+                writer.WriteAttributeString("Invert", c.GetInverseState().ToString());
+                writer.WriteAttributeString("AssignedHardware", c.GetAssignedHardware());
                 writer.WriteEndElement();
                 writer.WriteString("\n");
             }
@@ -79,49 +87,20 @@ namespace FlexRouter.ControlProcessors
         }
         public override void LoadAdditionals(XPathNavigator reader)
         {
-            AssignedHardware.Clear();
+            Connections.Clear();
             var readerAdd = reader.Select("Connectors/Connector");
             while (readerAdd.MoveNext())
             {
-                var item = new Assignment
-                {
-                    StateId = int.Parse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI)),
-                    StateName = readerAdd.Current.GetAttribute("Name", readerAdd.Current.NamespaceURI),
-                    Inverse = bool.Parse(readerAdd.Current.GetAttribute("Invert", readerAdd.Current.NamespaceURI)),
-                    AssignedItem = ControlProcessorHardware.FixForNewVersion(readerAdd.Current.GetAttribute("AssignedHardware", readerAdd.Current.NamespaceURI))
-                };
-                _assignments[item.StateId] = item;
+                var c = new Connector();
+                c.Id = int.Parse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI));
+                c.Order = c.Id;
+                c.Name = readerAdd.Current.GetAttribute("Name", readerAdd.Current.NamespaceURI);
+                var a = new AssignmentForButton();
+                a.SetInverseState(bool.Parse(readerAdd.Current.GetAttribute("Invert", readerAdd.Current.NamespaceURI)));
+                a.SetAssignedHardware(ControlProcessorHardware.FixForNewVersion(readerAdd.Current.GetAttribute("AssignedHardware", readerAdd.Current.NamespaceURI)));
+                a.SetConnector(c);
+                Connections.Add(a);
             }
-        }
-        public override Assignment[] GetAssignments()
-        {
-            return _assignments.ToArray();
-        }
-        public override void SetAssignment(Assignment assignment)
-        {
-            foreach (var t in _assignments.Where(t => t.StateId == assignment.StateId))
-            {
-                t.AssignedItem = assignment.AssignedItem;
-            }
-        }
-        private void PrepareAssignmentsList()
-        {
-            var a = new Assignment
-            {
-                StateId = 0,
-                StateName = "-",
-                Inverse = false,
-                AssignedItem = AssignedHardwareForSingle
-            };
-            _assignments.Add(a);
-            var b = new Assignment
-            {
-                StateId = 1,
-                StateName = "+",
-                Inverse = false,
-                AssignedItem = AssignedHardwareForSingle
-            };
-            _assignments.Add(b);
         }
         internal enum LastState
         {
@@ -164,6 +143,11 @@ namespace FlexRouter.ControlProcessors
             }
             if (_repeatsPerTimeCounter < _repeatsPerTime.Length - 1)
                 _repeatsPerTimeCounter++;
+        }
+
+        public void RenewStatesInfo(IEnumerable<Connector> states)
+        {
+            throw new NotImplementedException();
         }
     }
 }

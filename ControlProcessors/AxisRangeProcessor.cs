@@ -1,8 +1,10 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
+using FlexRouter.ControlProcessors.AssignedHardware;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Localizers;
@@ -12,7 +14,7 @@ namespace FlexRouter.ControlProcessors
     // Event. Pos, Min, Max. - какое число Min/Max может дать Event
     // MinMax - какими числами мы оперируем (приводим Event к ним)
     // MinMax - искусственное ограничение.
-    internal class AxisRangeProcessor : ControlProcessorSingleAssignmentBaseWithInversion<IDescriptorRangeExt>, ICollector
+    internal class AxisRangeProcessor : ControlProcessorBase<IDescriptorRangeExt>, ICollector
     {
         /// <summary>
         /// Значение, искусственно ограничивающее движение бегунка в меньшую сторону (нужен не весь ход потенциометра)
@@ -25,10 +27,17 @@ namespace FlexRouter.ControlProcessors
 
         public AxisRangeProcessor(DescriptorBase accessDescriptor) : base(accessDescriptor)
         {
-            SetAxisRangeDefaults();
         }
 
-        public override string GetName()
+        protected override Type GetAssignmentsType()
+        {
+            return typeof (Assignment);
+        } 
+        public override bool HasInvertMode()
+        {
+            return true;
+        }
+        public override string GetDescription()
         {
             return LanguageManager.GetPhrase(Phrases.HardwareAxis);
         }
@@ -61,7 +70,7 @@ namespace FlexRouter.ControlProcessors
         
         public void ProcessControlEvent(ControlEventBase controlEvent)
         {
-            if (controlEvent.Hardware.GetHardwareGuid() != AssignedHardwareForSingle)
+            if (controlEvent.Hardware.GetHardwareGuid() != Connections[0].GetAssignedHardware())
                 return;
             var ev = controlEvent as AxisEvent;
             if (ev == null)

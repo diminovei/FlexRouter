@@ -56,7 +56,54 @@ namespace FlexRouter.Helpers
             var folder = Path.Combine(location, subFolder);
             return folder;
         }
-        static public Dictionary<string, string> GetXmlList(string subFolder, string fileMask, string mainKey, string profileType)
+
+        //public class ProfileInfo
+        //{
+        //    public ProfileInfo(string name, string path)
+        //    {
+        //        Name = name;
+        //        Path = path;
+        //    }
+        //    public string Name { get; set; }
+        //    public string Path { get; set; }
+        //}
+        ///// <summary>
+        ///// Получить список описаний профилей
+        ///// </summary>
+        ///// <param name="subFolder">Подкаталог в каталоге приложения, где располагаются профили</param>
+        ///// <param name="fileMask">Маска файлов, среди которых нужно искать профили</param>
+        ///// <param name="mainXmlNodeName">Начальный узел XML</param>
+        ///// <param name="profileType">Тип профиля (профиль, назначения, ...)</param>
+        ///// <returns></returns>
+        //static public List<ProfileInfo> GetXmlList(string subFolder, string fileMask, string mainXmlNodeName, string profileType)
+        //{
+        //    var profileList = new List<ProfileInfo>();
+        //    var folder = GetFullSubfolderPath(subFolder);
+
+        //    if (!Directory.Exists(folder))
+        //        Directory.CreateDirectory(folder);
+
+        //    var fileList = Directory.GetFiles(folder, fileMask);
+
+        //    foreach (var file in fileList)
+        //    {
+        //        var xp = new XPathDocument(file);
+        //        var nav = xp.CreateNavigator();
+
+        //        var mainKeyNav = nav.Select("/" + mainXmlNodeName);
+        //        if (!mainKeyNav.MoveNext())
+        //            continue;
+        //        var fileProfileType = mainKeyNav.Current.GetAttribute("Type", mainKeyNav.Current.NamespaceURI);
+        //        if (profileType != fileProfileType)
+        //            continue;
+        //        var value = mainKeyNav.Current.GetAttribute("Name", mainKeyNav.Current.NamespaceURI);
+        //        profileList.Add(new ProfileInfo(value, file));
+        //    }
+        //    return profileList;
+        //}
+
+
+        static public Dictionary<string, string> GetXmlList(string subFolder, string fileMask, string mainXmlNodeName, string profileType)
         {
             var profileList = new Dictionary<string, string>();
             var folder = GetFullSubfolderPath(subFolder);
@@ -73,7 +120,7 @@ namespace FlexRouter.Helpers
                     var xp = new XPathDocument(file);
                     var nav = xp.CreateNavigator();
 
-                    var mainKeyNav = nav.Select("/" + mainKey);
+                    var mainKeyNav = nav.Select("/" + mainXmlNodeName);
                     if (!mainKeyNav.MoveNext())
                         continue;
                     var fileProfileType = mainKeyNav.Current.GetAttribute("Type", mainKeyNav.Current.NamespaceURI);

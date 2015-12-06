@@ -1,6 +1,8 @@
-﻿using System.Xml;
+﻿using System;
+using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.AccessDescriptors.Helpers;
+using FlexRouter.ControlProcessors.AssignedHardware;
 
 namespace FlexRouter.ControlProcessors.Helpers
 {
@@ -9,11 +11,16 @@ namespace FlexRouter.ControlProcessors.Helpers
     /// </summary>
     public interface IControlProcessor
     {
+        /// <summary>
+        /// Возможно ли инвертировать контрол? Нужно для редакторов
+        /// </summary>
+        /// <returns></returns>
+        bool HasInvertMode();
         int GetId();
         /// <summary>
         /// Вернуть текстовое имя ControlProcessor
         /// </summary>
-        string GetName();
+        string GetDescription();
         /// <summary>
         /// Нужно только для дампа отдельных модулей Arcc
         /// </summary>
@@ -23,23 +30,23 @@ namespace FlexRouter.ControlProcessors.Helpers
         /// Используется для передачи назначений в редактор
         /// </summary>
         /// <returns></returns>
-        Assignment[] GetAssignments();
+        IAssignment[] GetAssignments();
         /// <summary>
         /// Используется при сохранении данных из редактора в ControlProcessor. Сохранять нужно только назначение.
         /// </summary>
         /// <param name="assignment"></param>
-        void SetAssignment(Assignment assignment);
+        void SetAssignment(IAssignment assignment);
         /// <summary>
         /// Может ли это ControlProcessor быть назначенным для указанного AccessDescriptor
         /// </summary>
         /// <param name="accessDescriptor">AccessDescriptor</param>
         /// <returns>true - подходит</returns>
         bool IsAccessDesctiptorSuitable(DescriptorBase accessDescriptor);
-
+        /// <summary>
+        /// Должен вызываться при изменении состава коннекторов к AccessDescriptor (по-старому, состояний)
+        /// </summary>
+        void OnAssignmentsChanged();
         void Save(XmlTextWriter writer);
         void Load(XPathNavigator reader);
-        //ToDo: temp
-        int GetAssignedAccessDescriptor();
-        void SetId(int id);
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System.Data;
-using FlexRouter.ControlProcessors;
+using FlexRouter.ControlProcessors.AssignedHardware;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.Hardware;
 using FlexRouter.Hardware.Helpers;
@@ -11,12 +11,10 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
     {
         private readonly IControlProcessor _assignedControlProcessor;
         private DataTable _dataTable = new DataTable();
-        private readonly bool _enableInverse;
 
-        public AssignEditorHelper(IControlProcessor processor, bool enableInverse)
+        public AssignEditorHelper(IControlProcessor processor)
         {
             _assignedControlProcessor = processor;
-            _enableInverse = enableInverse;
         }
         /// <summary>
         /// Заполнить форму данными из описателя доступа
@@ -32,37 +30,44 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
 
             dc = _dataTable.Columns.Add(LanguageManager.GetPhrase(Phrases.EditorHardware));
             dc.ReadOnly = true;
-            if (_enableInverse)
+            if (_assignedControlProcessor.HasInvertMode())
                 _dataTable.Columns.Add(LanguageManager.GetPhrase(Phrases.EditorInvert), typeof(bool));
             var assignmentList = _assignedControlProcessor.GetAssignments();
             foreach (var assignment in assignmentList)
             {
-                if(_enableInverse)
-                    _dataTable.Rows.Add(assignment.StateId, assignment.StateName, assignment.AssignedItem, assignment.Inverse);
+                if (_assignedControlProcessor.HasInvertMode())
+                    _dataTable.Rows.Add(assignment.GetConnector().Id, assignment.GetConnector().Name, assignment.GetAssignedHardware(), assignment.GetInverseState());
                 else
-                    _dataTable.Rows.Add(assignment.StateId, assignment.StateName, assignment.AssignedItem);
+                    _dataTable.Rows.Add(assignment.GetConnector().Id, assignment.GetConnector().Name, assignment.GetAssignedHardware());
             }
             return _dataTable.AsDataView();
         }
 
         public void Save(int selectedRowIndex, string hardware)
         {
+            var rowCounter = -1;
+            var assignments = _assignedControlProcessor.GetAssignments();
+            // На случай, если меняется только инверсия, можно принимать и пустой hardware
+            if (selectedRowIndex == -1 || (string.IsNullOrEmpty(hardware)&& assignments.Length == 0))
+                return;
             foreach (var row in _dataTable.Rows)
             {
-                var assignment = new Assignment
+                rowCounter++;
+                if(rowCounter!=selectedRowIndex)
+                    continue;
+                foreach (IAssignment a in assignments)
                 {
-                    StateId = int.Parse((string) ((DataRow) row).ItemArray[0]),
-                    StateName = (string) ((DataRow) row).ItemArray[1]
-                };
-                if (selectedRowIndex!=-1 && (assignment.StateId == int.Parse((string)_dataTable.Rows[selectedRowIndex].ItemArray[0])) &&
-                    !string.IsNullOrEmpty(hardware))
-                    assignment.AssignedItem = hardware;
-                else
-                    assignment.AssignedItem = ((DataRow)row).ItemArray[2] is string ? (string)((DataRow)row).ItemArray[2] : null;
-                assignment.Inverse = _enableInverse && (assignment.Inverse = (bool)((DataRow)row).ItemArray[3]);
-                _assignedControlProcessor.SetAssignment(assignment);
-                HardwareManager.ResendLastControlEvent(hardware);
+                    if (a.GetConnector().Id == int.Parse((string) ((DataRow) row).ItemArray[0]))
+                    {
+                        a.SetAssignedHardware(string.IsNullOrEmpty(hardware) ? a.GetAssignedHardware() : hardware);
+                        if (_assignedControlProcessor.HasInvertMode())
+                            a.SetInverseState((bool)((DataRow)row).ItemArray[3]);
+                        _assignedControlProcessor.SetAssignment(a);
+                        break;
+                    }
+                }
             }
+            HardwareManager.ResendLastControlEvent(hardware);
         }
 
         public string LocalizeHardwareLabel(HardwareModuleType hardwareModuleType)

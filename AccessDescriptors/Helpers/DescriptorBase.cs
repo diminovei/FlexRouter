@@ -1,7 +1,7 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Xml;
 using System.Xml.XPath;
+using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.CalculatorRelated;
 using FlexRouter.Helpers;
 using FlexRouter.ProfileItems;
@@ -12,7 +12,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
     {
         private DescriptorBase _parentAccessDescriptorId;
 
-//        public abstract Connector[] GetConnectors();
+        public abstract Connector[] GetConnectors(object controlProcessor);
 
         public void SetDependency(DescriptorBase parentAccessDescriptorId)
         {

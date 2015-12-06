@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.Linq;
 using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
+using FlexRouter.ControlProcessors;
 using FlexRouter.Localizers;
 using FlexRouter.ProfileItems;
 
@@ -15,6 +17,18 @@ namespace FlexRouter.AccessDescriptors
     public class RangeUnion : DescriptorBase, IDescriptorPrevNext, IDescriptorRangeExt, IRepeaterInDescriptor
     {
         readonly List<DescriptorRange> _dependentDescriptors = new List<DescriptorRange>();
+
+        public override Connector[] GetConnectors(object controlProcessor)
+        {
+            var connectors = new List<Connector>();
+            if (controlProcessor is EncoderProcessor || controlProcessor is ButtonPlusMinusProcessor)
+            {
+                var c = new Connector { Id = 0, Name = "*", Order = 0 };
+                connectors.Add(c);
+                return connectors.ToArray();
+            }
+            throw new Exception(string.Format("ControlProcessor типа '{0}' не может быть назначен на AccessDescriptor типа '{1}'", controlProcessor.GetType(), this.GetType()));
+        }
 
         private int GetDependentDescriptorIndex(DescriptorRange descriptor)
         {

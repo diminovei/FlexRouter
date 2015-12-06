@@ -1,9 +1,11 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
+using FlexRouter.ControlProcessors.AssignedHardware;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
@@ -11,7 +13,7 @@ using FlexRouter.Localizers;
 
 namespace FlexRouter.ControlProcessors
 {
-    class ButtonProcessor : ControlProcessorMuitistateBase<IDescriptorMultistate>, ICollector, IControlProcessorMultistate, IRepeater
+    class ButtonProcessor : ControlProcessorBase<IDescriptorMultistateWithDefault>, ICollector, IRepeater
     {
         private int _lastStateId = -1;
         private bool _lastStatePeriod;
@@ -19,15 +21,25 @@ namespace FlexRouter.ControlProcessors
         {
         }
 
+        public override bool HasInvertMode()
+        {
+            return true;
+        }
+        protected override Type GetAssignmentsType()
+        {
+            return typeof(AssignmentForButton);
+        } 
+
         /// <summary>
         /// Эмуляция "Toggle" будет работать для всех кнопок сразу
         /// </summary>
         private bool _emulateToggle;
 
+
         /// <summary>
         /// Идентификатор AccessDescriptor'а, которым управляет ControlProcessor
         /// </summary>
-        public override string GetName()
+        public override string GetDescription()
         {
             return LanguageManager.GetPhrase(Phrases.HardwareButton);
         }
@@ -35,14 +47,14 @@ namespace FlexRouter.ControlProcessors
         {
             writer.WriteAttributeString("EmulateToggle", _emulateToggle.ToString());
             writer.WriteStartElement("Connectors");
-            foreach (var buttonInfo in AssignedHardware)
+            foreach (var c in Connections)
             {
                 writer.WriteStartElement("Connector");
-                writer.WriteAttributeString("Id", buttonInfo.Id.ToString(CultureInfo.InvariantCulture));
-                writer.WriteAttributeString("Order", buttonInfo.Order.ToString(CultureInfo.InvariantCulture));
-                writer.WriteAttributeString("Name", buttonInfo.Name);
-                writer.WriteAttributeString("Invert", buttonInfo.Invert.ToString());
-                writer.WriteAttributeString("AssignedHardware", buttonInfo.AssignedHardware);
+                writer.WriteAttributeString("Id", c.GetConnector().Id.ToString(CultureInfo.InvariantCulture));
+                writer.WriteAttributeString("Order", c.GetConnector().Order.ToString(CultureInfo.InvariantCulture));
+                writer.WriteAttributeString("Name", c.GetConnector().Name);
+                writer.WriteAttributeString("Invert", c.GetInverseState().ToString());
+                writer.WriteAttributeString("AssignedHardware", c.GetAssignedHardware());
                 writer.WriteEndElement();
                 writer.WriteString("\n");
             }
@@ -52,19 +64,21 @@ namespace FlexRouter.ControlProcessors
         public override void LoadAdditionals(XPathNavigator reader)
         {
             _emulateToggle = bool.Parse(reader.GetAttribute("EmulateToggle", reader.NamespaceURI));
-            AssignedHardware.Clear();
+            Connections.Clear();
             var readerAdd = reader.Select("Connectors/Connector");
             while (readerAdd.MoveNext())
             {
-                var item = new ButtonInfo
+                var c = new Connector
                 {
                     Id = int.Parse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI)),
                     Order = int.Parse(readerAdd.Current.GetAttribute("Order", readerAdd.Current.NamespaceURI)),
-                    Name = readerAdd.Current.GetAttribute("Name", readerAdd.Current.NamespaceURI),
-                    Invert = bool.Parse(readerAdd.Current.GetAttribute("Invert", readerAdd.Current.NamespaceURI)),
-                    AssignedHardware = ControlProcessorHardware.FixForNewVersion(readerAdd.Current.GetAttribute("AssignedHardware", readerAdd.Current.NamespaceURI))
+                    Name = readerAdd.Current.GetAttribute("Name", readerAdd.Current.NamespaceURI)
                 };
-                AssignedHardware.Add(item);
+                var a = new AssignmentForButton();
+                a.SetInverseState(bool.Parse(readerAdd.Current.GetAttribute("Invert", readerAdd.Current.NamespaceURI)));
+                a.SetAssignedHardware(ControlProcessorHardware.FixForNewVersion(readerAdd.Current.GetAttribute("AssignedHardware", readerAdd.Current.NamespaceURI)));
+                a.SetConnector(c);
+                Connections.Add(a);
             }
         }
         public void SetEmulateToggleMode(bool on)
@@ -84,21 +98,21 @@ namespace FlexRouter.ControlProcessors
             // Проверить, существует ли всё ещё такой ID контрола в AccessDescriptor
             // Как получить все состояния при загрузке ControlProcessor? Вызвать функцию в AccessDescriptor?
             var hardwareId = controlEvent.Hardware.GetHardwareGuid();
-            var button = AssignedHardware.FirstOrDefault(hw => hw.AssignedHardware == hardwareId);
+            var button = (AssignmentForButton) Connections.FirstOrDefault(hw => hw.GetAssignedHardware() == hardwareId);
             if (button == null)
                 return;
 
             if (!((DescriptorBase)AccessDescriptor).IsPowerOn())
                 return;
 
-            var direction = button.Invert ? !ev.IsPressed : ev.IsPressed;
+            var direction = button.GetInverseState() ? !ev.IsPressed : ev.IsPressed;
             if (_emulateToggle)
             {
                 var action = button.Toggle(direction);
                 if (action == ToggleState.MakeOn)
                 {
-                    AccessDescriptor.SetState(button.Id);
-                    _lastStateId = button.Id;
+                    AccessDescriptor.SetState(button.GetConnector().Id);
+                    _lastStateId = button.GetConnector().Id;
                     button.IsOn = true;
                 }
                     
@@ -112,8 +126,8 @@ namespace FlexRouter.ControlProcessors
             {
                 if (direction)
                 {
-                    AccessDescriptor.SetState(button.Id);
-                    _lastStateId = button.Id;
+                    AccessDescriptor.SetState(button.GetConnector().Id);
+                    _lastStateId = button.GetConnector().Id;
                     button.IsOn = true;
                 }
                 else
@@ -123,7 +137,7 @@ namespace FlexRouter.ControlProcessors
                 }
             }
             // Для дампа кнопок с первого раза (без AllKeys, затем PressedKeysOnly) нужно игнорировать события отжатых кнопок, если одна из кнопок уже нажата
-            if (AssignedHardware.Any(bi => bi.IsOn)) 
+            if (Connections.Any(bi => ((AssignmentForButton)bi).IsOn)) 
                 return;
             _lastStateId = -1;
             AccessDescriptor.SetDefaultState();

@@ -142,10 +142,14 @@ namespace FlexRouter.AccessDescriptors.Helpers
         /// <param name="itemId">идентификатор</param>
         public void RemoveFormulasByOwnerId(int itemId)
         {
-            for (var i = _formulaDictionary.Count-1; i >= 0; i--)
+            //for (var i = _formulaDictionary.Count-1; i >= 0; i--)
+            //{
+            //    if (_formulaDictionary.ElementAt(i).Value.OwnerId == itemId)
+            //        _formulaDictionary.Remove(_formulaDictionary.Keys.ElementAt(i));
+            //}
+            foreach (var s in _formulaDictionary.Where(x => x.Value.OwnerId == itemId).ToList())
             {
-                if (_formulaDictionary.ElementAt(i).Value.OwnerId == itemId)
-                    _formulaDictionary.Remove(_formulaDictionary.Keys.ElementAt(i));
+                _formulaDictionary.Remove(s.Key);
             }
         }
 

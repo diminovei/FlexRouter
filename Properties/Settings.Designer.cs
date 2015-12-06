@@ -74,24 +74,24 @@ namespace FlexRouter.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0,1,2,3,4,5,6,7")]
-        public string F3Indicator1to7SegmentsOrder {
+        public string F3Indicator1to8SegmentsOrder {
             get {
-                return ((string)(this["F3Indicator1to7SegmentsOrder"]));
+                return ((string)(this["F3Indicator1to8SegmentsOrder"]));
             }
             set {
-                this["F3Indicator1to7SegmentsOrder"] = value;
+                this["F3Indicator1to8SegmentsOrder"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("7,6,5,4,3,2,1,0")]
-        public string F3Indicator8to15SegmentsOrder {
+        public string F3Indicator9to16SegmentsOrder {
             get {
-                return ((string)(this["F3Indicator8to15SegmentsOrder"]));
+                return ((string)(this["F3Indicator9to16SegmentsOrder"]));
             }
             set {
-                this["F3Indicator8to15SegmentsOrder"] = value;
+                this["F3Indicator9to16SegmentsOrder"] = value;
             }
         }
     }

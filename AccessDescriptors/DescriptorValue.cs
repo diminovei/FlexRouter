@@ -11,7 +11,7 @@ using FlexRouter.ProfileItems;
 
 namespace FlexRouter.AccessDescriptors
 {
-    public class DescriptorValue : DescriptorMultistateBase, IDescriptorMultistate, IDefautValueAbility, IRepeaterInDescriptor
+    public class DescriptorValue : DescriptorMultistateBase, IDescriptorMultistateWithDefault, IDefautValueAbility, IRepeaterInDescriptor
     {
         public override string GetDescriptorType()
         {
@@ -73,6 +73,14 @@ namespace FlexRouter.AccessDescriptors
         public int GetDefaultStateId()
         {
             return _defaultStateId;
+        }
+        /// <summary>
+        /// Получить все состояния
+        /// </summary>
+        /// <returns></returns>
+        public override Connector[] GetConnectors(object controlProcessor)
+        {
+            return StateDescriptors.Where(x=>x.Id!=GetDefaultStateId()).ToArray();
         }
         /// <summary>
         /// Сохранить дополнительные параметры

@@ -110,9 +110,6 @@
                     </Grid.ColumnDefinitions>
                     <ComboBox x:Name="_selectLanguage" Grid.Column="1" HorizontalAlignment="Right" Margin="0,10,10,0" VerticalAlignment="Top" Width="199" DropDownOpened="SelectLanguageDropDownOpened" DropDownClosed="SelectLanguageDropDownClosed"/>
                     <Label x:Name="_selectLanguageLabel" Content="Language" Width="100" Grid.Column="1" HorizontalAlignment="Left" Margin="5,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.15,-3.077" />
-                    <Button x:Name="_importProfileAndKeepAssignments" Content="Import profile and save my assignments"  HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="1" Margin="10,95,0,0" Click="ImportProfileAndSaveMyAssignmentsClick" Width="247"/>
-                    <Button x:Name="_exportProfile" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Export profile" Grid.Column="1" Margin="10,149,0,0" Click="ExportProfileClick" Width="247"/>
-                    <Button x:Name="_importProfile" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Import profile" Grid.Column="1" Margin="10,122,0,0" Click="ImportProfileClick" Width="247"/>
                     <ComboBox x:Name="_selectProfile" Grid.Column="1" HorizontalAlignment="Right" Margin="0,64,10,0" VerticalAlignment="Top" Width="199" DropDownClosed="SelectProfileDropDownClosed"/>
                     <Label x:Name="_selectProfileLabel" Content="Profile" Width="100" Grid.Column="1" HorizontalAlignment="Left" Margin="5,64,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.15,-3.077" />
                     <Button x:Name="_createNewProfile" HorizontalAlignment="Right" VerticalAlignment="Top" Content="Create" Grid.Column="1" Margin="0,95,10,0" Click="CreateNewProfileClick" Width="115"/>

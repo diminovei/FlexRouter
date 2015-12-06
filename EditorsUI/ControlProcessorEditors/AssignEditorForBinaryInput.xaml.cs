@@ -1,15 +1,11 @@
 ﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.ControlProcessors;
 using FlexRouter.ControlProcessors.Helpers;
-using FlexRouter.EditorPanels;
 using FlexRouter.EditorsUI.Helpers;
-using FlexRouter.Hardware;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
 using FlexRouter.Localizers;
@@ -27,7 +23,6 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
         private readonly ButtonBinaryInputProcessor _assignedControlProcessor;
         private DataTable _dataTable = new DataTable();
 
-//        readonly ObservableCollection<ActiveButtonItem> _activeButtonsList = new ObservableCollection<ActiveButtonItem>();
         private readonly SortedDictionary<string, bool> _activeButtonsList = new SortedDictionary<string, bool>();
         
         private bool _initializationModeOn;
@@ -49,7 +44,6 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
             dc.ReadOnly = true;
 
             foreach (var bl in _activeButtonsList)
-                //_dataTable.Rows.Add(bl.Button, bl.State ? "1" : "0");
                 _dataTable.Rows.Add(bl.Key, bl.Value ? "1" : "0");
             return _dataTable.AsDataView();
         }
@@ -58,12 +52,12 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
             InitializeComponent();
             _hardwareSupported = hardwareSupported;
             _assignedControlProcessor = (ButtonBinaryInputProcessor)processor;
-            var usedHardware = _assignedControlProcessor.GetUsedHardwareWithStates();
+            var usedHardware = _assignedControlProcessor.GetInvolvedHardwareWithCurrentStates();
             foreach (var b in usedHardware)
             {
                 _activeButtonsList.Add(b.Key, b.Value);
             }
-            _assignEditorHelper = new AssignEditorHelper(processor, enableInverse);
+            _assignEditorHelper = new AssignEditorHelper(processor);
 
             Localize();
         }
@@ -78,7 +72,6 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
         }
         private string GetCurrentControlsCode()
         {
-            //return _activeButtonsList.Aggregate(string.Empty, (current, bl) => current + (bl.State ? "1" : "0"));
             return _activeButtonsList.Aggregate(string.Empty, (current, bl) => current + (bl.Value ? "1" : "0"));
         }
 
@@ -87,7 +80,7 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
             var selectedRowIndex = _selecedRowAndColumn.GetSelectedRowIndex();
             if (selectedRowIndex == -1 || AssignmentGrid.Columns.Count == 0) 
                 return;
-            _assignedControlProcessor.SetUsedHardwareWithStates(_activeButtonsList);
+            _assignedControlProcessor.SetInvolvedHardwareWithCurrentStates(_activeButtonsList);
             _assignEditorHelper.Save(selectedRowIndex, GetCurrentControlsCode());
             ShowData();
         }
@@ -139,18 +132,14 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
             var found = false;
             foreach (var item in _activeButtonsList)
             {
-                //if (item.Button != controlEvent.Hardware.GetHardwareGuid())
                 if (item.Key != controlEvent.Hardware.GetHardwareGuid())
                     continue;
-                //item.State = ev.IsPressed;
                 _activeButtonsList[item.Key] = ev.IsPressed;
-//                item.Value = ev.IsPressed;
                 found = true;
                 break;
             }
             if (!found && _initializationModeOn)
             {
-                //_activeButtonsList.Add(new ActiveButtonItem {Button = controlEvent.Hardware.GetHardwareGuid(), State = ev.IsPressed});
                 _activeButtonsList.Add(controlEvent.Hardware.GetHardwareGuid(), ev.IsPressed);
             }
             _allActiveButtons.ItemsSource = FillActiveButtonGrid();

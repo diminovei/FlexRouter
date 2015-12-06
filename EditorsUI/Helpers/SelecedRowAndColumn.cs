@@ -4,19 +4,19 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
 
-namespace FlexRouter.EditorPanels
+namespace FlexRouter.EditorsUI.Helpers
 {
     class SelecedRowAndColumn
     {
-        private int selectedRowIndex = -1;
-        private int selectedCellIndex = -1;
+        private int _selectedRowIndex = -1;
+        private int _selectedCellIndex = -1;
         public int GetSelectedRowIndex()
         {
-            return selectedRowIndex;
+            return _selectedRowIndex;
         }
         public int GetSelectedCellIndex()
         {
-            return selectedCellIndex;
+            return _selectedCellIndex;
         }
         public void OnMouseDoubleClick(DependencyObject dep)
         {
@@ -52,8 +52,8 @@ namespace FlexRouter.EditorPanels
             }*/
             var rowindex = dataGrid.ItemContainerGenerator.IndexFromContainer(row); //this returns ROW INDEX
             var value = ExtractBoundValue(row, cell);
-            selectedCellIndex = colindex;
-            selectedRowIndex = rowindex;
+            _selectedCellIndex = colindex;
+            _selectedRowIndex = rowindex;
             //MessageBox.Show(value + "\tColIndex:" + colindex + "\tRowIndex:" + rowindex);
         }
         /// <summary>

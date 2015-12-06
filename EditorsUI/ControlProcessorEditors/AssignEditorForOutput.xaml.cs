@@ -6,7 +6,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.ControlProcessors.Helpers;
-using FlexRouter.EditorPanels;
 using FlexRouter.EditorsUI.Helpers;
 using FlexRouter.Hardware;
 using FlexRouter.Hardware.HardwareEvents;
@@ -28,7 +27,7 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
         {
             InitializeComponent();
             _hardwareSupported = hardwareSupported;
-            _assignEditorHelper = new AssignEditorHelper(processor, enableInverse);
+            _assignEditorHelper = new AssignEditorHelper(processor);
             _moduleList.Text = "0";
             _blockId.Text = "0";
             _controlId.Text = "0";

@@ -71,6 +71,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using FlexRouter.AccessDescriptors;
 using FlexRouter.AccessDescriptors.Helpers;
+using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.CalculatorRelated;
 using FlexRouter.CalculatorRelated.Tokens;
 using FlexRouter.ControlProcessors;
@@ -87,11 +88,11 @@ using FlexRouter.Helpers;
 using FlexRouter.Localizers;
 using FlexRouter.MessagesToMainForm;
 using FlexRouter.ProfileItems;
+using FlexRouter.Properties;
 using FlexRouter.VariableWorkerLayer;
 using FlexRouter.VariableWorkerLayer.MethodFakeVariable;
 using FlexRouter.VariableWorkerLayer.MethodFsuipc;
 using FlexRouter.VariableWorkerLayer.MethodMemoryPatch;
-using Microsoft.Win32;
 using Clipboard = System.Windows.Clipboard;
 using ComboBox = System.Windows.Controls.ComboBox;
 using MessageBox = System.Windows.MessageBox;
@@ -237,9 +238,6 @@ namespace FlexRouter
             _saveAccessDescriptor.Content = LanguageManager.GetPhrase(Phrases.CommonButtonSave);
             _saveControlProcessor.Content = LanguageManager.GetPhrase(Phrases.CommonButtonSave);
             _saveVariable.Content = LanguageManager.GetPhrase(Phrases.CommonButtonSave);
-            _importProfile.Content = LanguageManager.GetPhrase(Phrases.CommonButtonImport);
-            _exportProfile.Content = LanguageManager.GetPhrase(Phrases.CommonButtonExport);
-            _importProfileAndKeepAssignments.Content = LanguageManager.GetPhrase(Phrases.CommonButtonImportAndKeepAssignments);
             _selectProfileLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelProfile);
             _selectLanguageLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelLanguage);
             _formulaResultLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelFormulaResult) + " (Dec/Hex/Bool)";
@@ -835,7 +833,7 @@ namespace FlexRouter
                 processorsList.Where(x => x.IsAccessDesctiptorSuitable(accessDescriptor)).Select(x => x).ToList();
             foreach (var controlProcessor in controlProcessors)
             {
-                var item = new ComboBoxItem {Content = controlProcessor.GetName(), Tag = controlProcessor};
+                var item = new ComboBoxItem {Content = controlProcessor.GetDescription(), Tag = controlProcessor};
                 _controlProcessorsList.Items.Add(item);
             }
             if (_controlProcessorsList.Items.Count == 1)
@@ -918,10 +916,11 @@ namespace FlexRouter
                 var ad = Profile.GetAccessDesciptorById(oldControlProcessorId) as DescriptorMultistateBase;
                 if (ad != null)
                 {
-                    var states = ad.GetStateDescriptors();
-                    var cp = controlProcessor as IControlProcessorMultistate;
-                    if (cp != null)
-                        cp.RenewStatesInfo(states);
+                    //var states = ad.GetConnectors(this);
+                    //var cp = controlProcessor as IControlProcessorMultistate;
+                    //if (cp != null)
+                    //    cp.RenewStatesInfo(states);
+                    controlProcessor.OnAssignmentsChanged();
                 }
                 ShowControlProcessor(controlProcessor);
                 Profile.SaveCurrentProfile();
@@ -1027,6 +1026,9 @@ namespace FlexRouter
 
         private void OnAnySaveButtonClicked(StackPanel panel, bool isVariableTree)
         {
+            if (_accessDescriptorsTree.SelectedItem == null)
+                return;
+
             // Требуется для того, чтобы при изменении, например, числа цифр в индикаторе не оставались гореть цифры
             var clearEvents = Profile.GetControlProcessorsClearEvents();
             HardwareManager.PostOutgoingEvents(clearEvents.ToList());
@@ -1048,9 +1050,13 @@ namespace FlexRouter
                 MessageBox.Show(message, header, MessageBoxButton.OK, MessageBoxImage.Stop);
                 return;
             }
+
             _routerCore.Pause();
             foreach (var child in panel.Children)
                 ((IEditor) child).Save();
+
+            Profile.UpdateControlProcessorsAssignments();
+
             if(isVariableTree)
                 RenewVariablesTrees();
             else
@@ -1091,7 +1097,7 @@ namespace FlexRouter
             if (item.Type != TreeItemType.Panel)
             {
                 var parentItem = ((TreeViewItem) ((TreeViewItem) tree.SelectedItem).Parent);
-                var parentText = GetTreeItemText(parentItem as TreeViewItem);
+                var parentText = GetTreeItemText(parentItem);
                 item.FullName = parentText + "." + item.Name;
             }
             else
@@ -1138,7 +1144,6 @@ namespace FlexRouter
             var item = combobox.SelectedItem as ComboBoxItem;
             return item == null ? null : ((ComboBoxItem) combobox.SelectedItem).Tag;
         }
-        //private static Dictionary<int, TreeViewItem> _tviCache = new Dictionary<int, TreeViewItem>();
         private static void ShowTree(TreeView tree, TreeItemType tit)
         {
             var vtk = new TreeViewStateKeeper();
@@ -1161,23 +1166,10 @@ namespace FlexRouter
                     if (adesc.IsDependent())
                         continue;
 
-                    //TreeViewItem treeAdItem = null;
-                    //if (
-                    //    _tviCache.ContainsKey(adesc.GetId())
-                    //    &&((DescriptorBase) _tviCache[adesc.GetId()].Tag).GetName() == adesc.GetName() 
-                    //    && ((DescriptorBase) _tviCache[adesc.GetId()].Tag).GetAssignedPanelId() == adesc.GetAssignedPanelId()
-                    //    )
-                    //{
-                    //        treeAdItem = _tviCache[adesc.GetId()];
-                    //}
-                    //else
-                    //{
-                        var icon = GetIcon(tit, adesc.GetId());
-                        var treeAdItem = CreateTreeViewItem(adesc.GetName(), adesc, tit, icon);
-                        treeAdItem.Tag = adesc;
-                        treeAdItem.Name = tit.ToString();
-                        //_tviCache[adesc.GetId()] = treeAdItem;
-                    //}
+                    var icon = GetIcon(tit, adesc.GetId());
+                    var treeAdItem = CreateTreeViewItem(adesc.GetName(), adesc, tit, icon);
+                    treeAdItem.Tag = adesc;
+                    treeAdItem.Name = tit.ToString();
 
                     treeRootItem.Items.Add(treeAdItem);
                     if (tit == TreeItemType.ControlProcessor)
@@ -1189,8 +1181,7 @@ namespace FlexRouter
                         if (a.GetDependency().GetId() != adesc.GetId())
                             continue;
                         icon = GetIcon(tit, a.GetId());
-                        var treeDependentItem =
-                            CreateTreeViewItem(Profile.PanelStorage.GetPanelById(a.GetAssignedPanelId()).Name + "." + a.GetName(), a,
+                        var treeDependentItem = CreateTreeViewItem(Profile.PanelStorage.GetPanelById(a.GetAssignedPanelId()).Name + "." + a.GetName(), a,
                                 tit, icon);
                         treeAdItem.Items.Add(treeDependentItem);
                     }
@@ -1199,6 +1190,54 @@ namespace FlexRouter
             }
             vtk.RestoreState(ref tree);
         }
+
+        //private static void ShowTree(TreeView tree, TreeItemType tit)
+        //{
+        //    var vtk = new TreeViewStateKeeper();
+        //    vtk.RememberState(ref tree);
+        //    var panels = Profile.PanelStorage.GetSortedPanelsList();
+        //    tree.Items.Clear();
+        //    var adAll = Profile.GetSortedAccessDesciptorList();
+        //    foreach (var panel in panels)
+        //    {
+        //        var treeRootItem = new TreeViewItem
+        //        {
+        //            Tag = panel,
+        //            Name = TreeItemType.Panel.ToString(),
+        //            Header = panel.Name
+        //        };
+
+        //        var ad = Profile.GetSortedAccessDesciptorListByPanelId(panel.Id);
+        //        foreach (var adesc in ad)
+        //        {
+        //            if (adesc.IsDependent())
+        //                continue;
+
+        //            var icon = GetIcon(tit, adesc.GetId());
+        //            var treeAdItem = CreateTreeViewItem(adesc.GetName(), adesc, tit, icon);
+        //            treeAdItem.Tag = adesc;
+        //            treeAdItem.Name = tit.ToString();
+
+        //            treeRootItem.Items.Add(treeAdItem);
+        //            if (tit == TreeItemType.ControlProcessor)
+        //                continue;
+        //            foreach (var a in adAll)
+        //            {
+        //                if (!a.IsDependent())
+        //                    continue;
+        //                if (a.GetDependency().GetId() != adesc.GetId())
+        //                    continue;
+        //                icon = GetIcon(tit, a.GetId());
+        //                var treeDependentItem =
+        //                    CreateTreeViewItem(Profile.PanelStorage.GetPanelById(a.GetAssignedPanelId()).Name + "." + a.GetName(), a,
+        //                        tit, icon);
+        //                treeAdItem.Items.Add(treeDependentItem);
+        //            }
+        //        }
+        //        tree.Items.Add(treeRootItem);
+        //    }
+        //    vtk.RestoreState(ref tree);
+        //}
 
         private static System.Drawing.Bitmap GetIcon(TreeItemType tit, int itemId)
         {
@@ -1211,7 +1250,7 @@ namespace FlexRouter
                 bool foundUnassigned = false;
                 foreach (var assignment in assignments)
                 {
-                    if (string.IsNullOrEmpty(assignment.AssignedItem))
+                    if (string.IsNullOrEmpty(assignment.GetAssignedHardware()))
                         foundUnassigned = true;
                 }
                 return foundUnassigned ? Properties.Resources.ConnectedPartially : Properties.Resources.Connected;
@@ -1251,9 +1290,9 @@ namespace FlexRouter
             if (string.IsNullOrEmpty(_selectLanguage.Text))
                 return;
             ApplicationSettings.DefaultLanguage = _selectLanguage.Text;
+            Settings.Default.DefaultLanguage = _selectLanguage.Text;
             LanguageManager.LoadLanguage(_selectLanguage.Text);
             Localize();
-            ApplicationSettings.DefaultLanguage = _selectLanguage.Text;
         }
 
         #endregion
@@ -1280,7 +1319,7 @@ namespace FlexRouter
                 string textInRun = current.GetTextInRun(LogicalDirection.Forward);
                 if (!string.IsNullOrWhiteSpace(textInRun))
                 {
-                    var index = textInRun.IndexOf(keyword);
+                    var index = textInRun.IndexOf(keyword, StringComparison.Ordinal);
                     if (index != -1)
                     {
                         var selectionStart = current.GetPositionAtOffset(index, LogicalDirection.Forward);
@@ -1511,6 +1550,7 @@ namespace FlexRouter
                 if (name != ApplicationSettings.DefaultProfile)
                 {
                     ApplicationSettings.DefaultProfile = name;
+                    Settings.Default.DefaultProfile = name;
                     SetTitle(name);
                 }
             }
@@ -1535,15 +1575,15 @@ namespace FlexRouter
                 return;
             LoadProfile(_selectProfile.Text);
             ApplicationSettings.DefaultProfile = _selectProfile.Text;
+            Settings.Default.DefaultProfile = _selectProfile.Text;
         }
 
         /// <summary>
         /// Загрузить профиль
         /// </summary>
         /// <param name="profileName">имя профиля. null - ничего не грузить</param>
-        /// <param name="controlProcessorsProfile">имя профиля, откуда брать назначения. null - брать из профиля, переданного в параметре profileName</param>
         /// <returns>true - профиль загружен</returns>
-        private bool LoadProfile(string profileName, string controlProcessorsProfile = null)
+        private bool LoadProfile(string profileName)
         {
             if (profileName == null)
                 return false;
@@ -1552,7 +1592,7 @@ namespace FlexRouter
                 return false;
             var profilePath = profileList[profileName];
             PauseRouterOnChangeProfile();
-            var loadResult = controlProcessorsProfile == null ? Profile.LoadProfile(profilePath) : Profile.MergeAssignmentsWithProfile(profileName, controlProcessorsProfile);
+            var loadResult = Profile.LoadProfile(profilePath);
             ResumeRouterOnChangeProfile();
             return loadResult;
         }
@@ -1583,66 +1623,6 @@ namespace FlexRouter
                 return;
             PauseRouterOnChangeProfile();
             Profile.RemoveCurrentProfile();
-            ResumeRouterOnChangeProfile();
-        }
-
-        /// <summary>
-        /// Экспортировать профиль в указанный пользователем файл
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ExportProfileClick(object sender, RoutedEventArgs e)
-        {
-            var of = new SaveFileDialog
-            {
-                Title = LanguageManager.GetPhrase(Phrases.SettingsExportProfileDialogHeader),
-                CheckPathExists = true,
-                Filter = @"Aircraft profile files (*.ap)|*.ap|All files (*.*)|*.*"
-            };
-            if (of.ShowDialog() != true)
-                return;
-            Profile.SaveProfileAs(of.FileName);
-        }
-
-        /// <summary>
-        /// Импортировать профиль с сохранением назначений текущего профиля
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ImportProfileAndSaveMyAssignmentsClick(object sender, RoutedEventArgs e)
-        {
-            if (!Profile.IsProfileLoaded())
-                return;
-            var of = new OpenFileDialog
-            {
-                Title = LanguageManager.GetPhrase(Phrases.SettingsImportProfileKeepAssignmentsDialogHeader),
-                Multiselect = false,
-                Filter = @"Aircraft profile files (*.ap)|*.ap|All files (*.*)|*.*"
-            };
-            if (of.ShowDialog() != true)
-                return;
-            PauseRouterOnChangeProfile();
-            Profile.ImportAndSaveAssignments(of.FileName);
-            ResumeRouterOnChangeProfile();
-        }
-
-        /// <summary>
-        /// Испортировать профиль из внешнего файла, указанного пользователем во внутреннее хранилище профилей роутера
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ImportProfileClick(object sender, RoutedEventArgs e)
-        {
-            var of = new OpenFileDialog
-            {
-                Title = LanguageManager.GetPhrase(Phrases.SettingsImportProfileDialogHeader),
-                Multiselect = false,
-                Filter = @"Aircraft profile files (*.ap)|*.ap|All files (*.*)|*.*"
-            };
-            if (of.ShowDialog() != true)
-                return;
-            PauseRouterOnChangeProfile();
-            Profile.Import(of.FileName);
             ResumeRouterOnChangeProfile();
         }
 
@@ -1707,7 +1687,6 @@ namespace FlexRouter
                 newItem.SetId(GlobalId.GetNew());
             }
         }
-
         private void _cloneAccessDescriptor_Click(object sender, RoutedEventArgs e)
         {
             var treeSelectedItem = GetTreeSelectedItem(_accessDescriptorsTree);

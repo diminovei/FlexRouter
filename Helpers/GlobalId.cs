@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace FlexRouter.Helpers
 {
@@ -21,6 +22,15 @@ namespace FlexRouter.Helpers
                 UsedIdList.Add(id);
                 return true;
             }
+        }
+        /// <summary>
+        /// Получить новый глобальный Id. id начинаются с единицы
+        /// 0 - Id не назначен, так как при назначении нового id переменная сначала увеличивается на единицу, а потом её значение отдаётся в качестве id
+        /// </summary>
+        /// <returns>id. 0 - Id не назначен, так как при назначении нового id переменная сначала увеличивается на единицу, а потом её значение отдаётся в качестве id</returns>
+        static public Guid GetNewGuid()
+        {
+            return System.Guid.NewGuid();
         }
         /// <summary>
         /// Получить новый глобальный Id. id начинаются с единицы

@@ -1,16 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Windows.Documents;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.CalculatorRelated;
 using FlexRouter.CalculatorRelated.Tokens;
+using FlexRouter.ControlProcessors;
+using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.Localizers;
 using FlexRouter.ProfileItems;
 using FlexRouter.VariableWorkerLayer;
 
 namespace FlexRouter.AccessDescriptors
 {
-    public class DescriptorRange : DescriptorRangeBase, IDescriptorPrevNext, IDescriptorRangeExt, IRepeaterInDescriptor, IDescriptorMultistate
+    public class DescriptorRange : DescriptorRangeBase, IDescriptorPrevNext, IDescriptorRangeExt, IRepeaterInDescriptor, IDescriptorMultistateWithDefault
     {
         private readonly CalculatorVariableAccessAddon _calculatorVariableAccessAddonCachedValues = new CalculatorVariableAccessAddon(true);
         /// <summary>
@@ -208,6 +212,50 @@ namespace FlexRouter.AccessDescriptors
                     Profile.VariableStorage.WriteValue(varId, formulaForVar.CalculatedDoubleValue);
             }
         }
+
+        public override Connector[] GetConnectors(object controlProcessor)
+        {
+            var connectors = new List<Connector>();
+            if (controlProcessor == null || controlProcessor is EncoderProcessor || controlProcessor is AxisRangeProcessor || controlProcessor is IndicatorProcessor || controlProcessor is LedMatrixIndicatorProcessor || controlProcessor is LampProcessor)
+            {
+                var c = new Connector {Id = 0, Name = "*", Order = 0};
+                connectors.Add(c);
+                return connectors.ToArray();
+            }
+            if (controlProcessor is ButtonPlusMinusProcessor)
+            {
+                var c = new Connector { Id = 0, Name = "-", Order = 0 };
+                connectors.Add(c);
+                c = new Connector { Id = 1, Name = "+", Order = 1 };
+                connectors.Add(c);
+                return connectors.ToArray();
+            }
+            if (controlProcessor is ButtonBinaryInputProcessor || controlProcessor is ButtonProcessor)
+            {
+                var stepValue = CalculateFormula(GetStepFormula());
+                if (stepValue == null)
+                    return connectors.ToArray();
+
+                var minimumValue = CalculateFormula(GetMinimumValueFormula());
+                if (minimumValue == null)
+                    return connectors.ToArray();
+
+                var maximumValue = CalculateFormula(GetMaximumValueFormula());
+                if (maximumValue == null)
+                    return connectors.ToArray();
+
+                var id = 0;
+                for (var i = (minimumValue > maximumValue ? maximumValue : minimumValue); i <= (minimumValue > maximumValue ? minimumValue : maximumValue); i += stepValue)
+                {
+                    var c = new Connector {Id = id, Name = i.ToString(), Order = id};
+                    connectors.Add(c);
+                    id++;
+                }
+                return connectors.ToArray();
+            }
+            throw new Exception(string.Format("ControlProcessor типа '{0}' не может быть назначен на AccessDescriptor типа '{1}'", controlProcessor.GetType(), this.GetType()));
+        }
+
         /// <summary>
         /// Инициализация описателя доступа
         /// </summary>
@@ -301,27 +349,13 @@ namespace FlexRouter.AccessDescriptors
             if (maximumValue == null)
                 return;
 
-            double range;
-            if (minimumValue > maximumValue)
-                range = (double)minimumValue - (double)maximumValue;
-            else
-                range = (double)maximumValue - (double)minimumValue;
-
-            var finalPosition = range / stepValue *id;
-
-            if (minimumValue > maximumValue)
-                finalPosition = minimumValue - finalPosition;
-            else
-                finalPosition = minimumValue + finalPosition;
-
-            _currentFormulaResultForTokenizer = (double)finalPosition;
+            _currentFormulaResultForTokenizer = (minimumValue > maximumValue ? (double)maximumValue : (double)minimumValue) + (double)stepValue * id;
 
             CalculateVariablesFormulaAndWriteValuesIfPowerIsOn();
         }
 
         public void SetDefaultState()
         {
-            throw new NotImplementedException();
         }
     }
 }

@@ -90,6 +90,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="AccessDescriptors\Helpers\Connector.cs" />
+    <Compile Include="AccessDescriptors\Helpers\CycleType.cs" />
     <Compile Include="AccessDescriptors\Helpers\DescriptorBase.cs" />
     <Compile Include="AccessDescriptors\DescriptorBinaryOutput.cs" />
     <Compile Include="AccessDescriptors\DescriptorRange.cs" />
@@ -99,11 +100,12 @@
     <Compile Include="AccessDescriptors\Helpers\DescriptorRangeBase.cs" />
     <Compile Include="AccessDescriptors\DescriptorValue.cs" />
     <Compile Include="AccessDescriptors\Helpers\GlobalFormulaKeeper.cs" />
-    <Compile Include="AccessDescriptors\Helpers\IAccessDescriptor.cs" />
-    <Compile Include="AccessDescriptors\Helpers\IRepeaterInDescriptor.cs" />
+    <Compile Include="AccessDescriptors\Interfaces\IAccessDescriptor.cs" />
+    <Compile Include="AccessDescriptors\Interfaces\IRepeaterInDescriptor.cs" />
     <Compile Include="ApplicationSettings.cs" />
+    <Compile Include="ControlProcessors\AssignedHardware\Assignment.cs" />
+    <Compile Include="ControlProcessors\AssignedHardware\IAssignment.cs" />
     <Compile Include="ControlProcessors\Helpers\ICollector.cs" />
-    <Compile Include="ControlProcessors\Helpers\IControlProcessorMultistate.cs" />
     <Compile Include="ControlProcessors\Helpers\IRepeater.cs" />
     <Compile Include="ControlProcessors\Helpers\IVisualizer.cs" />
     <Compile Include="ControlProcessors\SteppingMotorProcessor.cs" />
@@ -116,7 +118,7 @@
     </Compile>
     <Compile Include="EditorsUI\Helpers\IEditor.cs" />
     <Compile Include="AccessDescriptors\Interfaces\IDefautValueAbility.cs" />
-    <Compile Include="AccessDescriptors\Interfaces\IDescriptorMultistate.cs" />
+    <Compile Include="AccessDescriptors\Interfaces\IDescriptorMultistateWithDefault.cs" />
     <Compile Include="AccessDescriptors\Interfaces\IDescriptorPrevNext.cs" />
     <Compile Include="AccessDescriptors\Interfaces\IDescriptorRangeExt.cs" />
     <Compile Include="AccessDescriptors\Interfaces\IBinaryOutputMethods.cs" />
@@ -162,16 +164,12 @@
     <Compile Include="EditorsUI\ControlProcessorEditors\AssignEditorForBinaryInput.xaml.cs">
       <DependentUpon>AssignEditorForBinaryInput.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ControlProcessors\Helpers\Assignment.cs" />
     <Compile Include="ControlProcessors\ButtonBinaryInputProcessor.cs" />
     <Compile Include="ControlProcessors\Helpers\AxisDefaultRange.cs" />
-    <Compile Include="ControlProcessors\Helpers\ButtonInfo.cs" />
+    <Compile Include="ControlProcessors\AssignedHardware\AssignmentForButton.cs" />
     <Compile Include="ControlProcessors\ButtonPlusMinusProcessor.cs" />
     <Compile Include="ControlProcessors\Helpers\ControlProcessorBase.cs" />
     <Compile Include="ControlProcessors\AxisRangeProcessor.cs" />
-    <Compile Include="ControlProcessors\Helpers\ControlProcessorMuitistateBase.cs" />
-    <Compile Include="ControlProcessors\Helpers\ControlProcessorSingleAssignmentBase.cs" />
-    <Compile Include="ControlProcessors\Helpers\ControlProcessorSingleAssignmentBaseWithInversion.cs" />
     <Compile Include="ControlProcessors\EncoderProcessor.cs" />
     <Compile Include="ControlProcessors\IndicatorProcessor.cs" />
     <Compile Include="ControlProcessors\LampProcessor.cs" />
@@ -303,6 +301,7 @@
     <Compile Include="VariableWorkerLayer\MethodMemoryPatch\ModuleAndOffset.cs" />
     <Compile Include="VariableWorkerLayer\MethodMemoryPatch\ModuleInfo.cs" />
     <Compile Include="VariableWorkerLayer\MethodMemoryPatch\ProcessAccessFlags.cs" />
+    <Compile Include="VariableWorkerLayer\MethodMemoryPatch\SafeProcessHandle.cs" />
     <Compile Include="VariableWorkerLayer\ProcessVariableError.cs" />
     <Compile Include="VariableWorkerLayer\ReadVariableResult.cs" />
     <Compile Include="VariableWorkerLayer\VariableBase.cs" />

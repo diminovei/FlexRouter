@@ -1,4 +1,6 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.Xml;
 using System.Xml.XPath;
@@ -100,8 +102,6 @@ public class DescriptorIndicator : DescriptorOutputBase, IIndicatorMethods
         {
             return _digitsNumber;
         }
-
-
         /// <summary>
         /// ToDo: костыль для шагового двигателя
         /// Получить текст для вывода на индикатор
@@ -117,7 +117,6 @@ public class DescriptorIndicator : DescriptorOutputBase, IIndicatorMethods
                 ? (double?) formulaResult.CalculatedDoubleValue
                 : null;
         }
-
         /// <summary>
         /// Получить текст для вывода на индикатор
         /// </summary>
@@ -161,6 +160,14 @@ public class DescriptorIndicator : DescriptorOutputBase, IIndicatorMethods
             res = beforePointText + (_digitsAfterPoint == 0 ? "" : "." + afterPointText);
 
             return res;
+        }
+
+        public override Connector[] GetConnectors(object controlProcessor)
+        {
+            var connectors = new List<Connector>();
+            var c = new Connector { Id = 0, Name = "*", Order = 0 };
+            connectors.Add(c);
+            return connectors.ToArray();
         }
 
         public override void SaveAdditionals(XmlWriter writer)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using FlexRouter.VariableWorkerLayer.MethodMemoryPatch.Microsoft.Win32.SafeHandles;
 
 namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
 {
@@ -12,23 +13,17 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
     public class MemoryPatchMethod
     {
         [DllImport("Kernel32.dll")]
-        public static extern IntPtr OpenProcess(ProcessAccessFlags dwDesiredAccess, bool bInheritHandle, Int32 dwProcessId);
+        [return: MarshalAs(UnmanagedType.I1)]
+        public static extern bool ReadProcessMemory(SafeProcessHandle hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, uint nSize, ref uint lpNumberOfBytesRead);
 
         [DllImport("Kernel32.dll")]
         [return: MarshalAs(UnmanagedType.I1)]
-        public static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, uint nSize, ref uint lpNumberOfBytesRead);
+        public static extern bool WriteProcessMemory(SafeProcessHandle hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, uint nSize, ref uint lpNumberOfBytesWritten);
 
-        [DllImport("Kernel32.dll")]
-        [return: MarshalAs(UnmanagedType.I1)]
-        public static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, uint nSize, ref uint lpNumberOfBytesWritten);
-
-        [DllImport("Kernel32.dll")]
-        public static extern int GetLastError();
-
-        [DllImport("Kernel32.dll")]
-        [return: MarshalAs(UnmanagedType.I1)]
-        static extern bool CloseHandle(IntPtr hObject);
-
+        /// <summary>
+        /// Хэндл процесса симулятора
+        /// </summary>
+        private SafeProcessHandle _processHandle;
         /// <summary>
         /// Список найденных в процессе модулей
         /// </summary>
@@ -41,7 +36,6 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
         /// Дата и время последней попытки инициализации. Защита от слишком частых попыток
         /// </summary>
         private DateTime _lastTimeTryToInitialize = DateTime.MinValue;
-
         private InitializationState _lastInitStatus;
         /// <summary>
         /// Инициализация информации о модулях
@@ -77,6 +71,7 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
                         if (process.ProcessName != mainModuleName)
                             continue;
                         _mainModuleProcessId = process.Id;
+                        _processHandle = SafeProcessHandle.OpenProcess(ProcessAccessFlags.VmOperation | ProcessAccessFlags.QueryInformation | ProcessAccessFlags.VmRead | ProcessAccessFlags.VmWrite, false, _mainModuleProcessId);
                         for (var i = 0; i < process.Modules.Count; i++)
                         {
                             var info = new ModuleInfo
@@ -180,22 +175,11 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
                 try
                 {
                     var baseOffset = (IntPtr)((int)_modules[moduleName].BaseAddress + moduleOffset);
-                    var hProcess = OpenProcess(ProcessAccessFlags.VmOperation | ProcessAccessFlags.QueryInformation | ProcessAccessFlags.VmRead | ProcessAccessFlags.VmWrite, false, _mainModuleProcessId);
-                    if (hProcess == IntPtr.Zero)
-                    {
-                        return new ManageMemoryVariableResult
-                        {
-                            Code = MemoryPatchVariableErrorCode.OpenProcessError,
-                            Value = 0
-                        };
-                    }
-
                     var varConverter = new VariableConverter();
                     var buffer = varConverter.ValueToArray(valueToSet, variableSize);
 
                     uint bytesWrite = 0;
-                    var res = WriteProcessMemory(hProcess, baseOffset, buffer, (uint)buffer.Length, ref bytesWrite);
-                    CloseHandle(hProcess);
+                    var res = WriteProcessMemory(_processHandle, baseOffset, buffer, (uint)buffer.Length, ref bytesWrite);
                     return new ManageMemoryVariableResult
                     {
                         Code = res ? MemoryPatchVariableErrorCode.Ok : MemoryPatchVariableErrorCode.WriteError,
@@ -243,20 +227,10 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
                 try
                 {
                     var baseOffset = (IntPtr)((int)_modules[moduleName].BaseAddress + moduleOffset);
-                    var hProcess = OpenProcess(ProcessAccessFlags.QueryInformation | ProcessAccessFlags.VmRead | ProcessAccessFlags.VmWrite, false, _mainModuleProcessId);
-                    if (hProcess == IntPtr.Zero)
-                    {
-                        return new ManageMemoryVariableResult
-                        {
-                            Code = MemoryPatchVariableErrorCode.OpenProcessError,
-                            Value = 0
-                        };
-                    }
                     var varConverter = new VariableConverter();
                     var buffer = new byte[varConverter.ConvertSize(variableSize)];
                     uint bytesRead = 0;
-                    var readResult = ReadProcessMemory(hProcess, baseOffset, buffer, (uint)buffer.Length, ref bytesRead);
-                    CloseHandle(hProcess);
+                    var readResult = ReadProcessMemory(_processHandle, baseOffset, buffer, (uint)buffer.Length, ref bytesRead);
                     if (!readResult)
                     {
                         return new ManageMemoryVariableResult

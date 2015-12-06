@@ -1,6 +1,6 @@
 ﻿using FlexRouter.Hardware.HardwareEvents;
 
-namespace FlexRouter.AccessDescriptors.Helpers
+namespace FlexRouter.EditorsUI.Helpers
 {
     interface IControlProcessorEditor
     {

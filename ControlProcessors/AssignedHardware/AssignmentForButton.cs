@@ -1,6 +1,6 @@
 ﻿using FlexRouter.AccessDescriptors.Helpers;
 
-namespace FlexRouter.ControlProcessors.Helpers
+namespace FlexRouter.ControlProcessors.AssignedHardware
 {
     /// <summary>
     /// Индикатор состояния Toggle
@@ -14,42 +14,55 @@ namespace FlexRouter.ControlProcessors.Helpers
     /// <summary>
     /// Информация о кнопке
     /// </summary>
-    internal class ButtonInfo
+    internal class AssignmentForButton : IAssignment
     {
+        private Connector _connector;
+        public Connector GetConnector()
+        {
+            return _connector;
+        }
+
+        public void SetConnector(Connector connector)
+        {
+            _connector = connector;
+        }
         /// <summary>
-        /// Идентификатор
+        /// Назначение на состояние. В качестве назначения может быть идентификатор железа
         /// </summary>
-        public int Id;
+        private string _assignedItem = string.Empty;
+        public string GetAssignedHardware()
+        {
+            return _assignedItem;
+        }
+
+        public void SetAssignedHardware(string assignedHardware)
+        {
+            _assignedItem = assignedHardware;
+        }
+
+        public bool IsInverseInUse()
+        {
+            return true;
+        }
+
         /// <summary>
-        /// Порядок отображения
+        /// Инвертировать направление
         /// </summary>
-        public int Order;
-        /// <summary>
-        /// Имя
-        /// </summary>
-        public string Name;
-        /// <summary>
-        /// Кнопка инвертирована
-        /// </summary>
-        public bool Invert;
+        private bool _inverse;
+        public bool GetInverseState()
+        {
+            return _inverse;
+        }
+
+        public void SetInverseState(bool inverseState)
+        {
+            _inverse = inverseState;
+        }
+        
         /// <summary>
         /// Нажата ли 
         /// </summary>
         public bool IsOn;
-        /// <summary>
-        /// Нажата ли 
-        /// </summary>
-        public string AssignedHardware;
-        /// <summary>
-        /// Сравнить данные State и ButtonInfo
-        /// </summary>
-        /// <param name="state"></param>
-        /// <returns></returns>
-        public bool CompareState(Connector state)
-        {
-            return state.Id == Id;
-        }
-        #region ToggleEmulator
         /// <summary>
         /// Внутренний индикатор состояния Toggle
         /// </summary>
@@ -61,6 +74,7 @@ namespace FlexRouter.ControlProcessors.Helpers
             SecondOn,
         }
         private ToggleEmulatorStateType _toggleEmulatorState;
+
         public ToggleState Toggle(bool direction)
         {
             if (_toggleEmulatorState == ToggleEmulatorStateType.SecondOff && direction)
@@ -81,6 +95,5 @@ namespace FlexRouter.ControlProcessors.Helpers
             _toggleEmulatorState = ToggleEmulatorStateType.SecondOff;
             return ToggleState.DoNothing;
         }
-        #endregion
     }
 }

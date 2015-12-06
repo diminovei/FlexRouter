@@ -1,4 +1,6 @@
-﻿namespace FlexRouter.AccessDescriptors.Helpers
+﻿using FlexRouter.AccessDescriptors.Helpers;
+
+namespace FlexRouter.AccessDescriptors.Interfaces
 {
     public interface IAccessDescriptor
     {

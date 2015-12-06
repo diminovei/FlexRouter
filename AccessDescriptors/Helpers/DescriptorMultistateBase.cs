@@ -3,7 +3,6 @@ using System.Globalization;
 using System.Linq;
 using System.Xml;
 using System.Xml.XPath;
-using FlexRouter.ProfileItems;
 
 namespace FlexRouter.AccessDescriptors.Helpers
 {
@@ -52,10 +51,12 @@ namespace FlexRouter.AccessDescriptors.Helpers
             var readerAdd = reader.Select("States/State");
             while (readerAdd.MoveNext())
             {
-                var ads = new Connector();
-                ads.Id = int.Parse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI));
-                ads.Name = readerAdd.Current.GetAttribute("Name", readerAdd.Current.NamespaceURI);
-                ads.Order = int.Parse(readerAdd.Current.GetAttribute("Order", readerAdd.Current.NamespaceURI));
+                var ads = new Connector
+                {
+                    Id = int.Parse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI)),
+                    Name = readerAdd.Current.GetAttribute("Name", readerAdd.Current.NamespaceURI),
+                    Order = int.Parse(readerAdd.Current.GetAttribute("Order", readerAdd.Current.NamespaceURI))
+                };
                 StateDescriptors.Add(ads);
             }
             UsedVariables.Clear();
@@ -143,12 +144,6 @@ namespace FlexRouter.AccessDescriptors.Helpers
 
             StateDescriptors.Add(accessDescriptorState);
 
-            if (Profile.GetControlProcessorByAccessDescriptorId(GetId()) != null)
-            {
-                // ToDo: Обновить данные в ControlProcessor
-                //          var cp = Profile.GetControlProcessorByAccessDescriptorId(_assignedControlProcessor);
-                //            cp.RenewStatesInfo(_states.Values.ToArray());
-            }
             return accessDescriptorState;
         }
         /// <summary>
@@ -185,14 +180,6 @@ namespace FlexRouter.AccessDescriptors.Helpers
             UsedVariables.Remove(id);
             foreach (var s in StateDescriptors)
                 GlobalFormulaKeeper.Instance.RemoveVariableFormula(GetId(), id, s.Id);
-        }
-        /// <summary>
-        /// Получить все состояния
-        /// </summary>
-        /// <returns></returns>
-        public Connector[] GetStateDescriptors()
-        {
-            return StateDescriptors.ToArray();
         }
         /// <summary>
         /// Установить формулу для переменной в определённом состоянии

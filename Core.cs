@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -90,13 +89,7 @@ namespace FlexRouter
                 stopwatch.Start();
                 Profile.VariableStorage.SynchronizeVariables();
                 Work();
-                //counter++;
-                //if (counter > 30)
-                //{
-                //    counter = 0;
-                //    if (!ApplicationSettings.ControlsSynchronizationIsOff)
-                //        SoftDump();
-                //}
+
                 if ((!ApplicationSettings.ControlsSynchronizationIsOff) != Profile.VariableStorage.IsResistVariableChangesFromOutsideModeOn())
                 {
                     Profile.VariableStorage.SetResistVariableChangesFromOutsideMode(!ApplicationSettings.ControlsSynchronizationIsOff);
@@ -105,8 +98,9 @@ namespace FlexRouter
                 }
                     
                 stopwatch.Stop();
-                if(stopwatch.ElapsedMilliseconds < 200)
-                    Thread.Sleep(200-(int)stopwatch.ElapsedMilliseconds);
+                var delay = 200;
+                if (stopwatch.ElapsedMilliseconds < delay)
+                    Thread.Sleep(delay - (int)stopwatch.ElapsedMilliseconds);
             }
         }
         private void SoftDump()
@@ -131,13 +125,14 @@ namespace FlexRouter
             foreach (var controlEvent in events)
             {
                 Profile.SendEventToControlProcessors(controlEvent);
-                Messenger.AddMessage(MessageToMainForm.NewHardwareEvent, controlEvent);
+                //if(controlEvent.Hardware.ModuleType!=HardwareModuleType.Axis)
+                    Messenger.AddMessage(MessageToMainForm.NewHardwareEvent, controlEvent);
             }
             var outgoing = new List<ControlEventBase>();
             var newOutgoingEvents = Profile.GetControlProcessorsNewEvents();
             foreach (var newOutgoingEvent in newOutgoingEvents)
             {
-                // В том случае, когда на один индикатор назначены 2 дексриптора. Переключение "коммутатором"
+                // В том случае, когда на один индикатор назначены 2 деcкриптора. Переключение "коммутатором"
                 // более ранний по ID дескриптор установил текст при переключении коммутатора, а более поздний выключил питание. В итоге индикатор пуст
                 if (newOutgoingEvent.Hardware.ModuleType == HardwareModuleType.Indicator || newOutgoingEvent.Hardware.ModuleType == HardwareModuleType.BinaryOutput)
                 {

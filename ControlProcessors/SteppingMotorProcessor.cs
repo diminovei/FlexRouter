@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using FlexRouter.AccessDescriptors;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
+using FlexRouter.ControlProcessors.AssignedHardware;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
@@ -10,21 +12,31 @@ using FlexRouter.ProfileItems;
 
 namespace FlexRouter.ControlProcessors
 {
-    class SteppingMotorProcessor : ControlProcessorSingleAssignmentBaseWithInversion<IDescriptorRangeExt>, IVisualizer
+    class SteppingMotorProcessor : ControlProcessorBase<IDescriptorRangeExt>, IVisualizer
     {
         private double? _previousPosition;
 
         public SteppingMotorProcessor(DescriptorBase accessDescriptor) : base(accessDescriptor)
         {
         }
-        public override string GetName()
+
+        public override bool HasInvertMode()
+        {
+            return true;
+        }
+        protected override Type GetAssignmentsType()
+        {
+            return typeof(Assignment);
+        } 
+
+        public override string GetDescription()
         {
             return LanguageManager.GetPhrase(Phrases.HardwareIndicator);
         }
 
         public IEnumerable<ControlEventBase> GetNewEvent()
         {
-            if (string.IsNullOrEmpty(AssignedHardwareForSingle))
+            if (string.IsNullOrEmpty(Connections[0].GetAssignedHardware()))
                 return null;
 
             var ad = Profile.GetAccessDesciptorById(AssignedAccessDescriptorId);
@@ -34,7 +46,7 @@ namespace FlexRouter.ControlProcessors
             _previousPosition = position;
             var ev = new SteppingMotorEvent
             {
-                Hardware = ControlProcessorHardware.GenerateByGuid(AssignedHardwareForSingle),
+                Hardware = ControlProcessorHardware.GenerateByGuid(Connections[0].GetAssignedHardware()),
                 Position = (short) CalculateStepperPosition((short) position)
             };
             return new List<ControlEventBase> { ev };

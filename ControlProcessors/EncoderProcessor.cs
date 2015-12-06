@@ -1,17 +1,29 @@
-﻿using FlexRouter.AccessDescriptors.Helpers;
+﻿using System;
+using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
+using FlexRouter.ControlProcessors.AssignedHardware;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Localizers;
 
 namespace FlexRouter.ControlProcessors
 {
-    internal class EncoderProcessor : ControlProcessorSingleAssignmentBaseWithInversion<IDescriptorPrevNext>, ICollector
+    internal class EncoderProcessor : ControlProcessorBase<IDescriptorPrevNext>, ICollector
     {
         public EncoderProcessor(DescriptorBase accessDescriptor) : base(accessDescriptor)
         {
         }
-        public override string GetName()
+
+        public override bool HasInvertMode()
+        {
+            return true;
+        }
+        protected override Type GetAssignmentsType()
+        {
+            return typeof(Assignment);
+        } 
+
+        public override string GetDescription()
         {
             return LanguageManager.GetPhrase(Phrases.HardwareEncoder);
         }
@@ -22,13 +34,13 @@ namespace FlexRouter.ControlProcessors
             if (ev == null)
                 return;
 
-            if (controlEvent.Hardware.GetHardwareGuid() != AssignedHardwareForSingle)
+            if (controlEvent.Hardware.GetHardwareGuid() != Connections[0].GetAssignedHardware())
                 return;
 
             if (!((DescriptorBase)AccessDescriptor).IsPowerOn())
                 return;
 
-            var direction = GetInversion() ? !ev.RotateDirection : ev.RotateDirection;
+            var direction = Connections[0].GetInverseState() ? !ev.RotateDirection : ev.RotateDirection;
             if (direction)
                 AccessDescriptor.SetNextState(ev.ClicksCount);
             else

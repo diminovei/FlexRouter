@@ -28,7 +28,6 @@ namespace FlexRouter.VariableWorkerLayer
             _memoryPatchState = _memoryPatchMethodInstance.Initialize(Profile.GetMainManagedProcessName());
             Problems.AddOrUpdateProblem(_memoryPatchState.System, _memoryPatchState.ErrorMessage, ProblemHideOnFixOptions.HideDescription, _memoryPatchState.IsOk);
         }
-
         private void InitializeFsuipcMethod()
         {
             if (_fsuipcState != null)
@@ -226,40 +225,73 @@ namespace FlexRouter.VariableWorkerLayer
         }
         private void SynchronizeMemoryPatchVariable(MemoryPatchVariable mpv)
         {
-            // Если переменная не инициализирована или нет данных для записи, переменную нужно прочитать
-            if (mpv.GetValueInMemory() == null || mpv.GetValueToSet() == null)
+            var valueToSet = mpv.GetValueToSet();
+            if (valueToSet != null)
             {
-                var readVarResult = _memoryPatchMethodInstance.GetVariableValue(mpv.ModuleName, mpv.Offset, mpv.GetVariableSize());
-                if (readVarResult.Code == MemoryPatchVariableErrorCode.ModuleNotFound)
+                if (
+                    (_resistVariableChangesFromOutsideModeOn && valueToSet != mpv.GetValueInMemory())
+                    || (!_resistVariableChangesFromOutsideModeOn && valueToSet != mpv.GetPrevValueToSet())
+                    )
                 {
-                    if (!_notFoundModules.Contains(mpv.ModuleName))
-                        _notFoundModules.Add(mpv.ModuleName);
-                    //mpv.SetValueToSet(null);
-                    mpv.SetValueInMemory(null);
-                    Initialize();
+                    var writeVarResult = _memoryPatchMethodInstance.SetVariableValue(mpv.ModuleName, mpv.Offset, mpv.GetVariableSize(), (double)valueToSet);
+                    if (writeVarResult.Code == MemoryPatchVariableErrorCode.ModuleNotFound)
+                    {
+                        if (!_notFoundModules.Contains(mpv.ModuleName))
+                            _notFoundModules.Add(mpv.ModuleName);
+                        Initialize();
+                    }
+                    else
+                    {
+                        mpv.SetPrevValueToSet(valueToSet);
+                    }
                 }
-                else
-                    mpv.SetValueInMemory(readVarResult.Value);
+            }
+            var readVarResult = _memoryPatchMethodInstance.GetVariableValue(mpv.ModuleName, mpv.Offset, mpv.GetVariableSize());
+            if (readVarResult.Code == MemoryPatchVariableErrorCode.ModuleNotFound)
+            {
+                if (!_notFoundModules.Contains(mpv.ModuleName))
+                    _notFoundModules.Add(mpv.ModuleName);
+                Initialize();
             }
             else
-            {
-                var valueToSet = mpv.GetValueToSet();
-                if (valueToSet == null) 
-                    return;
-                var writeVarResult = _memoryPatchMethodInstance.SetVariableValue(mpv.ModuleName, mpv.Offset, mpv.GetVariableSize(), (double)valueToSet);
-                if (writeVarResult.Code == MemoryPatchVariableErrorCode.ModuleNotFound)
-                {
-                    if (!_notFoundModules.Contains(mpv.ModuleName))
-                        _notFoundModules.Add(mpv.ModuleName);
-                    Initialize();
-                }
-                else
-                {
-                    mpv.SetValueInMemory(writeVarResult.Value);
-                    mpv.SetValueToSet(null);
-                }
-            }
+                mpv.SetValueInMemory(readVarResult.Value);
         }
+        //private void SynchronizeMemoryPatchVariable(MemoryPatchVariable mpv)
+        //{
+        //    // Если переменная не инициализирована или нет данных для записи, переменную нужно прочитать
+        //    if (mpv.GetValueInMemory() == null || mpv.GetValueToSet() == null)
+        //    {
+        //        var readVarResult = _memoryPatchMethodInstance.GetVariableValue(mpv.ModuleName, mpv.Offset, mpv.GetVariableSize());
+        //        if (readVarResult.Code == MemoryPatchVariableErrorCode.ModuleNotFound)
+        //        {
+        //            if (!_notFoundModules.Contains(mpv.ModuleName))
+        //                _notFoundModules.Add(mpv.ModuleName);
+        //            //mpv.SetValueToSet(null);
+        //            mpv.SetValueInMemory(null);
+        //            Initialize();
+        //        }
+        //        else
+        //            mpv.SetValueInMemory(readVarResult.Value);
+        //    }
+        //    else
+        //    {
+        //        var valueToSet = mpv.GetValueToSet();
+        //        if (valueToSet == null) 
+        //            return;
+        //        var writeVarResult = _memoryPatchMethodInstance.SetVariableValue(mpv.ModuleName, mpv.Offset, mpv.GetVariableSize(), (double)valueToSet);
+        //        if (writeVarResult.Code == MemoryPatchVariableErrorCode.ModuleNotFound)
+        //        {
+        //            if (!_notFoundModules.Contains(mpv.ModuleName))
+        //                _notFoundModules.Add(mpv.ModuleName);
+        //            Initialize();
+        //        }
+        //        else
+        //        {
+        //            mpv.SetValueInMemory(writeVarResult.Value);
+        //            mpv.SetValueToSet(null);
+        //        }
+        //    }
+        //}
         private void SynchronizeFsuipcVariable(FsuipcVariable mpv)
         {
             if (mpv.GetValueToSet() != null)

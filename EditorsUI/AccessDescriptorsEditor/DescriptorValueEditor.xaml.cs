@@ -5,7 +5,6 @@ using System.Windows;
 using System.Windows.Input;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
-using FlexRouter.EditorPanels;
 using FlexRouter.EditorsUI.Dialogues;
 using FlexRouter.EditorsUI.Helpers;
 using FlexRouter.Helpers;
@@ -41,7 +40,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             _assignedAccessDescriptor = assignedAccessDescriptor;
 
             _usedVariables = _assignedAccessDescriptor.GetAllUsedVariables().ToList();
-            _stateList = _assignedAccessDescriptor.GetStateDescriptors().ToList().OrderBy(i => i.Order).ToList();
+            _stateList = _assignedAccessDescriptor.GetConnectors(null).ToList().OrderBy(i => i.Order).ToList();
             foreach (var s in _stateList)
             {
                 foreach (var v in _usedVariables)
@@ -132,7 +131,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
         public bool IsDataChanged()
         {
             var origUsedVariables = _assignedAccessDescriptor.GetAllUsedVariables();
-            var origStateList = _assignedAccessDescriptor.GetStateDescriptors().ToList().OrderBy(i => i.Order);
+            var origStateList = _assignedAccessDescriptor.GetConnectors(null).ToList().OrderBy(i => i.Order);
 
             // Сравниваем размер и состав массива переменных
             if (origUsedVariables.Length != _usedVariables.Count())

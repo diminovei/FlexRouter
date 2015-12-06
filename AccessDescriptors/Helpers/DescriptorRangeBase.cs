@@ -4,14 +4,6 @@ using System.Xml.XPath;
 
 namespace FlexRouter.AccessDescriptors.Helpers
 {
-    public enum CycleType
-    {
-        None,
-        Simple,
-        UnreachableMinimum,
-        UnreachableMaximum
-    }
-
     public abstract class DescriptorRangeBase : DescriptorMultistateBase
     {
         private int _minimumValueFormulaId = -1;

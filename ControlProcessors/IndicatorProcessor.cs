@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
+using FlexRouter.ControlProcessors.AssignedHardware;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
@@ -9,21 +11,31 @@ using FlexRouter.ProfileItems;
 
 namespace FlexRouter.ControlProcessors
 {
-    class IndicatorProcessor : ControlProcessorSingleAssignmentBase<IIndicatorMethods>, IVisualizer
+    class IndicatorProcessor : ControlProcessorBase<IIndicatorMethods>, IVisualizer
     {
         private string _previousIndicatorText;
 
         public IndicatorProcessor(DescriptorBase accessDescriptor) : base(accessDescriptor)
         {
         }
-        public override string GetName()
+
+        protected override Type GetAssignmentsType()
+        {
+            return typeof(Assignment);
+        } 
+
+        public override string GetDescription()
         {
             return LanguageManager.GetPhrase(Phrases.HardwareIndicator);
+        }
+        public override bool HasInvertMode()
+        {
+            return false;
         }
 
         public IEnumerable<ControlEventBase> GetNewEvent()
         {
-            if (string.IsNullOrEmpty(AssignedHardwareForSingle))
+            if (string.IsNullOrEmpty(Connections[0].GetAssignedHardware()))
                 return null;
             var ad = Profile.GetAccessDesciptorById(AssignedAccessDescriptorId);
             var text = ((IIndicatorMethods) ad).GetIndicatorText();
@@ -32,20 +44,19 @@ namespace FlexRouter.ControlProcessors
             _previousIndicatorText = text;
             var ev = new IndicatorEvent
             {
-                Hardware = ControlProcessorHardware.GenerateByGuid(AssignedHardwareForSingle),
+                Hardware = ControlProcessorHardware.GenerateByGuid(Connections[0].GetAssignedHardware()),
                 IndicatorText = text,
             };
-            // ToDo: добавить восстановление текста, если индикатор участвовал в поиске
             return new List<ControlEventBase> { ev };
         }
 
         public IEnumerable<ControlEventBase> GetClearEvent()
         {
-            if (string.IsNullOrEmpty(AssignedHardwareForSingle))
+            if (string.IsNullOrEmpty(Connections[0].GetAssignedHardware()))
                 return null;
             var ev = new IndicatorEvent
             {
-                Hardware = ControlProcessorHardware.GenerateByGuid(AssignedHardwareForSingle),
+                Hardware = ControlProcessorHardware.GenerateByGuid(Connections[0].GetAssignedHardware()),
                 IndicatorText = "",
             };
             // Требуется для того, чтобы при изменении, например, числа цифр в индикаторе не оставались гореть цифры
