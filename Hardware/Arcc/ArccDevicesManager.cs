@@ -234,6 +234,9 @@ namespace FlexRouter.Hardware.Arcc
                 Devices[controlProcessorHardware.MotherBoardId].Dump(hardwareArray);
                 var lastUpdateTime = DateTime.Now;
                 var stateCount = 0;
+
+                //var m = string.Format("{0} module {1}", HardwareInDump.MotherBoardId, _moduleTypeInDump);
+                //Problems.AddOrUpdateProblem(m, "Дамп ", ProblemHideOnFixOptions.HideItemAndDescription, false);
                 // Ждём дампа всех кнопок модуля или перерыва в поставке данных и переходим к дампу следующего модуля
                 while (true)
                 {
@@ -253,7 +256,6 @@ namespace FlexRouter.Hardware.Arcc
                                 Problems.AddOrUpdateProblem(message, "", ProblemHideOnFixOptions.HideItemAndDescription, true);
                                 break;
                             }
-                                
                             buttonsDumpedCount = _buttonDumpState.Count(b => b);
                         }
                         if (_moduleTypeInDump == ModuleTypeInDump.BinaryInput)

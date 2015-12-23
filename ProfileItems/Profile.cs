@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using FlexRouter.AccessDescriptors.FormulaKeeper;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.EditorsUI.Dialogues;
@@ -33,15 +34,15 @@ namespace FlexRouter.ProfileItems
         /// </summary>
         /// <param name="panelId"></param>
         /// <returns></returns>
-        public static bool IsPanelInUse(int panelId)
+        public static bool IsPanelInUse(Guid panelId)
         {
             return AccessDescriptorsStorage.Any(descriptorBase => descriptorBase.Value.GetAssignedPanelId() == panelId) ||
                 VariableStorage.GetAllVariables().Any(variable => variable.PanelId == panelId);
         }
 
-        private static readonly Dictionary<int, IControlProcessor> ControlProcessorsStorage = new Dictionary<int, IControlProcessor>();
+        private static readonly Dictionary<Guid, IControlProcessor> ControlProcessorsStorage = new Dictionary<Guid, IControlProcessor>();
 
-        private static readonly Dictionary<int, DescriptorBase> AccessDescriptorsStorage = new Dictionary<int, DescriptorBase>();
+        private static readonly Dictionary<Guid, DescriptorBase> AccessDescriptorsStorage = new Dictionary<Guid, DescriptorBase>();
 
         private static string _mainSimulatorProcess;
 
@@ -67,7 +68,7 @@ namespace FlexRouter.ProfileItems
             return string.IsNullOrEmpty(varNames) ? null : varNames;
         }
 
-        public static string GetVariableAndPanelNameById(int id)
+        public static string GetVariableAndPanelNameById(Guid id)
         {
             var variable = VariableStorage.GetVariableById(id);
             var variableName = variable.Name;
@@ -75,7 +76,7 @@ namespace FlexRouter.ProfileItems
             return panel.Name + "." + variableName;
         }
 
-        public static int GetVariableByPanelAndName(string panelName, string variableName)
+        public static Guid GetVariableByPanelAndName(string panelName, string variableName)
         {
             var varList = VariableStorage.GetAllVariables();
             foreach (var v in varList)
@@ -87,16 +88,16 @@ namespace FlexRouter.ProfileItems
                     continue;
                 return v.Id;
             }
-            return -1;
+            return Guid.Empty;
         }
 
-        public static IOrderedEnumerable<IVariable> GetSortedVariablesListByPanelId(int panelId)
+        public static IOrderedEnumerable<IVariable> GetSortedVariablesListByPanelId(Guid panelId)
         {
             var vars = VariableStorage.GetAllVariables();
             return vars.Where(ad => ad.PanelId == panelId).OrderBy(ad => ad.Name);
         }
 
-        public static int RegisterAccessDescriptor(DescriptorBase ad)
+        public static Guid RegisterAccessDescriptor(DescriptorBase ad)
         {
             AccessDescriptorsStorage[ad.GetId()] = ad;
             return ad.GetId();
@@ -104,23 +105,23 @@ namespace FlexRouter.ProfileItems
 
         public static void InitializeAccessDescriptors()
         {
-            //lock (AccessDescriptorsStorage)
-            //{
+            lock (AccessDescriptorsStorage)
+            {
                 foreach (var ad in AccessDescriptorsStorage)
                 {
                     ad.Value.Initialize();
                 }
-//            }
+            }
         }
 
-        public static DescriptorBase GetAccessDesciptorById(int id)
+        public static DescriptorBase GetAccessDesciptorById(Guid id)
         {
             if (!AccessDescriptorsStorage.ContainsKey(id))
                 return null;
             return AccessDescriptorsStorage[id];
         }
 
-        public static IOrderedEnumerable<DescriptorBase> GetSortedAccessDesciptorListByPanelId(int panelId)
+        public static IOrderedEnumerable<DescriptorBase> GetSortedAccessDesciptorListByPanelId(Guid panelId)
         {
             return AccessDescriptorsStorage.Values.Where(ad => ad.GetAssignedPanelId() == panelId).OrderBy(ad => ad.GetName());
         }
@@ -129,7 +130,7 @@ namespace FlexRouter.ProfileItems
             return AccessDescriptorsStorage.Values.OrderBy(ad => ad.GetName());
         }
 
-        public static void RemoveAccessDescriptor(int accessDescriptorId)
+        public static void RemoveAccessDescriptor(Guid accessDescriptorId)
         {
             if (!AccessDescriptorsStorage.ContainsKey(accessDescriptorId))
                 return;
@@ -142,57 +143,57 @@ namespace FlexRouter.ProfileItems
         /// </summary>
         /// <param name="id">Associated AccessDescriptorId</param>
         /// <returns></returns>
-        public static IControlProcessor GetControlProcessorByAccessDescriptorId(int id)
+        public static IControlProcessor GetControlProcessorByAccessDescriptorId(Guid id)
         {
-            //lock (ControlProcessorsStorage)
-            //{
+            lock (ControlProcessorsStorage)
+            {
                 return !ControlProcessorsStorage.ContainsKey(id) ? null : ControlProcessorsStorage[id];
-//            }
+            }
         }
 
-        public static void RemoveControlProcessor(int associatedAccessDescriptorId)
+        public static void RemoveControlProcessor(Guid associatedAccessDescriptorId)
         {
-            //lock (ControlProcessorsStorage)
-            //{
+            lock (ControlProcessorsStorage)
+            {
                 if (!ControlProcessorsStorage.ContainsKey(associatedAccessDescriptorId))
                     return;
                 ControlProcessorsStorage.Remove(associatedAccessDescriptorId);
-//            }
+            }
         }
 
-        public static int RegisterControlProcessor(IControlProcessor cp, int associatedAccessDescriptorId)
+        public static Guid RegisterControlProcessor(IControlProcessor cp, Guid associatedAccessDescriptorId)
         {
-            //lock (ControlProcessorsStorage)
-            //{
+            lock (ControlProcessorsStorage)
+            {
                 var id = associatedAccessDescriptorId;
                 ControlProcessorsStorage.Add(id, cp);
                 return id;
-//            }
+            }
         }
 
         public static void SendEventToControlProcessors(ControlEventBase controlEvent)
         {
-            //lock (ControlProcessorsStorage)
-            //{
+            lock (ControlProcessorsStorage)
+            {
                 foreach (var cp in ControlProcessorsStorage)
                 {
                     if (cp.Value is IVisualizer)
                         continue;
                     ((ICollector)cp.Value).ProcessControlEvent(controlEvent);
                 }
-            //}
+            }
         }
         public static void TickControlProcessors()
         {
-            //lock (ControlProcessorsStorage)
-            //{
+            lock (ControlProcessorsStorage)
+            {
                 foreach (var cp in ControlProcessorsStorage)
                 {
                     var value = cp.Value as IRepeater;
                     if (value != null)
                         value.Tick();
                 }
-            //}
+            }
         }
         public static ControlProcessorHardware[] GetControlProcessorAssignments()
         {
@@ -224,8 +225,8 @@ namespace FlexRouter.ProfileItems
 
         public static IEnumerable<ControlEventBase> GetControlProcessorsNewEvents()
         {
-            //lock (ControlProcessorsStorage)
-            //{
+            lock (ControlProcessorsStorage)
+            {
                 var evs = new List<ControlEventBase>();
                 foreach (var cps in ControlProcessorsStorage)
                 {
@@ -237,13 +238,13 @@ namespace FlexRouter.ProfileItems
                     evs.AddRange(range);
                 }
                 return evs;
-            //}
+            }
         }
 
         public static IEnumerable<ControlEventBase> GetControlProcessorsClearEvents()
         {
-            //lock (ControlProcessorsStorage)
-            //{
+            lock (ControlProcessorsStorage)
+            {
                 var evs = new List<ControlEventBase>();
                 foreach (var cps in ControlProcessorsStorage)
                 {
@@ -255,7 +256,7 @@ namespace FlexRouter.ProfileItems
                     evs.AddRange(range);
                 }
                 return evs;
-            //}
+            }
         }
 
         public static void UpdateControlProcessorsAssignments()
@@ -504,7 +505,7 @@ namespace FlexRouter.ProfileItems
             }
             else
                 LoadAssignments(profilePath);
-
+            GlobalId.Save();
             foreach (var descriptorBase in AccessDescriptorsStorage)
                 descriptorBase.Value.Initialize();
             return true;
@@ -522,7 +523,13 @@ namespace FlexRouter.ProfileItems
             while (navPointer.MoveNext())
             {
                 var type = navPointer.Current.GetAttribute("Type", navPointer.Current.NamespaceURI);
-                var id = int.Parse(navPointer.Current.GetAttribute("AssignedAccessDescriptorId", navPointer.Current.NamespaceURI));
+
+                Guid id;
+                if (!Guid.TryParse(navPointer.Current.GetAttribute("AssignedAccessDescriptorId", navPointer.Current.NamespaceURI), out id))
+                {
+                    // ToDo: удалить
+                    id = GlobalId.GetByOldId(ObjType.AccessDescriptor, int.Parse(navPointer.Current.GetAttribute("AssignedAccessDescriptorId", navPointer.Current.NamespaceURI)));
+                }
                 if (!AccessDescriptorsStorage.ContainsKey(id))
                 {
                     cpLoadErrorsCounter++;

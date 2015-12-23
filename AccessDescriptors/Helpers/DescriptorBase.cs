@@ -1,6 +1,7 @@
-﻿using System.Globalization;
+﻿using System;
 using System.Xml;
 using System.Xml.XPath;
+using FlexRouter.AccessDescriptors.FormulaKeeper;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.CalculatorRelated;
 using FlexRouter.Helpers;
@@ -12,7 +13,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
     {
         private DescriptorBase _parentAccessDescriptorId;
 
-        public abstract Connector[] GetConnectors(object controlProcessor);
+        public abstract Connector[] GetConnectors(object controlProcessor, bool withDefaultState = false);
 
         public void SetDependency(DescriptorBase parentAccessDescriptorId)
         {
@@ -33,7 +34,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
         /// <summary>
         /// Глобальный идентификатор -1 - значит ещё не зарегистрирован в профиле
         /// </summary>
-        protected int Id = -1;
+        protected Guid Id = Guid.Empty;
         /// <summary>
         /// Имя AccessDescriptor'а
         /// </summary>
@@ -41,7 +42,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
         /// <summary>
         /// Идентификатор панели, к которой принадлежит AccessDescriptor
         /// </summary>
-        private int _panelId = -1;
+        private Guid _panelId = Guid.Empty;
         /// <summary>
         /// Использовать формулу питания панели или собственную?
         /// </summary>
@@ -49,7 +50,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
         /// <summary>
         /// Идентификатор формулы питания в GlobalFormulaKeeper
         /// </summary>
-        private int _powerFormulaId = -1;
+        private Guid _powerFormulaId = Guid.Empty;
         /// <summary>
         /// Аддон к калькулятору, позволяющий парсить переменные в формулах
         /// </summary>
@@ -79,16 +80,11 @@ namespace FlexRouter.AccessDescriptors.Helpers
                 return true;
             return descriptorFormulaResult.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.BooleanResult &&
                    descriptorFormulaResult.CalculatedBoolBoolValue;
-
-            //var result = CalculatorE.ComputeFormula(_usePanelPowerFormula ? Profile.PanelStorage.GetPanelById(_panelId).GetPowerFormula() : GetPowerFormula());
-            //if (result.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.FormulaWasEmpty)
-            //    return true;
-            //return result.GetFormulaComputeResultType() == TypeOfComputeFormulaResult.BooleanResult && result.CalculatedBoolBoolValue;
         }
 
         public void SetPowerFormula(string powerFormula)
         {
-            if (_powerFormulaId == -1)
+            if (_powerFormulaId == Guid.Empty)
                 _powerFormulaId = GlobalFormulaKeeper.Instance.StoreFormula(powerFormula, GetId());
             else
                 _powerFormulaId = GlobalFormulaKeeper.Instance.StoreOrChangeFormulaText(_powerFormulaId, powerFormula, GetId());
@@ -96,7 +92,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
 
         public string GetPowerFormula()
         {
-            return _powerFormulaId == -1 ? null : GlobalFormulaKeeper.Instance.GetFormulaText(_powerFormulaId);
+            return _powerFormulaId == Guid.Empty ? null : GlobalFormulaKeeper.Instance.GetFormulaText(_powerFormulaId);
         }
 
         public string GetName()
@@ -112,21 +108,21 @@ namespace FlexRouter.AccessDescriptors.Helpers
         /// <summary>
         ///  -1 - значит ещё не зарегистрирован в профиле
         /// </summary>
-        public int GetId()
+        public Guid GetId()
         {
             return Id;
         }
-        public void SetId(int id)
+        public void SetId(Guid id)
         {
             Id = id;
         }
 
-        public int GetAssignedPanelId()
+        public Guid GetAssignedPanelId()
         {
             return _panelId;
         }
 
-        public void SetAssignedPanelId(int panelId)
+        public void SetAssignedPanelId(Guid panelId)
         {
             _panelId = panelId;
         }
@@ -150,8 +146,8 @@ namespace FlexRouter.AccessDescriptors.Helpers
         public void SaveHeader(XmlWriter writer)
         {
             writer.WriteAttributeString("Type", GetType().Name);
-            writer.WriteAttributeString("Id", Id.ToString(CultureInfo.InvariantCulture));
-            writer.WriteAttributeString("PanelId", _panelId.ToString(CultureInfo.InvariantCulture));
+            writer.WriteAttributeString("Id", Id.ToString());
+            writer.WriteAttributeString("PanelId", _panelId.ToString());
             writer.WriteAttributeString("Name", _name);
             writer.WriteAttributeString("PowerFormula", GetPowerFormula());
             writer.WriteAttributeString("UsePanelPowerFormula", _usePanelPowerFormula.ToString());
@@ -170,10 +166,22 @@ namespace FlexRouter.AccessDescriptors.Helpers
 
         public void LoadHeader(XPathNavigator reader)
         {
-            Id = int.Parse(reader.GetAttribute("Id", reader.NamespaceURI));
-            GlobalId.RegisterExisting(Id);
+            if (!Guid.TryParse(reader.GetAttribute("Id", reader.NamespaceURI), out Id))
+            {
+                // ToDo: удалить
+                Id = GlobalId.GetByOldId(ObjType.AccessDescriptor, int.Parse(reader.GetAttribute("Id", reader.NamespaceURI)));
+                if(Id == Guid.Empty)
+                    Id = GlobalId.Register(ObjType.AccessDescriptor, int.Parse(reader.GetAttribute("Id", reader.NamespaceURI)));
+            }
             GlobalFormulaKeeper.Instance.RemoveFormulasByOwnerId(GetId());
-            _panelId = int.Parse(reader.GetAttribute("PanelId", reader.NamespaceURI));
+
+            if (!Guid.TryParse(reader.GetAttribute("PanelId", reader.NamespaceURI), out _panelId))
+            {
+                // ToDo: удалить
+                _panelId = GlobalId.GetByOldId(ObjType.Panel, int.Parse(reader.GetAttribute("PanelId", reader.NamespaceURI)));
+                if(_panelId == Guid.Empty)
+                    _panelId = GlobalId.Register(ObjType.Panel, int.Parse(reader.GetAttribute("PanelId", reader.NamespaceURI)));
+            }
             _name = reader.GetAttribute("Name", reader.NamespaceURI);
             var powerFormula = reader.GetAttribute("PowerFormula", reader.NamespaceURI);
             SetPowerFormula(powerFormula);

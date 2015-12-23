@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Xml;
 using System.Xml.XPath;
+using FlexRouter.AccessDescriptors.FormulaKeeper;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.CalculatorRelated;
@@ -78,9 +79,9 @@ namespace FlexRouter.AccessDescriptors
         /// Получить все состояния
         /// </summary>
         /// <returns></returns>
-        public override Connector[] GetConnectors(object controlProcessor)
+        public override Connector[] GetConnectors(object controlProcessor, bool withDefaultState = false)
         {
-            return StateDescriptors.Where(x=>x.Id!=GetDefaultStateId()).ToArray();
+            return withDefaultState ? StateDescriptors.ToArray() : StateDescriptors.Where(x => x.Id != GetDefaultStateId()).ToArray();
         }
         /// <summary>
         /// Сохранить дополнительные параметры

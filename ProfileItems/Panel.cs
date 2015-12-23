@@ -1,4 +1,5 @@
-﻿using System.Drawing.Printing;
+﻿using System;
+using System.Drawing.Printing;
 using System.Globalization;
 using System.Xml;
 using System.Xml.XPath;
@@ -16,14 +17,14 @@ namespace FlexRouter.ProfileItems
         {
             return LanguageManager.GetPhrase(Phrases.EditorHeaderPanel);
         }
-        public int Id;
+        public Guid Id;
         public string Name;
         private string _powerFormula;
         /// <summary>
         /// Конструктор, вызывамый при загрузке панели из профиля
         /// </summary>
         /// <param name="id">идентификатор панели</param>
-        private Panel(int id)
+        private Panel(Guid id)
         {
             Id = id;
         }
@@ -35,11 +36,11 @@ namespace FlexRouter.ProfileItems
             Id = GlobalId.GetNew();
         }
 
-        public int GetId()
+        public Guid GetId()
         {
             return Id;
         }
-        public void SetId(int id)
+        public void SetId(Guid id)
         {
             Id = id;
         }
@@ -54,7 +55,7 @@ namespace FlexRouter.ProfileItems
         public void Save(XmlTextWriter writer)
         {
             writer.WriteStartElement("Panel");
-            writer.WriteAttributeString("Id", Id.ToString(CultureInfo.InvariantCulture));
+            writer.WriteAttributeString("Id", Id.ToString());
             writer.WriteAttributeString("Name", Name);
             writer.WriteAttributeString("PowerFormula", GetPowerFormula());
             writer.WriteEndElement();
@@ -62,10 +63,14 @@ namespace FlexRouter.ProfileItems
         }
         public static Panel Load(XPathNavigator reader)
         {
-            var id = int.Parse(reader.GetAttribute("Id", reader.NamespaceURI));
-            var panel = new Panel(id);
-            GlobalId.RegisterExisting(id);
-            panel.Name = reader.GetAttribute("Name", reader.NamespaceURI);
+            Guid id;
+            if (!Guid.TryParse(reader.GetAttribute("Id", reader.NamespaceURI), out id))
+            {
+
+                // ToDo: удалить
+                id = GlobalId.Register(ObjType.Panel, int.Parse(reader.GetAttribute("Id", reader.NamespaceURI)));
+            }
+            var panel = new Panel(id) {Name = reader.GetAttribute("Name", reader.NamespaceURI)};
             var powerFormula = reader.GetAttribute("PowerFormula", reader.NamespaceURI);
             panel.SetPowerFormula(powerFormula);
             return panel;

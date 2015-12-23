@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Documents;
+using FlexRouter.AccessDescriptors.FormulaKeeper;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.CalculatorRelated;
@@ -213,7 +214,7 @@ namespace FlexRouter.AccessDescriptors
             }
         }
 
-        public override Connector[] GetConnectors(object controlProcessor)
+        public override Connector[] GetConnectors(object controlProcessor, bool withDefaultState = false)
         {
             var connectors = new List<Connector>();
             if (controlProcessor == null || controlProcessor is EncoderProcessor || controlProcessor is AxisRangeProcessor || controlProcessor is IndicatorProcessor || controlProcessor is LedMatrixIndicatorProcessor || controlProcessor is LampProcessor)

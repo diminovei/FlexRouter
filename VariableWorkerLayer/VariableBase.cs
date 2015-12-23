@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Globalization;
 using System.Xml;
 using System.Xml.XPath;
@@ -9,15 +10,15 @@ namespace FlexRouter.VariableWorkerLayer
 {
     public abstract class VariableBase : IVariable, ITreeItem
     {
-        public int Id { get; set; }
-        public int PanelId { get; set; }
+        public Guid Id { get; set; }
+        public Guid PanelId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
 
         protected VariableBase()
         {
             Id = GlobalId.GetNew();
-            PanelId = -1;
+            PanelId = Guid.Empty;
         }
         
         public void Save(XmlTextWriter writer)
@@ -29,8 +30,8 @@ namespace FlexRouter.VariableWorkerLayer
         public void SaveHeader(XmlTextWriter writer)
         {
             writer.WriteAttributeString("Type", GetType().Name);
-            writer.WriteAttributeString("Id", Id.ToString(CultureInfo.InvariantCulture));
-            writer.WriteAttributeString("PanelId", PanelId.ToString(CultureInfo.InvariantCulture));
+            writer.WriteAttributeString("Id", Id.ToString());
+            writer.WriteAttributeString("PanelId", PanelId.ToString());
             writer.WriteAttributeString("Name", Name);
             writer.WriteAttributeString("Description", Description);
         }
@@ -47,9 +48,20 @@ namespace FlexRouter.VariableWorkerLayer
 
         public void LoadHeader(XPathNavigator reader)
         {
-            Id = int.Parse(reader.GetAttribute("Id", reader.NamespaceURI));
-            GlobalId.RegisterExisting(Id);
-            PanelId = int.Parse(reader.GetAttribute("PanelId", reader.NamespaceURI));
+            Guid id;
+            if (!Guid.TryParse(reader.GetAttribute("Id", reader.NamespaceURI), out id))
+            {
+                // ToDo: удалить
+                id = GlobalId.Register(ObjType.Variable, int.Parse(reader.GetAttribute("Id", reader.NamespaceURI)));
+            }
+            Id = id;
+
+            Guid panelId;
+            if (!Guid.TryParse(reader.GetAttribute("PanelId", reader.NamespaceURI), out panelId))
+            {
+                panelId = GlobalId.GetByOldId(ObjType.Panel, int.Parse(reader.GetAttribute("PanelId", reader.NamespaceURI)));
+            }
+            PanelId = panelId;
             Name = reader.GetAttribute("Name", reader.NamespaceURI);
             Description = reader.GetAttribute("Description", reader.NamespaceURI);
         }
@@ -60,7 +72,6 @@ namespace FlexRouter.VariableWorkerLayer
         public IVariable GetCopy()
         {
             var variable = (IVariable)MemberwiseClone();
-            //variable.Id = GlobalId.GetNew();
             return variable;
         }
 

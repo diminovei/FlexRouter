@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 using FlexRouter.ProfileItems;
 
@@ -14,8 +15,8 @@ namespace FlexRouter.EditorsUI.Dialogues
     /// </summary>
     public partial class Selector
     {
-        private int _selectedItemId = -1;
-        private readonly int _selectedPanelId = -1;
+        private Guid _selectedItemId = Guid.Empty;
+        private readonly Guid _selectedPanelId = Guid.Empty;
         private readonly SelectedType _selectedType;
         public Selector(SelectedType selectedType)
         {
@@ -63,7 +64,7 @@ namespace FlexRouter.EditorsUI.Dialogues
 //            var adAll = Profile.GetSortedAccessDesciptorList();
             foreach (var panel in panels)
             {
-                if(_selectedPanelId!=-1 && panel.Id != _selectedPanelId)
+                if(_selectedPanelId!=Guid.Empty && panel.Id != _selectedPanelId)
                     continue;
                 var treeRootItem = new TreeViewItem { Tag = panel.Id, Name = TreeItemType.Panel.ToString(), Header = panel.Name };
 
@@ -98,7 +99,7 @@ namespace FlexRouter.EditorsUI.Dialogues
 
         private void CancelClick(object sender, RoutedEventArgs e)
         {
-            _selectedItemId = -1;
+            _selectedItemId = Guid.Empty;
             Close();
         }
 
@@ -111,7 +112,7 @@ namespace FlexRouter.EditorsUI.Dialogues
         /// Возвращает id выбранной переменной
         /// </summary>
         /// <returns>id выбранной переменной. -1, если ничего не выбрано</returns>
-        public int GetSelectedItemId()
+        public Guid GetSelectedItemId()
         {
             return _selectedItemId;
         }
@@ -121,7 +122,7 @@ namespace FlexRouter.EditorsUI.Dialogues
             
             if (_tree.SelectedItem == null)
             {
-                _selectedItemId = -1;
+                _selectedItemId = Guid.Empty;
                 return;
             }
                 
@@ -129,18 +130,18 @@ namespace FlexRouter.EditorsUI.Dialogues
             if (((TreeViewItem)_tree.SelectedItem).Name == TreeItemType.Panel.ToString())
             {
                 _description.Text = string.Empty;
-                _selectedItemId = -1;
+                _selectedItemId = Guid.Empty;
                 return;
             }
             if (_selectedType == SelectedType.Variable)
             {
-                var selectedVariable = Profile.VariableStorage.GetVariableById((int)((TreeViewItem)_tree.SelectedItem).Tag);
+                var selectedVariable = Profile.VariableStorage.GetVariableById((Guid)((TreeViewItem)_tree.SelectedItem).Tag);
                 _description.Text = selectedVariable.Description;
                 _selectedItemId = selectedVariable.Id;
             }
             if (_selectedType == SelectedType.AccessDescriptor)
             {
-                var selectedDescriptor = Profile.GetAccessDesciptorById((int)((TreeViewItem)_tree.SelectedItem).Tag);
+                var selectedDescriptor = Profile.GetAccessDesciptorById((Guid)((TreeViewItem)_tree.SelectedItem).Tag);
                 _description.Text = string.Empty;
                 _selectedItemId = selectedDescriptor.GetId();
             }

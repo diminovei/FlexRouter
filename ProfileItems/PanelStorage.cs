@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace FlexRouter.ProfileItems
@@ -8,7 +9,7 @@ namespace FlexRouter.ProfileItems
     /// </summary>
     public class PanelStorage
     {
-        private readonly Dictionary<int, Panel> _panelsStorage = new Dictionary<int, Panel>();
+        private readonly Dictionary<Guid, Panel> _panelsStorage = new Dictionary<Guid, Panel>();
 
         //public delegate void OnChangeDelegate();
         //private event OnChangeDelegate OnChange;
@@ -40,7 +41,7 @@ namespace FlexRouter.ProfileItems
             return _panelsStorage.Values.OrderBy(panel => panel.Name);
         }
 
-        public Panel GetPanelById(int id)
+        public Panel GetPanelById(Guid id)
         {
             return !_panelsStorage.ContainsKey(id) ? null : _panelsStorage[id];
         }

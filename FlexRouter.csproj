@@ -89,6 +89,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AccessDescriptors\FormulaKeeper\FormulaContainer.cs" />
+    <Compile Include="AccessDescriptors\FormulaKeeper\GlobalFormulaKeeper.cs" />
     <Compile Include="AccessDescriptors\Helpers\Connector.cs" />
     <Compile Include="AccessDescriptors\Helpers\CycleType.cs" />
     <Compile Include="AccessDescriptors\Helpers\DescriptorBase.cs" />
@@ -99,7 +101,7 @@
     <Compile Include="AccessDescriptors\Helpers\DescriptorOutputBase.cs" />
     <Compile Include="AccessDescriptors\Helpers\DescriptorRangeBase.cs" />
     <Compile Include="AccessDescriptors\DescriptorValue.cs" />
-    <Compile Include="AccessDescriptors\Helpers\GlobalFormulaKeeper.cs" />
+    <Compile Include="AccessDescriptors\FormulaKeeper\FormulaKeeper.cs" />
     <Compile Include="AccessDescriptors\Interfaces\IAccessDescriptor.cs" />
     <Compile Include="AccessDescriptors\Interfaces\IRepeaterInDescriptor.cs" />
     <Compile Include="ApplicationSettings.cs" />

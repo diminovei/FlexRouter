@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms.VisualStyles;
@@ -66,7 +67,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             var d = new Selector(SelectedType.AccessDescriptor);
             d.ShowDialog();
             var selectedAdId = d.GetSelectedItemId();
-            if (selectedAdId == -1)
+            if (selectedAdId == Guid.Empty)
                 return;
             var ad = Profile.GetAccessDesciptorById(selectedAdId);
             if (!(ad is DescriptorRange))

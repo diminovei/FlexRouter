@@ -71,8 +71,8 @@ namespace FlexRouter
 
 //            // Button
 //            var ad = new DescriptorValue();
-//            ad.AddState("Off");
-//            ad.AddState("On");
+//            ad.AddConnector("Off");
+//            ad.AddConnector("On");
 //            ad.AddVariable(/*var1Id*/0);
 //            ad.AddVariable(/*var2Id*/1);
 //            ad.SetFormula(0, 0, "0");
@@ -91,8 +91,8 @@ namespace FlexRouter
 
 //            // BinaryInput
 //            var ad3 = new DescriptorValue();
-//            ad3.AddState("Off");
-//            ad3.AddState("On");
+//            ad3.AddConnector("Off");
+//            ad3.AddConnector("On");
 //            ad3.AddVariable(/*var1Id*/0);
 //            ad3.AddVariable(/*var2Id*/1);
 //            ad3.SetFormula(0, 0, "0");

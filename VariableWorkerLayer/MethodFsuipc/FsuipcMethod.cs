@@ -19,8 +19,8 @@ namespace FlexRouter.VariableWorkerLayer.MethodFsuipc
             internal byte[] Buffer;
             internal int Token;
         }
-        readonly Dictionary<int, InternalVariableDesc> _fsuipcVariablesForRead = new Dictionary<int, InternalVariableDesc>();
-        readonly Dictionary<int, InternalVariableDesc> _fsuipcVariablesForWrite = new Dictionary<int, InternalVariableDesc>();
+        readonly Dictionary<Guid, InternalVariableDesc> _fsuipcVariablesForRead = new Dictionary<Guid, InternalVariableDesc>();
+        readonly Dictionary<Guid, InternalVariableDesc> _fsuipcVariablesForWrite = new Dictionary<Guid, InternalVariableDesc>();
         private readonly Fsuipc _fsuipc = new Fsuipc();	// Our main fsuipc object!
         private int _dwResult = -1;				// Variable to hold returned results
         private InitializationState _lastInitStatus;
@@ -149,7 +149,7 @@ namespace FlexRouter.VariableWorkerLayer.MethodFsuipc
             _fsuipcVariablesForRead.Clear();
             _fsuipcVariablesForWrite.Clear();
         }
-        public double? GetValue(int id)
+        public double? GetValue(Guid id)
         {
             if(!_fsuipcVariablesForRead.ContainsKey(id))
                 return -1;

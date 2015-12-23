@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace FlexRouter.VariableWorkerLayer
 {
     public class VariableManager
     {
-        private readonly Dictionary<int, IVariable> _variables = new Dictionary<int, IVariable>();
+        private readonly Dictionary<Guid, IVariable> _variables = new Dictionary<Guid, IVariable>();
         private readonly MemoryPatchMethod _memoryPatchMethodInstance = new MemoryPatchMethod();
         private readonly FsuipcMethod _fsuipcMethodInstance = new FsuipcMethod();
         private readonly List<string> _notFoundModules = new List<string>();
@@ -106,7 +107,7 @@ namespace FlexRouter.VariableWorkerLayer
         /// </summary>
         /// <param name="id">Иднтификатор переменной</param>
         /// <returns></returns>
-        public IVariable GetVariableById(int id)
+        public IVariable GetVariableById(Guid id)
         {
             return !_variables.ContainsKey(id) ? null : _variables[id];
         }
@@ -131,7 +132,7 @@ namespace FlexRouter.VariableWorkerLayer
         /// Удалить переменную
         /// </summary>
         /// <param name="variableId">Идентификатор переменной</param>
-        public void RemoveVariable(int variableId)
+        public void RemoveVariable(Guid variableId)
         {
             if (!_variables.ContainsKey(variableId))
                 return;
@@ -160,7 +161,7 @@ namespace FlexRouter.VariableWorkerLayer
         /// <param name="varId">Идентификатор переменной</param>
         /// <param name="value">значение</param>
         /// <returns>Результат</returns>
-        public ProcessVariableError WriteValue(int varId, double value)
+        public ProcessVariableError WriteValue(Guid varId, double value)
         {
             if (!_variables.ContainsKey(varId))
                 return ProcessVariableError.IdIsNotExist;
@@ -175,7 +176,7 @@ namespace FlexRouter.VariableWorkerLayer
         /// </summary>
         /// <param name="varId">Идентификатор переменной</param>
         /// <returns></returns>
-        public ReadVariableResult ReadCachedValue(int varId)
+        public ReadVariableResult ReadCachedValue(Guid varId)
         {
             return ReadValue(varId, true);
         }
@@ -184,11 +185,11 @@ namespace FlexRouter.VariableWorkerLayer
         /// </summary>
         /// <param name="varId"></param>
         /// <returns></returns>
-        public ReadVariableResult ReadValue(int varId)
+        public ReadVariableResult ReadValue(Guid varId)
         {
             return ReadValue(varId, false);
         }
-        private ReadVariableResult ReadValue(int varId, bool getCachedValue)
+        private ReadVariableResult ReadValue(Guid varId, bool getCachedValue)
         {
             var result = new ReadVariableResult();
             if (!_variables.ContainsKey(varId))

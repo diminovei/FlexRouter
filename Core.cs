@@ -21,7 +21,6 @@ namespace FlexRouter
         private volatile Mode _mode = Mode.Stop;
         private Thread _routerCoreThread;
         private volatile bool _isDumpedOnce;
-        readonly List<string> _outputWasOn = new List<string>();
         public bool Pause()
         {
             return Stop(true);
@@ -129,6 +128,8 @@ namespace FlexRouter
                     Messenger.AddMessage(MessageToMainForm.NewHardwareEvent, controlEvent);
             }
             var outgoing = new List<ControlEventBase>();
+            var outputWasOn = new List<string>();
+
             var newOutgoingEvents = Profile.GetControlProcessorsNewEvents();
             foreach (var newOutgoingEvent in newOutgoingEvents)
             {
@@ -137,23 +138,25 @@ namespace FlexRouter
                 if (newOutgoingEvent.Hardware.ModuleType == HardwareModuleType.Indicator || newOutgoingEvent.Hardware.ModuleType == HardwareModuleType.BinaryOutput)
                 {
                     var isPowerOff = false;
-                    var hwGuid = newOutgoingEvent.Hardware.GetHardwareGuid();
 
                     var indicatorEvent = newOutgoingEvent as IndicatorEvent;
-                    if (indicatorEvent != null && indicatorEvent.IndicatorText == string.Empty) 
+                    if (indicatorEvent != null && string.IsNullOrWhiteSpace(indicatorEvent.IndicatorText)) 
                         isPowerOff = true;
+                    
                     var lampEvent = newOutgoingEvent as LampEvent;
                     if (lampEvent != null && !lampEvent.IsOn) 
                         isPowerOff = true;
-                    if (isPowerOff && _outputWasOn.Contains(hwGuid))
+
+                    var hwGuid = newOutgoingEvent.Hardware.GetHardwareGuid();
+                    if (isPowerOff && outputWasOn.Contains(hwGuid))
                         continue;
 
-                    if(!isPowerOff && !_outputWasOn.Contains(hwGuid))
-                        _outputWasOn.Add(hwGuid);
+                    if(!isPowerOff && !outputWasOn.Contains(hwGuid))
+                        outputWasOn.Add(hwGuid);
                 }
                 outgoing.Add(newOutgoingEvent);
             }
-            _outputWasOn.Clear();
+            outputWasOn.Clear();
             HardwareManager.PostOutgoingEvents(outgoing);
             Profile.TickControlProcessors();
         }

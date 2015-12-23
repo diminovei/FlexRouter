@@ -9,6 +9,7 @@ using System.Xml.XPath;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.ControlProcessors;
+using FlexRouter.Helpers;
 using FlexRouter.Localizers;
 using FlexRouter.ProfileItems;
 
@@ -18,16 +19,21 @@ namespace FlexRouter.AccessDescriptors
     {
         readonly List<DescriptorRange> _dependentDescriptors = new List<DescriptorRange>();
 
-        public override Connector[] GetConnectors(object controlProcessor)
+        public override Connector[] GetConnectors(object controlProcessor, bool withDefaultState = false)
         {
             var connectors = new List<Connector>();
-            if (controlProcessor is EncoderProcessor || controlProcessor is ButtonPlusMinusProcessor)
+            if (controlProcessor is ButtonPlusMinusProcessor)
             {
-                var c = new Connector { Id = 0, Name = "*", Order = 0 };
+                var c = new Connector { Id = 0, Name = "-", Order = 0 };
+                connectors.Add(c);
+                c = new Connector { Id = 1, Name = "+", Order = 1 };
                 connectors.Add(c);
                 return connectors.ToArray();
             }
-            throw new Exception(string.Format("ControlProcessor типа '{0}' не может быть назначен на AccessDescriptor типа '{1}'", controlProcessor.GetType(), this.GetType()));
+            var t = new Connector { Id = 0, Name = "*", Order = 0 };
+            connectors.Add(t);
+            return connectors.ToArray();
+//            throw new Exception(string.Format("ControlProcessor типа '{0}' не может быть назначен на AccessDescriptor типа '{1}'", controlProcessor.GetType(), this.GetType()));
         }
 
         private int GetDependentDescriptorIndex(DescriptorRange descriptor)
@@ -95,7 +101,7 @@ namespace FlexRouter.AccessDescriptors
             return Properties.Resources.RangeUnion;
         }
 
-        private readonly List<int> _loadedDependentDescriptors = new List<int>();
+        private readonly List<Guid> _loadedDependentDescriptors = new List<Guid>();
         public override void Initialize()
         {
             base.Initialize();
@@ -116,7 +122,7 @@ namespace FlexRouter.AccessDescriptors
             foreach (var dd in _dependentDescriptors)
             {
                 writer.WriteStartElement("Descriptor");
-                writer.WriteAttributeString("Id", dd.GetId().ToString(CultureInfo.InvariantCulture));
+                writer.WriteAttributeString("Id", dd.GetId().ToString());
                 writer.WriteEndElement();
             }
             writer.WriteEndElement();
@@ -126,7 +132,14 @@ namespace FlexRouter.AccessDescriptors
             var readerAdd = reader.Select("DependentAccessDescriptors/Descriptor");
             while (readerAdd.MoveNext())
             {
-                var id = int.Parse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI));
+                Guid id;
+                if (!Guid.TryParse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI), out id))
+                {
+                    // ToDo: удалить
+                    id = GlobalId.GetByOldId(ObjType.AccessDescriptor, int.Parse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI)));
+                    if(id == Guid.Empty)
+                        id = GlobalId.Register(ObjType.AccessDescriptor, int.Parse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI)));
+                }
                 _loadedDependentDescriptors.Add(id);
             }
         }

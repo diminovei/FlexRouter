@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Xml;
 using System.Xml.XPath;
+using FlexRouter.AccessDescriptors.FormulaKeeper;
 
 namespace FlexRouter.AccessDescriptors.Helpers
 {
     public abstract class DescriptorRangeBase : DescriptorMultistateBase
     {
-        private int _minimumValueFormulaId = -1;
-        private int _maximumValueFormulaId = -1;
-        private int _defaultValueFormulaId = -1;
-        private int _stepFormulaId = -1;
-        private int _receiveValueFormulaId = -1;
+        private Guid _minimumValueFormulaId = Guid.Empty;
+        private Guid _maximumValueFormulaId = Guid.Empty;
+        private Guid _defaultValueFormulaId = Guid.Empty;
+        private Guid _stepFormulaId = Guid.Empty;
+        private Guid _receiveValueFormulaId = Guid.Empty;
         private CycleType _cycleType;
         public bool EnableDefaultValue;
 
@@ -54,13 +55,11 @@ namespace FlexRouter.AccessDescriptors.Helpers
         {
             SetFormulaHelper(formula, ref _defaultValueFormulaId);
         }
-        public void SetFormulaHelper(string formula, ref int id)
+        public void SetFormulaHelper(string formula, ref Guid id)
         {
-            if (id == -1)
-                id = GlobalFormulaKeeper.Instance.StoreFormula(formula, GetId());
-            else
-                id = GlobalFormulaKeeper.Instance.StoreOrChangeFormulaText(id, formula, GetId());
+            id = id == Guid.Empty ? GlobalFormulaKeeper.Instance.StoreFormula(formula, GetId()) : GlobalFormulaKeeper.Instance.StoreOrChangeFormulaText(id, formula, GetId());
         }
+
         public string GetReceiveValueFormula()
         {
             return GlobalFormulaKeeper.Instance.GetFormulaText(_receiveValueFormulaId);

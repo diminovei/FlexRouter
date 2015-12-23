@@ -52,7 +52,7 @@ namespace FlexRouter.ControlProcessors
         }
 
         ///// <summary>
-        ///// Словарь [код, stateId]. Если в словаре есть код, который сейчас набран кнопками - включаем указанный StateId
+        ///// Словарь [код, stateId]. Если в словаре есть код, который сейчас набран кнопками - включаем указанный ConnectorId
         ///// </summary>
         //private readonly List<Assignment> _stateAssignments = new List<Assignment>();
         

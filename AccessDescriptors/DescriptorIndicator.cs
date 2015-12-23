@@ -162,7 +162,7 @@ public class DescriptorIndicator : DescriptorOutputBase, IIndicatorMethods
             return res;
         }
 
-        public override Connector[] GetConnectors(object controlProcessor)
+        public override Connector[] GetConnectors(object controlProcessor, bool withDefaultState = false)
         {
             var connectors = new List<Connector>();
             var c = new Connector { Id = 0, Name = "*", Order = 0 };

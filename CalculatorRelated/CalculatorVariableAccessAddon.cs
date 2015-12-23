@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using FlexRouter.CalculatorRelated.Tokens;
 using FlexRouter.ProfileItems;
 using FlexRouter.VariableWorkerLayer;
@@ -31,7 +32,7 @@ namespace FlexRouter.CalculatorRelated
             if (varAndPanelName.Length != 2)
                 return null;
             var varId = Profile.GetVariableByPanelAndName(varAndPanelName[0], varAndPanelName[1]);
-            if (varId == -1)
+            if (varId == Guid.Empty)
                 return tokenToPreprocess;
             var readResult = _readCachedValues ? Profile.VariableStorage.ReadCachedValue(varId) : Profile.VariableStorage.ReadValue(varId);
             if (readResult.Error != ProcessVariableError.Ok)
@@ -68,7 +69,7 @@ namespace FlexRouter.CalculatorRelated
                 if (varAndPanelName.Length != 2)
                     return null;
                 var varId = Profile.GetVariableByPanelAndName(varAndPanelName[0], varAndPanelName[1]);
-                if (varId == -1)
+                if (varId == Guid.Empty)
                     token.Error = FormulaError.TokenPointsAbsentItem;
                 token.Error = FormulaError.Ok;
                 return token;

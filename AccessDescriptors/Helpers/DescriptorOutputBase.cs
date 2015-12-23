@@ -1,11 +1,13 @@
-﻿using System.Xml;
+﻿using System;
+using System.Xml;
 using System.Xml.XPath;
+using FlexRouter.AccessDescriptors.FormulaKeeper;
 
 namespace FlexRouter.AccessDescriptors.Helpers
 {
     public abstract class DescriptorOutputBase: DescriptorBase
    {
-        protected int OutputFormulaId = -1;
+        protected Guid OutputFormulaId = Guid.Empty;
 
         /// <summary>
         /// Получить формулу для расчёта значения для вывода на индикатор
@@ -21,7 +23,7 @@ namespace FlexRouter.AccessDescriptors.Helpers
         /// <param name="formula">Токинезированная формула</param>
         public void SetFormula(string formula)
         {
-            if (OutputFormulaId == -1)
+            if (OutputFormulaId == Guid.Empty)
                 OutputFormulaId = GlobalFormulaKeeper.Instance.StoreFormula(formula, GetId());
             else
                 OutputFormulaId = GlobalFormulaKeeper.Instance.StoreOrChangeFormulaText(OutputFormulaId, formula, GetId());

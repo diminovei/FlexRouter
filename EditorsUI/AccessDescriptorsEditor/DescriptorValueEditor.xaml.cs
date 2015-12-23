@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using FlexRouter.AccessDescriptors.FormulaKeeper;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.EditorsUI.Dialogues;
@@ -26,7 +28,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
         private readonly DescriptorMultistateBase _assignedAccessDescriptor;
 
         private DataTable _dataTable = new DataTable();
-        private readonly List<int> _usedVariables;
+        private readonly List<Guid> _usedVariables;
         private readonly List<Connector> _stateList;
         private readonly FormulaKeeper _localFormulaKeeper = new FormulaKeeper();
 
@@ -40,7 +42,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             _assignedAccessDescriptor = assignedAccessDescriptor;
 
             _usedVariables = _assignedAccessDescriptor.GetAllUsedVariables().ToList();
-            _stateList = _assignedAccessDescriptor.GetConnectors(null).ToList().OrderBy(i => i.Order).ToList();
+            _stateList = _assignedAccessDescriptor.GetConnectors(null, true).ToList().OrderBy(i => i.Order).ToList();
             foreach (var s in _stateList)
             {
                 foreach (var v in _usedVariables)
@@ -104,12 +106,6 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             }
             StatesGrid.ItemsSource = _dataTable.AsDataView();
         }
-
-/*        private string GetFormulaFromDataTable(int variableIndex, int stateIndex)
-        {
-            
-        }*/
-
         public void Save()
         {
             ApplyGridChangesToInternalDataStructures();
@@ -131,7 +127,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
         public bool IsDataChanged()
         {
             var origUsedVariables = _assignedAccessDescriptor.GetAllUsedVariables();
-            var origStateList = _assignedAccessDescriptor.GetConnectors(null).ToList().OrderBy(i => i.Order);
+            var origStateList = _assignedAccessDescriptor.GetConnectors(null, true).ToList().OrderBy(i => i.Order);
 
             // Сравниваем размер и состав массива переменных
             if (origUsedVariables.Length != _usedVariables.Count())
@@ -204,7 +200,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             var x = new Selector(SelectedType.Variable);
             x.ShowDialog();
             var selectedVariable = x.GetSelectedItemId();
-            if (selectedVariable == -1)
+            if (selectedVariable == Guid.Empty)
                 return;
             if (_usedVariables.Contains(selectedVariable))
             {
@@ -231,7 +227,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             {
                 _usedVariables.Remove(selectedVar.Id);
                 foreach (var state in _stateList)
-                    _localFormulaKeeper.RemoveVariableFormula(_assignedAccessDescriptor.GetId(), selectedVar.Id, state.Id);
+                    _localFormulaKeeper.RemoveFormulaByVariableIdAndOwnerId(_assignedAccessDescriptor.GetId(), selectedVar.Id, state.Id);
                 ShowData();
             }
         }
@@ -253,7 +249,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             {
                 _stateList.RemoveAll(x => x.Id == stateId);
                 foreach (var usedVariable in _usedVariables)
-                    _localFormulaKeeper.RemoveVariableFormula(_assignedAccessDescriptor.GetId(), usedVariable, stateId);
+                    _localFormulaKeeper.RemoveFormulaByVariableIdAndOwnerId(_assignedAccessDescriptor.GetId(), usedVariable, stateId);
                 ShowData();
             }
         }

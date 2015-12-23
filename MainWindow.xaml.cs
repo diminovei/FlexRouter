@@ -26,6 +26,7 @@
 // Автомат тяги работает не корректно. Не автоматит, не устанавливает в 2 "режим 2"
 // Стабилизация по высоте включается, а лампа не загорается. Нужно разбираться
 //  ***************************** Сделать
+//  Не отображается значение переменной в памяти. Из-за принудительной синхронизации?
 //      При удалении элемента перестраивать дерево и переходить на следующий элемент
 //      Сделать умную синхронизацию деревьев (удалять то, что исчезло, добавлять то, что появилось вместо полной перерисовки)
 //      Пройтись по всем ToDo и доделать
@@ -62,6 +63,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
@@ -70,6 +72,7 @@ using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Threading;
 using FlexRouter.AccessDescriptors;
+using FlexRouter.AccessDescriptors.FormulaKeeper;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.CalculatorRelated;
@@ -118,26 +121,20 @@ namespace FlexRouter
 
         public MainWindow()
         {
-            //var v = new FsuipcVariable();
-            //v.Offset = 0xBDC;
-            //v.Size = MemoryVariableSize.FourBytes;
-            //v.Id = 3;
-            //var f = new FsuipcMethod();
-            //var r = f.Initialize();
-            //r = r;
-            //f.AddVariableToRead(v);
-            //f.Process();
-            //var x = f.GetValue(3);
-            //x = x;
-            //v.SetValueToSet(8196);
-            //f.AddVariableToWrite(v);
-            //f.AddVariableToRead(v);
-            //f.Process();
-            //var y = f.GetValue(3);
-            //y = y;
-            //f.UnInitialize();
-            //return;
-            
+            AppDomain.CurrentDomain.UnhandledException
+                += delegate(object sender, UnhandledExceptionEventArgs args)
+                {
+                    var e = (Exception)args.ExceptionObject;
+                    var logFolder = Utils.GetFullSubfolderPath("Logs");
+                    if (!Directory.Exists(logFolder))
+                        Directory.CreateDirectory(logFolder);
+                    var logPath = Path.Combine(logFolder, "flexrouter.log");
+                    var version = Assembly.GetEntryAssembly().GetName().Version;
+                    File.AppendAllText(logPath, string.Format("{0};Unhandled exception;{1};{2}\n", DateTime.Now, version, e));
+                    MessageBox.Show(e.ToString(), "Unhandled exception", MessageBoxButton.OK, MessageBoxImage.Stop);
+                    Application.Current.Shutdown();
+                };
+
             InitializeComponent();
             ApplicationSettings.LoadSettings();
             LanguageManager.Initialize();
@@ -916,10 +913,6 @@ namespace FlexRouter
                 var ad = Profile.GetAccessDesciptorById(oldControlProcessorId) as DescriptorMultistateBase;
                 if (ad != null)
                 {
-                    //var states = ad.GetConnectors(this);
-                    //var cp = controlProcessor as IControlProcessorMultistate;
-                    //if (cp != null)
-                    //    cp.RenewStatesInfo(states);
                     controlProcessor.OnAssignmentsChanged();
                 }
                 ShowControlProcessor(controlProcessor);
@@ -1026,9 +1019,6 @@ namespace FlexRouter
 
         private void OnAnySaveButtonClicked(StackPanel panel, bool isVariableTree)
         {
-            if (_accessDescriptorsTree.SelectedItem == null)
-                return;
-
             // Требуется для того, чтобы при изменении, например, числа цифр в индикаторе не оставались гореть цифры
             var clearEvents = Profile.GetControlProcessorsClearEvents();
             HardwareManager.PostOutgoingEvents(clearEvents.ToList());
@@ -1239,7 +1229,7 @@ namespace FlexRouter
         //    vtk.RestoreState(ref tree);
         //}
 
-        private static System.Drawing.Bitmap GetIcon(TreeItemType tit, int itemId)
+        private static System.Drawing.Bitmap GetIcon(TreeItemType tit, Guid itemId)
         {
             if (tit == TreeItemType.ControlProcessor)
             {

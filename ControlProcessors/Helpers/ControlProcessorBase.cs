@@ -7,6 +7,7 @@ using System.Xml.XPath;
 using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.ControlProcessors.AssignedHardware;
 using FlexRouter.Hardware.Helpers;
+using FlexRouter.Helpers;
 
 namespace FlexRouter.ControlProcessors.Helpers
 {
@@ -93,16 +94,16 @@ namespace FlexRouter.ControlProcessors.Helpers
         {
             return Connections.Select(c => c.GetAssignedHardware()).ToArray();
         }
-        protected int AssignedAccessDescriptorId;
-        public int GetAssignedAccessDescriptor()
+        protected Guid AssignedAccessDescriptorId;
+        public Guid GetAssignedAccessDescriptor()
         {
             return AssignedAccessDescriptorId;
         }
-        public int GetId()
+        public Guid GetId()
         {
             return AssignedAccessDescriptorId;
         }
-        public void SetId(int id)
+        public void SetId(Guid id)
         {
             AssignedAccessDescriptorId = id;
         }
@@ -114,8 +115,7 @@ namespace FlexRouter.ControlProcessors.Helpers
         protected void SaveHeader(XmlTextWriter writer)
         {
             writer.WriteAttributeString("Type", GetType().Name);
-            writer.WriteAttributeString("AssignedAccessDescriptorId",
-                AssignedAccessDescriptorId.ToString(CultureInfo.InvariantCulture));
+            writer.WriteAttributeString("AssignedAccessDescriptorId", AssignedAccessDescriptorId.ToString());
         }
         protected virtual void SaveAdditionals(XmlTextWriter writer)
         {
@@ -141,7 +141,11 @@ namespace FlexRouter.ControlProcessors.Helpers
         }
         public void LoadHeader(XPathNavigator reader)
         {
-            AssignedAccessDescriptorId = int.Parse(reader.GetAttribute("AssignedAccessDescriptorId", reader.NamespaceURI));
+            if (!Guid.TryParse(reader.GetAttribute("AssignedAccessDescriptorId", reader.NamespaceURI), out AssignedAccessDescriptorId))
+            {
+                // ToDo: удалить
+                AssignedAccessDescriptorId = GlobalId.GetByOldId(ObjType.AccessDescriptor, int.Parse(reader.GetAttribute("AssignedAccessDescriptorId", reader.NamespaceURI)));
+            }
         }
         public virtual void LoadAdditionals(XPathNavigator reader)
         {
