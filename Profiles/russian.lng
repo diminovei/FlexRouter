@@ -25,6 +25,7 @@
   <Phrase Name="EditorVariableDecValue" Value = "Dec значение в памяти"/>
   <Phrase Name="EditorDescription" Value = "Описание"/>
   <Phrase Name="EditorDigitsAfterPoint" Value = "Знаков после запятой"/>
+  <Phrase Name="EditorDigitsTotalNumber" Value = "Всего знаков"/>
   <Phrase Name="EditorAbsoluteOffset" Value = "Абсолютное смещение"/>
   <Phrase Name="EditorConvertAbsoluteOffsetToRelative" Value = "В относительное"/>
   <Phrase Name="EditorPowerFormula" Value = "Формула подачи питания"/>
@@ -43,12 +44,15 @@
   <Phrase Name="EditorRepeater" Value = "Повторитель"/>
   <Phrase Name="EditorHardwareMotherboard" Value = "Материнская плата"/>
   <Phrase Name="EditorHardwareModule" Value = "Модуль"/>
+  <Phrase Name="EditorHardwareBlock" Value = "Блок"/>
   <Phrase Name="EditorHardwareControl" Value = "Элемент"/>
   <Phrase Name="EditorRenameState" Value = "Переименовать состояние"/>
   <Phrase Name="EditorRemoveState" Value = "Удалить состояние"/>
   <Phrase Name="EditorAddState" Value = "Добавить состояние"/>
   <Phrase Name="EditorAddVariable" Value = "Добавить переменную"/>
   <Phrase Name="EditorRemoveVariable" Value = "Удалить переменную"/>
+  <Phrase Name="EditorCloneVariable" Value = "Клонировать"/>
+  <Phrase Name="EditorCloneAccessDescriptor" Value = "Клонировать"/>
   <Phrase Name="EditorDefaultStateColumnHeader" Value = "По-умолчанию"/>
   <Phrase Name="EditorSetDefaultState" Value = "По-умолчанию"/>
   <Phrase Name="EditorAxisReset" Value = "Сброс"/>
@@ -58,6 +62,7 @@
   <Phrase Name="EditorDependentDescriptorsList" Value = "Список зависимых описателей"/>
   <Phrase Name="EditorStartInitializeBinaryInputButtonsList" Value = "Инициализировать"/>
   <Phrase Name="EditorStopInitializeBinaryInputButtonsList" Value = "Готово"/>
+  <Phrase Name="EditorVariableAndPanelNameToClipboard" Value = "Имя переменной в буфер обмена"/>
 
   <Phrase Name="EditorTypeMemoryMultistate" Value = "Доступ к памяти (набор значений)"/>
   <Phrase Name="EditorTypeMemoryIndicator" Value = "Доступ к памяти (управление индикатором)"/>
@@ -82,6 +87,7 @@
   <Phrase Name="EditorAccessDescriptorIsAlreadyInList" Value = "Это описатель уже есть в списке"/>
   <Phrase Name="EditorSelectAnItemFirst" Value = "Сначала выберите один из пунктов"/>
   <Phrase Name="EditorDependentAssignmentWasRemoved" Value = "Назначение на зависимый узел удалено"/>
+  <Phrase Name="EditorMessageTheSameVariableIsExist" Value = "Переменная не будет сохранена, потому что уже существует другая, работающая с тем же адресом"/>
 
   <Phrase Name="MessageBoxErrorHeader" Value = "Ошибка"/>
   <Phrase Name="MessageBoxWarningHeader" Value = "Предупреждение"/>
@@ -99,6 +105,7 @@
   <Phrase Name="HardwareButton" Value = "Кнопка"/>
   <Phrase Name="HardwareEncoder" Value = "Энкодер"/>
   <Phrase Name="HardwareIndicator" Value = "Индикатор"/>
+  <Phrase Name="HardwareLedMatrixIndicator" Value = "Индикатор из матрицы светодиодов"/>
   <Phrase Name="HardwareBinaryOutput" Value = "Лампа"/>
   <Phrase Name="HardwareAxis" Value = "Ось"/>
   <Phrase Name="HardwareButtonPlusMinus" Value = "Кнопки +-"/>
@@ -128,9 +135,10 @@
   <Phrase Name="SettingsMessageRemoveProfile" Value = "Удалить профиль?"/>
   <Phrase Name="SettingsExportProfileDialogHeader" Value = "Экспортировать профиль"/>
   <Phrase Name="SettingsImportProfileDialogHeader" Value = "Импортировать профиль"/>
-  <Phrase Name="SettingsImportProfileKeepAssignmentsDialogHeader" Value = "Импортировать новую версию профиля и сохранить мои назначения"/>
   <Phrase Name="SettingsMessageInputProfileNewName" Value = "Выберете имя профиля"/>
   <Phrase Name="SettingsTurnControlsSynchronizationOff" Value = "Отключить регулярную синхронизацию реальных и виртуальных тумблеров"/>
+  <Phrase Name="SettingsJoystickBindByInstanceGuid" Value = "Использовать внутренний Guid джойстика (если роутер находит только один экземпляр джойстика)"/>
+  <Phrase Name="SettingsHardwareGuidConflict" Value = "Несколько джойстиков имеют одинаковый идентификатор. Включите галку 'Использовать внутренний Guid джойстика' на вкладке 'Настройка' и перезапустите роутер"/>
 
   <Phrase Name="TabInfo" Value = "Информация"/>
   <Phrase Name="TabSettings" Value = "Настройки"/>
@@ -142,10 +150,8 @@
   <Phrase Name="CommonButtonCreate" Value = "Создать"/>
   <Phrase Name="CommonButtonSave" Value = "Сохранить"/>
   <Phrase Name="CommonButtonRemove" Value = "Удалить"/>
+  <Phrase Name="CommonButtonClearAssignment" Value = "Очистить назначение"/>
   <Phrase Name="CommonButtonRename" Value = "Переименовать"/>
-  <Phrase Name="CommonButtonImport" Value = "Импортировать"/>
-  <Phrase Name="CommonButtonExport" Value = "Экспортировать"/>
-  <Phrase Name="CommonButtonImportAndKeepAssignments" Value = "Импортировать и сохранить назначения"/>
   <Phrase Name="CommonLabelLanguage" Value = "Язык (Language)"/>
   <Phrase Name="CommonLabelProfile" Value = "Профиль"/>
   <Phrase Name="CommonLabelFormulaResult" Value = "Результат"/>
@@ -161,4 +167,10 @@
   <Phrase Name="CommonStatePaused" Value = "Приостановлен"/>
   <Phrase Name="CommonStateStopped" Value = "Остановлен"/>
   <Phrase Name="CommonProfileManagement" Value = "Управление профилем"/>
+  <Phrase Name="CommonDumpControls" Value = "Синхронизировать состояние кнопок"/>
+
+  <Phrase Name="CycleTypeUnreachableMinimum" Value = "Недостижимый минимум (min;max]"/>
+  <Phrase Name="CycleTypeUnreachableMaximum" Value = "Недостижимый максимум [min;max)"/>
+  <Phrase Name="CycleTypeReachableMinMax" Value = "Простой [min;max]"/>
+  <Phrase Name="CycleTypeNone" Value = "Выключен"/>
 </FlexRouterProfile>

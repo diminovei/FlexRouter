@@ -14,11 +14,8 @@
     <Setting Name="JoystickBindByInstanceGuid" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="F3Indicator1to8SegmentsOrder" Type="System.String" Scope="User">
-      <Value Profile="(Default)">0,1,2,3,4,5,6,7</Value>
-    </Setting>
-    <Setting Name="F3Indicator9to16SegmentsOrder" Type="System.String" Scope="User">
-      <Value Profile="(Default)">7,6,5,4,3,2,1,0</Value>
+    <Setting Name="F3IndicatorSegmentsToPin" Type="System.String" Scope="User">
+      <Value Profile="(Default)">A-5,B-4,C-2,D-1,E-0,F-7,G-6,P-3</Value>
     </Setting>
   </Settings>
 </SettingsFile>

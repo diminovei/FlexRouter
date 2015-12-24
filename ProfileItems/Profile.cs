@@ -505,7 +505,8 @@ namespace FlexRouter.ProfileItems
             }
             else
                 LoadAssignments(profilePath);
-            GlobalId.Save();
+            // ToDo: удалить
+//            GlobalId.Save();
             foreach (var descriptorBase in AccessDescriptorsStorage)
                 descriptorBase.Value.Initialize();
             return true;
@@ -565,7 +566,6 @@ namespace FlexRouter.ProfileItems
             VariableStorage.Clear();
             PanelStorage.Clear();
             GlobalFormulaKeeper.Instance.ClearAll();
-            GlobalId.ClearAll();
             _mainSimulatorProcess = string.Empty;
             _currentProfileName = null;
             _currentProfilePath = null;

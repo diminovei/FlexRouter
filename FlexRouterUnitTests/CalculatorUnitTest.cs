@@ -265,11 +265,11 @@ namespace FlexRouterUnitTests
             valueAccessDescriptor.AddVariable(secondTestVariableId);
             valueAccessDescriptor.AddVariable(thirdTestVariableId);
 //            valueAccessDescriptor.SetFormula(0, 0, "0");
-            valueAccessDescriptor.SetFormula(0, 0, "0");
-            valueAccessDescriptor.SetFormula(0, 1, "0");
+            valueAccessDescriptor.SetFormula(0, secondTestVariableId, "0");
+            valueAccessDescriptor.SetFormula(0, thirdTestVariableId, "0");
 //            valueAccessDescriptor.SetFormula(1, 0, "1");
-            valueAccessDescriptor.SetFormula(1, 0, "2.58");
-            valueAccessDescriptor.SetFormula(1, 1, "-3");
+            valueAccessDescriptor.SetFormula(1, secondTestVariableId, "2.58");
+            valueAccessDescriptor.SetFormula(1, thirdTestVariableId, "-3");
             valueAccessDescriptor.AssignDefaultStateId(0);
             valueAccessDescriptor.SetAssignedPanelId(panelId3);
             valueAccessDescriptor.SetName("AccessDescriptor1");

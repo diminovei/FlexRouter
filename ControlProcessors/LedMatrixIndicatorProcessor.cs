@@ -67,8 +67,9 @@ namespace FlexRouter.ControlProcessors
             //    //  '--D--'-P   '--3--'-7
 
 //            const string setting = "A-5,B-4,C-2,D-1,E-0,F-7,G-6,P-3";
-            const string setting = "A-0,B-1,C-2,D-3,E-4,F-5,G-6,P-7";
-            var segmentToPinPair = setting.ToUpper().Split(',');
+            //const string setting = "A-0,B-1,C-2,D-3,E-4,F-5,G-6,P-7";
+            //var segmentToPinPair = setting.ToUpper().Split(',');
+            var segmentToPinPair = Properties.Settings.Default.F3IndicatorSegmentsToPin.ToUpper().Split(',');
             foreach (var p in segmentToPinPair)
             {
                 var segmentToPin = p.Split('-');

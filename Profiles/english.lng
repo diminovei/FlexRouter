@@ -24,6 +24,7 @@
   <Phrase Name="EditorVariableHexValue" Value = "Hex value in memory"/>
   <Phrase Name="EditorVariableDecValue" Value = "Dex value in memory"/>
   <Phrase Name="EditorDigitsAfterPoint" Value = "Digits after point"/>
+  <Phrase Name="EditorDigitsTotalNumber" Value = "Total digits number"/>
   <Phrase Name="EditorDescription" Value = "Description"/>
   <Phrase Name="EditorAbsoluteOffset" Value = "Absolute offset"/>
   <Phrase Name="EditorConvertAbsoluteOffsetToRelative" Value = "To relative"/>
@@ -44,12 +45,15 @@
   <Phrase Name="EditorRepeater" Value = "Repeater"/>
   <Phrase Name="EditorHardwareMotherboard" Value = "Motherboard"/>
   <Phrase Name="EditorHardwareModule" Value = "Module"/>
+  <Phrase Name="EditorHardwareBlock" Value = "Block"/>
   <Phrase Name="EditorHardwareControl" Value = "Control"/>
   <Phrase Name="EditorRenameState" Value = "Rename state"/>
   <Phrase Name="EditorRemoveState" Value = "Remove state"/>
   <Phrase Name="EditorAddState" Value = "Add state"/>
   <Phrase Name="EditorAddVariable" Value = "Add variable"/>
   <Phrase Name="EditorRemoveVariable" Value = "Remove variable"/>
+  <Phrase Name="EditorCloneVariable" Value = "Clone"/>
+  <Phrase Name="EditorCloneAccessDescriptor" Value = "Clone"/>
   <Phrase Name="EditorDefaultStateColumnHeader" Value = "Default"/>
   <Phrase Name="EditorSetDefaultState" Value = "Default"/>
   <Phrase Name="MainFormRemove" Value = "Remove"/>
@@ -60,6 +64,7 @@
   <Phrase Name="EditorDependentAssignmentWasRemoved" Value = "Assignment of dependent control processor was removed"/>
   <Phrase Name="EditorStartInitializeBinaryInputButtonsList" Value = "Initialize"/>
   <Phrase Name="EditorStopInitializeBinaryInputButtonsList" Value = "Stop"/>
+  <Phrase Name="EditorVariableAndPanelNameToClipboard" Value = "Variable and panel name to clipboard"/>
 
   <Phrase Name="EditorTypeMemoryMultistate" Value = "Memory access (values set)"/>
   <Phrase Name="EditorTypeMemoryIndicator" Value = "Memory access (indicator)"/>
@@ -84,6 +89,7 @@
   <Phrase Name="EditorAccessDescriptorTypeIsNotSuitable" Value = "Access descriptor type is not suitable"/>
   <Phrase Name="EditorAccessDescriptorIsAlreadyInList" Value = "Access descriptor is already in list"/>
   <Phrase Name="EditorSelectAnItemFirst" Value = "Select an item first"/>
+  <Phrase Name="EditorMessageTheSameVariableIsExist" Value = "Variable will not be saved because another one use the same address:"/>
 
   <Phrase Name="MessageBoxErrorHeader" Value = "Error"/>
   <Phrase Name="MessageBoxWarningHeader" Value = "Error"/>
@@ -101,6 +107,7 @@
   <Phrase Name="HardwareButton" Value = "Button"/>
   <Phrase Name="HardwareEncoder" Value = "Encoder"/>
   <Phrase Name="HardwareIndicator" Value = "Indicator"/>
+  <Phrase Name="HardwareLedMatrixIndicator" Value = "Led matrix indicator"/>
   <Phrase Name="HardwareBinaryOutput" Value = "Binary output"/>
   <Phrase Name="HardwareAxis" Value = "Axis"/>
   <Phrase Name="HardwareButtonPlusMinus" Value = "Buttons +-"/>
@@ -130,9 +137,10 @@
   <Phrase Name="SettingsMessageRemoveProfile" Value = "Remove profile?"/>
   <Phrase Name="SettingsExportProfileDialogHeader" Value = "Export profile"/>
   <Phrase Name="SettingsImportProfileDialogHeader" Value = "Import profile"/>
-  <Phrase Name="SettingsImportProfileKeepAssignmentsDialogHeader" Value = "Import new profile version and keep my assignments"/>
   <Phrase Name="SettingsMessageInputProfileNewName" Value = "Select profile name"/>
   <Phrase Name="SettingsTurnControlsSynchronizationOff" Value = "Turn regular real to virtual controls synchronization off"/>
+  <Phrase Name="SettingsJoystickBindByInstanceGuid" Value = "Use joystick internal Guid (if router detect only one joystick instance)"/>
+  <Phrase Name="SettingsHardwareGuidConflict" Value = "Two or more joysticks have equal identifier. Set check box 'Use joystick internal Guid' on at 'Settings' tab, then restart router"/>
 
   <Phrase Name="TabInfo" Value = "Information"/>
   <Phrase Name="TabSettings" Value = "Settings"/>
@@ -144,10 +152,8 @@
   <Phrase Name="CommonButtonCreate" Value = "Create"/>
   <Phrase Name="CommonButtonSave" Value = "Save"/>
   <Phrase Name="CommonButtonRemove" Value = "Remove"/>
+  <Phrase Name="CommonButtonClearAssignment" Value = "Remove assignment"/>
   <Phrase Name="CommonButtonRename" Value = "Rename"/>
-  <Phrase Name="CommonButtonImport" Value = "Import"/>
-  <Phrase Name="CommonButtonExport" Value = "Export"/>
-  <Phrase Name="CommonButtonImportAndKeepAssignments" Value = "Import and keep assignments"/>
   <Phrase Name="CommonLabelLanguage" Value = "Language"/>
   <Phrase Name="CommonLabelProfile" Value = "Profile"/>
   <Phrase Name="CommonLabelFormulaResult" Value = "Result"/>
@@ -163,4 +169,10 @@
   <Phrase Name="CommonStatePaused" Value = "Paused"/>
   <Phrase Name="CommonStateStopped" Value = "Stopped"/>
   <Phrase Name="CommonProfileManagement" Value = "Profile management"/>
+  <Phrase Name="CommonDumpControls" Value = "Sync keys state"/>
+
+  <Phrase Name="CycleTypeUnreachableMinimum" Value = "Unreachable minimum (min;max]"/>
+  <Phrase Name="CycleTypeUnreachableMaximum" Value = "Unreachable maximum [min;max)"/>
+  <Phrase Name="CycleTypeReachableMinMax" Value = "Simple [min;max]"/>
+  <Phrase Name="CycleTypeNone" Value = "None"/>
 </FlexRouterProfile>
