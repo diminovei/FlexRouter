@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using FlexRouter.Hardware.HardwareEvents;
@@ -48,13 +48,15 @@ namespace FlexRouter.Hardware.Joystick
             }
             return true;
         }
-        public override int[] GetCapacity(ControlProcessorHardware cph, DeviceSubType deviceSubType)
+        public override Capacity GetCapacity(ControlProcessorHardware cph, DeviceSubType deviceSubType)
         {
+            if (deviceSubType == DeviceSubType.Motherboard && (cph.ModuleType == HardwareModuleType.Button || cph.ModuleType == HardwareModuleType.Axis))
+                return new Capacity { Names = GetConnectedDevices().ToArray() };
             if (cph.ModuleType == HardwareModuleType.Axis && deviceSubType == DeviceSubType.Control)
-                return Enumerable.Range(0, ((JoystickDevice)Devices[cph.MotherBoardId]).GetCapabilities().AxesCount).ToArray();
+                return new Capacity {Names = Enumerable.Range(0, ((JoystickDevice) Devices[cph.MotherBoardId]).GetCapabilities().AxesCount).ToArray().Select(x => x.ToString(CultureInfo.InvariantCulture)).ToArray()};
             if (cph.ModuleType == HardwareModuleType.Button && deviceSubType == DeviceSubType.Control)
-                return Enumerable.Range(0, ((JoystickDevice)Devices[cph.MotherBoardId]).GetCapabilities().ButtonCount).ToArray();
-            return null;
+                return new Capacity { Names = Enumerable.Range(0, ((JoystickDevice) Devices[cph.MotherBoardId]).GetCapabilities().ButtonCount).ToArray().Select(x => x.ToString(CultureInfo.InvariantCulture)).ToArray()};
+            return new Capacity { DeviceSubtypeIsNotSuitableForCurrentHardware = true };
         }
     }
 }

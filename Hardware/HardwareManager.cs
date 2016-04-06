@@ -29,6 +29,7 @@ namespace FlexRouter.Hardware
         /// <summary>
         /// Таймер для смены фазы поиска компонентов
         /// </summary>
+// ReSharper disable once NotAccessedField.Local
         private static Timer _searchTimer;
         /// <summary>
         /// Guid компонента, который находится в поиске (индикатор, светодиод).
@@ -55,7 +56,9 @@ namespace FlexRouter.Hardware
         {
             if (string.IsNullOrEmpty(_contolInSearchGuid))
                 return;
-            var ev = GetLastControlEvent(_contolInSearchGuid);
+            ControlEventBase ev = null;
+            if (SoftDumpCache.ContainsKey(_contolInSearchGuid))
+                ev = SoftDumpCache[_contolInSearchGuid];
             if (ev == null)
             {
                 var hardware = ControlProcessorHardware.GenerateByGuid(_contolInSearchGuid);
@@ -67,7 +70,7 @@ namespace FlexRouter.Hardware
                         IsOn = false
                     };
                 }
-                if (hardware.ModuleType == HardwareModuleType.Indicator)
+                if (hardware.ModuleType == HardwareModuleType.Indicator || hardware.ModuleType == HardwareModuleType.LedMatrixIndicator)
                 {
                     ev = new IndicatorEvent
                     {
@@ -133,7 +136,9 @@ namespace FlexRouter.Hardware
         {
             foreach (var hardware in Hardwares)
                 hardware.Disconnect();
-            ClearEventsCache();
+            
+            IncomingEvents.Clear();
+            SoftDumpCache.Clear();
         }
         static public void Dump(ControlProcessorHardware[] hardware)
         {
@@ -155,48 +160,46 @@ namespace FlexRouter.Hardware
             }
             return allDevices.ToArray();
         }
+
         /// <summary>
         /// Получить информацию о возможностях устройства
         /// </summary>
         /// <param name="cph"></param>
         /// <param name="deviceSubType"></param>
-        public static int[] GetCapacity(ControlProcessorHardware cph, DeviceSubType deviceSubType)
+        public static Capacity GetCapacity(ControlProcessorHardware cph, DeviceSubType deviceSubType)
         {
-            foreach (var hardware in Hardwares)
+            if (deviceSubType != DeviceSubType.Motherboard)
             {
-                if (hardware.GetConnectedDevices().Contains(cph.MotherBoardId))
+                foreach (var hardware in Hardwares.Where(hardware => hardware.GetConnectedDevices().Contains(cph.MotherBoardId)))
                     return hardware.GetCapacity(cph, deviceSubType);
             }
-            return null;
+            var capacity = new Capacity();
+            foreach (var c in Hardwares.Select(hardware => hardware.GetCapacity(cph, deviceSubType)))
+                capacity.Add(c);
+            return capacity;
         }
+
         /// <summary>
         /// Получить входящие событиея (нажатие кнопки, вращение энкодера и т.д.)
         /// </summary>
         /// <returns>Массив событий</returns>
-        static public ControlEventBase[] GetIncomingEvents()
+        static public IEnumerable<ControlEventBase> GetIncomingEvents()
         {
-            var ie = new List<ControlEventBase>();
+            var incomingEventsToReturn = new List<ControlEventBase>();
             for (var i = 0; i < Hardwares.Count; i++)
             {
                 var incomingEvents = Hardwares.ElementAt(i).GetIncomingEvents();
                 if (incomingEvents == null)
                     continue;
-                ie.AddRange(incomingEvents);
-
+                foreach (var ie in incomingEvents)
+                {
+                    if(ie == null)
+                        continue;
+                    incomingEventsToReturn.Add(ie);
+                    SoftDumpCache[ie.Hardware.GetHardwareGuid()] = ie;
+                }
             }
-            // Именно здесь, чтобы не добавлять FakeEvent в FakeEvent. Получение данных из FakeEvent позже
-            foreach (var ev in ie)
-            {
-                SetLastControlEvent(ev);
-                if (ev.Hardware.ModuleType == HardwareModuleType.Button || ev.Hardware.ModuleType == HardwareModuleType.Axis)
-                    SoftDumpCache[ev.Hardware.GetHardwareGuid()] = ev;
-            }
-            
-            // Получение данных из FakeEvent
-            var fakeEvents = GetFakeIncomingEvents();
-            ie.AddRange(fakeEvents);
-            
-            return ie.Count == 0 ? new ControlEventBase[0] : ie.ToArray();
+            return incomingEventsToReturn;
         }
         /// <summary>
         /// Отправить на устройство исходящее событие
@@ -206,7 +209,7 @@ namespace FlexRouter.Hardware
         {
             if (outgoingEvent.Hardware.GetHardwareGuid() == _contolInSearchGuid)
                 return;
-            SetLastControlEvent(outgoingEvent);
+            SoftDumpCache[outgoingEvent.Hardware.GetHardwareGuid()] = outgoingEvent;
             foreach (var hardware in Hardwares)
                 hardware.PostOutgoingEvent(outgoingEvent);
         }
@@ -217,13 +220,13 @@ namespace FlexRouter.Hardware
             {
                 if (ev.Hardware.GetHardwareGuid() == _contolInSearchGuid)
                     continue;
-                SetLastControlEvent(ev);
+
+                SoftDumpCache[ev.Hardware.GetHardwareGuid()] = ev;
                 oe.Add(ev);
             }
             foreach (var hardware in Hardwares)
                 hardware.PostOutgoingEvents(oe.ToArray());
         }
-        
         /// <summary>
         /// Отправить на устройство исходящее событие
         /// </summary>
@@ -235,12 +238,17 @@ namespace FlexRouter.Hardware
         }
         #region Код, запоминающий состояния всех контролов и позволяющий отправить фэйковое сообщение, "сдампить" контролы
         private static readonly Queue<ControlEventBase> IncomingEvents = new Queue<ControlEventBase>();
-        private static readonly Dictionary<string, ControlEventBase> LastControlEvents = new Dictionary<string, ControlEventBase>();
-
-        private static void ClearEventsCache()
+        public static void ResendLastControlEvent(string hardwareGuid)
         {
-            IncomingEvents.Clear();
-            LastControlEvents.Clear();
+            var controlEvent = SoftDumpCache.FirstOrDefault(x => x.Key == hardwareGuid).Value;
+            if (controlEvent == null)
+                return;
+            if (controlEvent.Hardware.ModuleType != HardwareModuleType.Axis && controlEvent.Hardware.ModuleType != HardwareModuleType.Button)
+                return;
+            lock (IncomingEvents)
+            {
+                IncomingEvents.Enqueue(controlEvent);
+            }
         }
         /// <summary>
         /// Мягкий дамп нужен для того, чтобы привести виртуальные тумблеры в соответствие с железячными сразу после загрузки самолёта
@@ -249,54 +257,18 @@ namespace FlexRouter.Hardware
         /// Мягкий дамп делается раз в N секунд
         /// </summary>
         private static readonly Dictionary<string, ControlEventBase> SoftDumpCache = new Dictionary<string, ControlEventBase>();
-        static private void SetLastControlEvent(ControlEventBase controlEvent)
-        {
-            LastControlEvents[controlEvent.Hardware.GetHardwareGuid()] = controlEvent;
-        }
-        static private ControlEventBase GetLastControlEvent(string controlGuid)
-        {
-            if (string.IsNullOrEmpty(controlGuid))
-                return null;
-            return !LastControlEvents.ContainsKey(controlGuid) ? null : LastControlEvents[controlGuid];
-        }
-
-        public static void ResendLastControlEvent(string controlGuid)
-        {
-            var controlEvent = GetLastControlEvent(controlGuid);
-            if (controlEvent == null)
-                return;
-            if (controlEvent.Hardware.ModuleType != HardwareModuleType.Axis &&
-                controlEvent.Hardware.ModuleType != HardwareModuleType.Button)
-                return;
-            lock (IncomingEvents)
-            {
-                IncomingEvents.Enqueue(controlEvent);
-            }
-        }
-
-        /// <summary>
-        /// Получить входящие события (нажатие кнопки, вращение энкодера и т.д.)
-        /// </summary>
-        /// <returns>Массив событий</returns>
-        public static ControlEventBase[] GetFakeIncomingEvents()
-        {
-            var ie = new List<ControlEventBase>();
-            lock (IncomingEvents)
-            {
-                while (IncomingEvents.Count > 0)
-                    ie.Add(IncomingEvents.Dequeue());
-            }
-            return ie.ToArray();
-        }
         /// <summary>
         /// Получить актуальное состояние всех кнопок и осей
         /// </summary>
         /// <returns>Список событий</returns>
         public static ControlEventBase[] SoftDump()
         {
-            var eventsArray = new List<ControlEventBase>();
-            eventsArray.AddRange(SoftDumpCache.Values);
-            return eventsArray.ToArray();
+            lock (SoftDumpCache)
+            {
+                var eventsArray = new List<ControlEventBase>();
+                eventsArray.AddRange(SoftDumpCache.Values.Where(ev =>ev.Hardware.ModuleType == HardwareModuleType.Button || ev.Hardware.ModuleType == HardwareModuleType.Axis));
+                return eventsArray.ToArray();
+            }
         }
         #endregion
     }

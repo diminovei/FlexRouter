@@ -13,10 +13,11 @@ using FlexRouter.Localizers;
 
 namespace FlexRouter.ControlProcessors
 {
-    class ButtonProcessor : ControlProcessorBase<IDescriptorMultistateWithDefault>, ICollector, IRepeater
+    class ButtonProcessor : CollectorBase<IDescriptorMultistateWithDefault>, ICollector, IRepeater
     {
         private int _lastStateId = -1;
         private bool _lastStatePeriod;
+
         public ButtonProcessor(DescriptorBase accessDescriptor) : base(accessDescriptor)
         {
         }
@@ -34,7 +35,6 @@ namespace FlexRouter.ControlProcessors
         /// Эмуляция "Toggle" будет работать для всех кнопок сразу
         /// </summary>
         private bool _emulateToggle;
-
 
         /// <summary>
         /// Идентификатор AccessDescriptor'а, которым управляет ControlProcessor
@@ -89,21 +89,33 @@ namespace FlexRouter.ControlProcessors
         {
             return _emulateToggle;
         }
-        public void ProcessControlEvent(ControlEventBase controlEvent)
+
+        protected override bool IsControlEventSuitable(ControlEventBase controlEvent)
         {
             var ev = controlEvent as ButtonEvent;
             if (ev == null)
-                return;
+                return false;
             // AD при изменении состава State'ов нотифицирует об этом CP
             // Проверить, существует ли всё ещё такой ID контрола в AccessDescriptor
             // Как получить все состояния при загрузке ControlProcessor? Вызвать функцию в AccessDescriptor?
             var hardwareId = controlEvent.Hardware.GetHardwareGuid();
-            var button = (AssignmentForButton) Connections.FirstOrDefault(hw => hw.GetAssignedHardware() == hardwareId);
+            var button = (AssignmentForButton)Connections.FirstOrDefault(hw => hw.GetAssignedHardware() == hardwareId);
             if (button == null)
-                return;
+                return false;
+            return true;
+        }
 
-            if (!((DescriptorBase)AccessDescriptor).IsPowerOn())
-                return;
+        protected override bool IsNeedToRepeatControlEventOnPowerOn()
+        {
+            return true;
+        }
+
+        protected override void OnNewControlEvent(ControlEventBase controlEvent)
+        {
+            var ev = controlEvent as ButtonEvent;
+
+            var hardwareId = controlEvent.Hardware.GetHardwareGuid();
+            var button = (AssignmentForButton)Connections.FirstOrDefault(hw => hw.GetAssignedHardware() == hardwareId);
 
             var direction = button.GetInverseState() ? !ev.IsPressed : ev.IsPressed;
             if (_emulateToggle)
@@ -115,7 +127,7 @@ namespace FlexRouter.ControlProcessors
                     _lastStateId = button.GetConnector().Id;
                     button.IsOn = true;
                 }
-                    
+
                 if (action == ToggleState.MakeOff)
                 {
                     button.IsOn = false;
@@ -137,17 +149,17 @@ namespace FlexRouter.ControlProcessors
                 }
             }
             // Для дампа кнопок с первого раза (без AllKeys, затем PressedKeysOnly) нужно игнорировать события отжатых кнопок, если одна из кнопок уже нажата
-            if (Connections.Any(bi => ((AssignmentForButton)bi).IsOn)) 
+            if (Connections.Any(bi => ((AssignmentForButton)bi).IsOn))
                 return;
             _lastStateId = -1;
             AccessDescriptor.SetDefaultState();
         }
 
-        public void Tick()
+        protected override void OnTick()
         {
             if (!(AccessDescriptor is IRepeaterInDescriptor))
                 return;
-            var repeaterIsOn = ((DescriptorMultistateBase) AccessDescriptor).IsRepeaterOn();
+            var repeaterIsOn = ((DescriptorMultistateBase)AccessDescriptor).IsRepeaterOn();
             if (!repeaterIsOn || _lastStateId == -1)
                 return;
 

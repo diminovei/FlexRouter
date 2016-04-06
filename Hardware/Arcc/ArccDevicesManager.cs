@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
 using FlexRouter.Helpers;
+using FlexRouter.Problems;
 using FTD2XX_NET;
 
 namespace FlexRouter.Hardware.Arcc
@@ -32,28 +34,42 @@ namespace FlexRouter.Hardware.Arcc
                 Devices[outgoingEvent.Hardware.MotherBoardId].PostOutgoingEvent(outgoingEvent);
        }
 
-        public override int[] GetCapacity(ControlProcessorHardware cph, DeviceSubType deviceSubType)
+        public override Capacity GetCapacity(ControlProcessorHardware cph, DeviceSubType deviceSubType)
         {
+            if (deviceSubType == DeviceSubType.Motherboard)
+            {
+                if (cph.ModuleType == HardwareModuleType.Axis
+                    || cph.ModuleType == HardwareModuleType.BinaryOutput
+                    || cph.ModuleType == HardwareModuleType.Button
+                    || cph.ModuleType == HardwareModuleType.Encoder
+                    || cph.ModuleType == HardwareModuleType.Indicator)
+                    return new Capacity {Names = GetConnectedDevices().ToArray()};
+
+                return new Capacity {DeviceSubtypeIsNotSuitableForCurrentHardware = true};
+            }
+
             // В ARCC id любой платы задаётся байтом. 0-255
             if (deviceSubType == DeviceSubType.ExtensionBoard)
-                return Enumerable.Range(0, 255).ToArray();
+            {
+                return new Capacity {Names = Enumerable.Range(0, 255).ToArray().Select(x=>x.ToString(CultureInfo.InvariantCulture)).ToArray()};
+            }
 
             // ARCC не имеет подразделений типа "Block"
             if (deviceSubType == DeviceSubType.Block)
-                return null;
+                return new Capacity { DeviceSubtypeIsNotSuitableForCurrentHardware = true };
 
             switch (cph.ModuleType)
             {
                 case HardwareModuleType.Axis:
-                        return Enumerable.Range(1, 8).ToArray();
+                    return new Capacity {Names = Enumerable.Range(1, 8).ToArray().Select(x=>x.ToString(CultureInfo.InvariantCulture)).ToArray()};
                 case HardwareModuleType.BinaryOutput:
-                        return Enumerable.Range(1, 29).ToArray();
+                    return new Capacity { Names = Enumerable.Range(1, 29).ToArray().Select(x => x.ToString(CultureInfo.InvariantCulture)).ToArray() };
                 case HardwareModuleType.Button:
-                        return Enumerable.Range(1, 168).ToArray();
+                    return new Capacity { Names = Enumerable.Range(1, 168).ToArray().Select(x => x.ToString(CultureInfo.InvariantCulture)).ToArray() };
                 case HardwareModuleType.Encoder:
-                        return Enumerable.Range(1, 14).ToArray();
+                    return new Capacity { Names = Enumerable.Range(1, 14).ToArray().Select(x => x.ToString(CultureInfo.InvariantCulture)).ToArray() };
                 default:
-                    return null;
+                    return new Capacity { DeviceSubtypeIsNotSuitableForCurrentHardware = true };
             }
         }
 
@@ -253,7 +269,7 @@ namespace FlexRouter.Hardware.Arcc
                                 System.Diagnostics.Debug.Print("Dumped successfully");
                                 var moduleType = _moduleTypeInDump.ToString();
                                 var message = string.Format("{0} module {1}", HardwareInDump.MotherBoardId, moduleType);
-                                Problems.AddOrUpdateProblem(message, "", ProblemHideOnFixOptions.HideItemAndDescription, true);
+                                Problems.Problems.AddOrUpdateProblem(message, "", ProblemHideOnFixOptions.HideItemAndDescription, true);
                                 break;
                             }
                             buttonsDumpedCount = _buttonDumpState.Count(b => b);
@@ -267,7 +283,7 @@ namespace FlexRouter.Hardware.Arcc
 
                                 var moduleType = _moduleTypeInDump.ToString();
                                 var message = string.Format("{0} module {1}", HardwareInDump.MotherBoardId, moduleType);
-                                Problems.AddOrUpdateProblem(message, "", ProblemHideOnFixOptions.HideItemAndDescription, true);
+                                Problems.Problems.AddOrUpdateProblem(message, "", ProblemHideOnFixOptions.HideItemAndDescription, true);
                                 break;
                             }
                             buttonsDumpedCount = _binaryInputDumpState.Count(b => b);
@@ -296,7 +312,7 @@ namespace FlexRouter.Hardware.Arcc
 
                                 var description = string.Format("Can't dump {0} keys: {1}", undumpedButtonsCount, buttonsList);
                                 var message = string.Format("{0} module {1}", HardwareInDump.MotherBoardId, moduleType);
-                                Problems.AddOrUpdateProblem(message, description, ProblemHideOnFixOptions.HideItemAndDescription, false);
+                                Problems.Problems.AddOrUpdateProblem(message, description, ProblemHideOnFixOptions.HideItemAndDescription, false);
                                 System.Diagnostics.Debug.Print("Dump failed. Dumped: " + buttonsDumpedCount);
                                 break;
                             }

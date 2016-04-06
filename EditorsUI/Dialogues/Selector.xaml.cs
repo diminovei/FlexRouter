@@ -68,7 +68,7 @@ namespace FlexRouter.EditorsUI.Dialogues
                     continue;
                 var treeRootItem = new TreeViewItem { Tag = panel.Id, Name = TreeItemType.Panel.ToString(), Header = panel.Name };
 
-                var ad = Profile.GetSortedAccessDesciptorListByPanelId(panel.Id);
+                var ad = Profile.AccessDescriptor.GetSortedAccessDesciptorListByPanelId(panel.Id);
                 /*foreach (var adesc in ad)
                 {
                     if (adesc.IsDependent())
@@ -141,7 +141,7 @@ namespace FlexRouter.EditorsUI.Dialogues
             }
             if (_selectedType == SelectedType.AccessDescriptor)
             {
-                var selectedDescriptor = Profile.GetAccessDesciptorById((Guid)((TreeViewItem)_tree.SelectedItem).Tag);
+                var selectedDescriptor = Profile.AccessDescriptor.GetAccessDesciptorById((Guid)((TreeViewItem)_tree.SelectedItem).Tag);
                 _description.Text = string.Empty;
                 _selectedItemId = selectedDescriptor.GetId();
             }

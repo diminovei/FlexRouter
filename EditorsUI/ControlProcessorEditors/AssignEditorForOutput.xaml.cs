@@ -4,7 +4,6 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.EditorsUI.Helpers;
 using FlexRouter.Hardware;
@@ -20,20 +19,16 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
     partial class AssignEditorForOutput : IEditor, IControlProcessorEditor
     {
         private readonly HardwareModuleType _hardwareSupported;
-        private readonly SelecedRowAndColumn _selecedRowAndColumn = new SelecedRowAndColumn();
+        private readonly SelectedRowAndColumn _selectedRowAndColumn = new SelectedRowAndColumn();
         private readonly AssignEditorHelper _assignEditorHelper;
-
         public AssignEditorForOutput(IControlProcessor processor, bool enableInverse, HardwareModuleType hardwareSupported)
         {
             InitializeComponent();
             _hardwareSupported = hardwareSupported;
             _assignEditorHelper = new AssignEditorHelper(processor);
-            _moduleList.Text = "0";
-            _blockId.Text = "0";
-            _controlId.Text = "0";
             ShowData();
             Localize();
-            EnableControls();
+            CheckSelection();
         }
         /// <summary>
         /// Заполнить форму данными из описателя доступа
@@ -41,35 +36,32 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
         private void ShowData()
         {
             AssignmentGrid.ItemsSource = _assignEditorHelper.GetGridData();
-            if (AssignmentGrid.Columns.Count != 0)
-                AssignmentGrid.Columns[0].Visibility = Visibility.Hidden;
         }
         public void Save()
         {
-            var selectedRowIndex = _selecedRowAndColumn.GetSelectedRowIndex();
+            var selectedRowIndex = _selectedRowAndColumn.GetSelectedRowIndex();
             if (selectedRowIndex == -1 || AssignmentGrid.Columns.Count == 0) 
                 return;
             var hardware = GetSelectedHardwareGuid();
-            //ToDo: сохранение не работает
             _assignEditorHelper.Save(selectedRowIndex, hardware);
             ShowData();
             HardwareManager.StopComponentSearch();
         }
-
         private string GetSelectedHardwareGuid()
         {
             if (!IsCorrectData().IsDataFilledCorrectly)
                 return string.Empty;
 
-            var cph = new ControlProcessorHardware();
-            cph.BlockId = uint.Parse(_blockId.Text);
-            cph.ControlId = _controlId.SelectedItem != null ? uint.Parse(_controlId.SelectedItem.ToString()) : uint.Parse(_controlId.Text);
-            cph.MotherBoardId = _motherboardList.SelectedItem != null ? _motherboardList.SelectedItem.ToString() : _motherboardList.Text;
-            cph.ModuleType = _hardwareSupported;
-            cph.ModuleId = _moduleList.SelectedItem != null ? uint.Parse(_moduleList.SelectedItem.ToString()) : uint.Parse(_moduleList.Text);
+            var cph = new ControlProcessorHardware
+            {
+                ModuleType = _hardwareSupported,
+                MotherBoardId = (string)_motherboardList.SelectedItem,
+                BlockId = uint.Parse(string.IsNullOrEmpty((string)_blockId.SelectedItem) ? "0" : (string)_blockId.SelectedItem),
+                ModuleId = uint.Parse(string.IsNullOrEmpty((string)_moduleList.SelectedItem) ? "0" : (string)_moduleList.SelectedItem),
+                ControlId = uint.Parse(string.IsNullOrEmpty((string)_controlId.SelectedItem) ? "0" : (string)_controlId.SelectedItem),
+            };
             return cph.GetHardwareGuid();
         }
-
         public void Localize()
         {
             ShowData();
@@ -79,35 +71,35 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
             _controlIdLabel.Content = LanguageManager.GetPhrase(Phrases.EditorHardwareControl);
             _hardwareTypeLabel.Content = _assignEditorHelper.LocalizeHardwareLabel(_hardwareSupported);
         }
-
         public bool IsDataChanged()
         {
-            //ToDo
             return false;
         }
-
         public EditorFieldsErrors IsCorrectData()
         {
+            var cph = CheckSelection();
+            if(cph!=null)
+                return new EditorFieldsErrors(string.Empty);
             var emptyField = string.Empty;
-            if (_motherboardList == null || string.IsNullOrEmpty(_motherboardList.Text))
+
+            if (string.IsNullOrEmpty((string)_motherboardList.SelectedItem))
                 emptyField += "\n" + LanguageManager.GetPhrase(Phrases.EditorHardwareMotherboard);
-            if (_moduleList == null || string.IsNullOrEmpty(_moduleList.Text))
+            if (_moduleList.IsVisible && string.IsNullOrEmpty((string)_moduleList.SelectedItem))
                 emptyField += "\n" + LanguageManager.GetPhrase(Phrases.EditorHardwareModule);
-            if (_controlId == null || string.IsNullOrEmpty(_controlId.Text))
+            if (_blockId.IsVisible && string.IsNullOrEmpty((string)_blockId.SelectedItem))
+                emptyField += "\n" + LanguageManager.GetPhrase(Phrases.EditorHardwareBlock);
+            if (_controlId.IsVisible && string.IsNullOrEmpty((string)_controlId.SelectedItem))
                 emptyField += "\n" + LanguageManager.GetPhrase(Phrases.EditorHardwareControl);
+
             return new EditorFieldsErrors(emptyField);
         }
-
-        //
-        // SINGLE CLICK EDITING
-        //
         private void OnDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            _selecedRowAndColumn.OnMouseDoubleClick((DependencyObject)e.OriginalSource);
+            _selectedRowAndColumn.OnMouseDoubleClick((DependencyObject)e.OriginalSource);
         }
         private void StatesGridGotFocus(object sender, RoutedEventArgs e)
         {
-            _selecedRowAndColumn.OnMouseDoubleClick((DependencyObject)e.OriginalSource);
+            _selectedRowAndColumn.OnMouseDoubleClick((DependencyObject)e.OriginalSource);
         }
         /// <summary>
         /// Функция обрабатывает нажатие кнопки или кручение энкодера
@@ -119,7 +111,9 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
         }
         private void AssignmentGridLoaded(object sender, RoutedEventArgs e)
         {
-            AssignmentGrid.Columns[0].Visibility = Visibility.Hidden;
+            if (AssignmentGrid.Columns.Count != 0)
+                AssignmentGrid.Columns[0].Visibility = Visibility.Hidden;
+            SelectDataGridRow.SelectRowByIndex(AssignmentGrid, 0);
         }
         public static bool IsNumeric(string text)
         {
@@ -128,50 +122,59 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
         }
         private void MotherboardListDropDownOpened(object sender, EventArgs e)
         {
-            _motherboardList.Items.Clear();
-            var devices = HardwareManager.GetConnectedDevices();
-            foreach (var device in devices)
-                _motherboardList.Items.Add(device);
+            RememberSelectedItemOnOpenCombobox(_motherboardList, DeviceSubType.Motherboard);
         }
         private void MotherboardListDropDownClosed(object sender, EventArgs e)
         {
-            EnableControls();
-            StartSearch();
+            RestoreSelectedItemOnCloseCombobox(_motherboardList);
         }
-
+        private void _moduleList_DropDownOpened(object sender, EventArgs e)
+        {
+            RememberSelectedItemOnOpenCombobox(_moduleList, DeviceSubType.ExtensionBoard);
+        }
         private void _moduleList_DropDownClosed(object sender, EventArgs e)
         {
-            EnableControls();
-            StartSearch();
+            RestoreSelectedItemOnCloseCombobox(_moduleList);
         }
-
-        private void _moduleList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void _blockId_DropDownOpened(object sender, EventArgs e)
         {
-            StartSearch();
+            RememberSelectedItemOnOpenCombobox(_blockId, DeviceSubType.Block);
         }
-        private void _blockId_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void _blockId_DropDownClosed(object sender, EventArgs e)
         {
-            StartSearch();
+            RestoreSelectedItemOnCloseCombobox(_blockId);
         }
-        private void _controlId_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void _controlId_DropDownOpened(object sender, EventArgs e)
         {
-            StartSearch();
+            RememberSelectedItemOnOpenCombobox(_controlId, DeviceSubType.Control);
         }
-
+        private void _controlId_DropDownClosed(object sender, EventArgs e)
+        {
+            RestoreSelectedItemOnCloseCombobox(_controlId);
+        }
         private void SelectNextComboboxItem(ref ComboBox cb)
         {
+            if (cb.SelectedItem == null)
+            {
+                SelectFirstComboboxItem(ref cb);
+                OnSelectionChanged();
+                return;
+            }
             if (cb.SelectedIndex + 1 < cb.Items.Count)
                 cb.SelectedIndex++;
+            OnSelectionChanged();
         }
         private void SelectPrevComboboxItem(ref ComboBox cb)
         {
             if (cb.SelectedIndex - 1 >= 0)
                 cb.SelectedIndex--;
+            OnSelectionChanged();
         }
         private void SelectFirstComboboxItem(ref ComboBox cb)
         {
             if (cb.Items.Count > 0)
                 cb.SelectedIndex = 0;
+            OnSelectionChanged();
         }
 
         private void ModuleValueDownClick(object sender, RoutedEventArgs e)
@@ -223,60 +226,167 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
         {
             e.Handled = !IsNumeric(e.Text) || ((TextBox)sender).Text.Length > 4;
         }
-
-        private void EnableControls()
+        private void OnSelectionChanged()
         {
-            if (string.IsNullOrEmpty(_motherboardList.Text))
-            {
-                ShowModuleList(false);
-                ShowBlock(false);
-                ShowControl(false);
-                return;
-            }
-            // Заполняем ControlProcessorHardware
+            var cph = CheckSelection();
+            if (cph != null)
+                StartSearch();
+        }
+        private string _selectedItemOfOpenedCombobox;
+        private void RememberSelectedItemOnOpenCombobox(ComboBox cb, DeviceSubType deviceSubType)
+        {
+            _selectedItemOfOpenedCombobox = (string)cb.SelectedItem;
             var cph = new ControlProcessorHardware
             {
                 ModuleType = _hardwareSupported,
-                MotherBoardId = _motherboardList.Text
+                MotherBoardId = (string)_motherboardList.SelectedItem,
+                BlockId = uint.Parse(string.IsNullOrEmpty((string)_blockId.SelectedItem) ? "0" : (string)_blockId.SelectedItem),
+                ModuleId = uint.Parse(string.IsNullOrEmpty((string)_moduleList.SelectedItem) ? "0" : (string)_moduleList.SelectedItem),
+                ControlId = uint.Parse(string.IsNullOrEmpty((string)_controlId.SelectedItem) ? "0" : (string)_controlId.SelectedItem),
             };
-            if (!string.IsNullOrEmpty(_moduleList.Text) && IsNumeric(_moduleList.Text))
-                cph.ModuleId = uint.Parse(_moduleList.Text);
-            if (!string.IsNullOrEmpty(_blockId.Text) && IsNumeric(_blockId.Text))
-                cph.BlockId = uint.Parse(_blockId.Text);
-            if (!string.IsNullOrEmpty(_controlId.Text) && IsNumeric(_controlId.Text))
-                cph.ControlId = uint.Parse(_controlId.Text);
-            // Получаем возможности железа
-            var extensionModule = HardwareManager.GetCapacity(cph, DeviceSubType.ExtensionBoard);
-            ShowModuleList(extensionModule != null);
-            FillCombobox(_moduleList, extensionModule);
-
-            var block = HardwareManager.GetCapacity(cph, DeviceSubType.Block);
-            ShowBlock(block!=null && block.Length != 0);
-            FillCombobox(_blockId, block);
-                    
-            var control = HardwareManager.GetCapacity(cph, DeviceSubType.Control);
-            ShowControl(control!=null && control.Length != 0);
-            FillCombobox(_controlId, control);
-        }
-
-        private void FillCombobox(ComboBox cb, int[] dc)
-        {
-            if (dc == null) 
-                return;
-            var value = cb.Text;
             cb.Items.Clear();
-            foreach (var deviceIndex in dc)
-                cb.Items.Add(deviceIndex);
+            var capacity = HardwareManager.GetCapacity(cph, deviceSubType).Names;
+            foreach (var c in capacity)
+                cb.Items.Add(c);
+        }
+        private void RestoreSelectedItemOnCloseCombobox(ComboBox cb)
+        {
+            if (string.IsNullOrEmpty(cb.Text))
+            {
+                if (cb.Items.Cast<string>().Any(item => item == _selectedItemOfOpenedCombobox))
+                {
+                    cb.SelectedItem = _selectedItemOfOpenedCombobox;
+                    cb.Text = _selectedItemOfOpenedCombobox;
+                }
+            }
+            var cph = CheckSelection();
+            if(cph!=null)
+                StartSearch();
+        }
+        /// <summary>
+        /// Проверяет возможности железа и от этого скрывает или показывает нужные контролы.
+        /// </summary>
+        /// <returns>null - не все контролы заполнены, !null - всё в порядке, можно отправлять событие на поиск</returns>
+        private ControlProcessorHardware CheckSelection()
+        {
+            var cph = new ControlProcessorHardware
+            {
+                ModuleType = _hardwareSupported,
+            };
 
-            if (dc.Contains(int.Parse(value)))
-                cb.Text = value;
+            var isPreviousFiledCheckPassedSuccessfully = true;
+
+            // Проверяем Motherboard
+            var c = HardwareManager.GetCapacity(cph, DeviceSubType.Motherboard);
+            // Если материнская плата не используется
+            if (c.DeviceSubtypeIsNotSuitableForCurrentHardware)
+            {
+                cph.MotherBoardId = string.Empty;
+            }
+            else
+            {
+                if (string.IsNullOrEmpty((string)_motherboardList.SelectedItem))
+                    isPreviousFiledCheckPassedSuccessfully = false;
+                else
+                    cph.MotherBoardId = (string)_motherboardList.SelectedItem;
+            }
+
+            // Проверяем ExtensionBoard/ModuleList
+            // Если предыдущий шаг провален - скрываем и считаем этот шаг также проваленым
+            if (!isPreviousFiledCheckPassedSuccessfully)
+                ShowModuleList(false);
+            else
+            {
+                c = HardwareManager.GetCapacity(cph, DeviceSubType.ExtensionBoard);
+                // Если материнская плата не используется
+                if (c.DeviceSubtypeIsNotSuitableForCurrentHardware)
+                {
+                    ShowModuleList(false);
+                    cph.ModuleId = 0;
+                }
+                else
+                {
+                    if (string.IsNullOrEmpty((string)_moduleList.SelectedItem))
+                    {
+                        ShowModuleList(true);
+                        isPreviousFiledCheckPassedSuccessfully = false;
+                    }
+                        
+                    else
+                    {
+                        ShowModuleList(true);
+                        cph.ModuleId = uint.Parse((string)_moduleList.SelectedItem);
+                    }
+                }
+            }
+
+            // Проверяем Block
+            // Если предыдущий шаг провален - скрываем и считаем этот шаг также проваленым
+            if (!isPreviousFiledCheckPassedSuccessfully)
+                ShowBlock(false);
+            else
+            {
+                c = HardwareManager.GetCapacity(cph, DeviceSubType.Block);
+                // Если материнская плата не используется
+                if (c.DeviceSubtypeIsNotSuitableForCurrentHardware)
+                {
+                    ShowBlock(false);
+                    cph.BlockId = 0;
+                }
+                else
+                {
+                    if (string.IsNullOrEmpty((string)_blockId.SelectedItem))
+                    {
+                        ShowBlock(true);
+                        isPreviousFiledCheckPassedSuccessfully = false;
+                    }
+                    else
+                    {
+                        ShowBlock(true);
+                        cph.BlockId = uint.Parse((string)_blockId.SelectedItem);
+                    }
+                        
+                }
+            }
+
+            // Проверяем Control
+            // Если предыдущий шаг провален - скрываем и считаем этот шаг также проваленым
+            if (!isPreviousFiledCheckPassedSuccessfully)
+                ShowControl(false);
+            else
+            {
+                c = HardwareManager.GetCapacity(cph, DeviceSubType.Control);
+                // Если материнская плата не используется
+                if (c.DeviceSubtypeIsNotSuitableForCurrentHardware)
+                {
+                    cph.ControlId = 0;
+                    ShowControl(false);
+                }
+                else
+                {
+                    if (string.IsNullOrEmpty((string)_controlId.SelectedItem))
+                    {
+                        isPreviousFiledCheckPassedSuccessfully = false;
+                        ShowControl(true);
+                    }
+                        
+                    else
+                    {
+                        ShowControl(true);
+                        cph.ControlId = uint.Parse((string)_controlId.SelectedItem);
+                    }
+                }
+            }
+            if (isPreviousFiledCheckPassedSuccessfully)
+                return cph;
+            return null;
         }
         private void ShowModuleList(bool show)
         {
             _moduleList.Visibility = show ? Visibility.Visible : Visibility.Hidden;
             _moduleListLabel.Visibility = show ? Visibility.Visible : Visibility.Hidden;
             if (!show)
-                _moduleList.Text = "0";
+                _moduleList.Text = string.Empty;
             _moduleValueDown.Visibility = show ? Visibility.Visible : Visibility.Hidden;
             _moduleValueUp.Visibility = show ? Visibility.Visible : Visibility.Hidden;
             _moduleValueZero.Visibility = show ? Visibility.Visible : Visibility.Hidden;
@@ -286,7 +396,7 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
         {
             _blockId.Visibility = show ? Visibility.Visible : Visibility.Hidden;
             if (!show)
-                _blockId.Text = "0";
+                _blockId.Text = string.Empty;
             _blockValueDown.Visibility = show ? Visibility.Visible : Visibility.Hidden;
             _blockValueUp.Visibility = show ? Visibility.Visible : Visibility.Hidden;
             _blockValueZero.Visibility = show ? Visibility.Visible : Visibility.Hidden;
@@ -296,20 +406,18 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
         {
             _controlId.Visibility = show ? Visibility.Visible : Visibility.Hidden;
             if(!show)
-                _controlId.Text = "0";
+                _controlId.Text = string.Empty;
             _controlValueDown.Visibility = show ? Visibility.Visible : Visibility.Hidden;
             _controlValueUp.Visibility = show ? Visibility.Visible : Visibility.Hidden;
             _controlValueZero.Visibility = show ? Visibility.Visible : Visibility.Hidden;
             _controlIdLabel.Visibility = show ? Visibility.Visible : Visibility.Hidden;
         }
-
         private void StartSearch()
         {
             var hardware = GetSelectedHardwareGuid();
             if(!string.IsNullOrEmpty(hardware))
                 HardwareManager.SetComponentToSearch(hardware);
         }
-
         private void UserControl_Unloaded(object sender, RoutedEventArgs e)
         {
             HardwareManager.StopComponentSearch();

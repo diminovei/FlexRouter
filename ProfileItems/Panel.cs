@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Drawing.Printing;
-using System.Globalization;
 using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.Helpers;
@@ -11,7 +9,7 @@ namespace FlexRouter.ProfileItems
     /// <summary>
     /// Панель (объединяющая сущность)
     /// </summary>
-    public class Panel
+    public class Panel : ProfileItemPrivacy, IITemWithId
     {
         public string GetNameOfProfileItemType()
         {

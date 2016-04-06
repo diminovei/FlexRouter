@@ -15,7 +15,7 @@ using FlexRouter.ProfileItems;
 
 namespace FlexRouter.AccessDescriptors
 {
-    public class RangeUnion : DescriptorBase, IDescriptorPrevNext, IDescriptorRangeExt, IRepeaterInDescriptor
+    public class RangeUnion : DescriptorBase, IDescriptorPrevNext, IDescriptorRangeExt, IRepeaterInDescriptor, IITemWithId
     {
         readonly List<DescriptorRange> _dependentDescriptors = new List<DescriptorRange>();
 
@@ -107,7 +107,7 @@ namespace FlexRouter.AccessDescriptors
             base.Initialize();
             foreach (var ld in _loadedDependentDescriptors)
             {
-                var ad = Profile.GetAccessDesciptorById(ld);
+                var ad = Profile.AccessDescriptor.GetAccessDesciptorById(ld);
                 if(!(ad is DescriptorRange))
                     continue;
                 _dependentDescriptors.Add((DescriptorRange) ad);

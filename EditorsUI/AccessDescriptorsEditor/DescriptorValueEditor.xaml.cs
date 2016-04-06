@@ -24,12 +24,12 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
         // который меняется только при сохранении
         // При удалении состояния/переменной нужно удалить данные из FormulaKeeper
 
-        private readonly SelecedRowAndColumn _selecedRowAndColumn = new SelecedRowAndColumn();
+        private readonly SelectedRowAndColumn _selectedRowAndColumn = new SelectedRowAndColumn();
         private readonly DescriptorMultistateBase _assignedAccessDescriptor;
 
         private DataTable _dataTable = new DataTable();
         private readonly List<Guid> _usedVariables;
-        private readonly List<Connector> _stateList;
+        private readonly List<Connector> _connectorList;
         private readonly FormulaKeeper _localFormulaKeeper = new FormulaKeeper();
 
         private int _defaultState = -1;
@@ -42,8 +42,8 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             _assignedAccessDescriptor = assignedAccessDescriptor;
 
             _usedVariables = _assignedAccessDescriptor.GetAllUsedVariables().ToList();
-            _stateList = _assignedAccessDescriptor.GetConnectors(null, true).ToList().OrderBy(i => i.Order).ToList();
-            foreach (var s in _stateList)
+            _connectorList = _assignedAccessDescriptor.GetConnectors(null, true).ToList().OrderBy(i => i.Order).ToList();
+            foreach (var s in _connectorList)
             {
                 foreach (var v in _usedVariables)
                 {
@@ -93,7 +93,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             foreach (var v in _usedVariables)
                 _dataTable.Columns.Add(Profile.VariableStorage.GetVariableById(v).Name);
             // Добавляем строки. Первая колонка - наименование состояния, затем формулы для переменных
-            foreach (var s in _stateList)
+            foreach (var s in _connectorList)
             {
                 var formulaList = new List<object>();
                 
@@ -135,11 +135,11 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             if (origUsedVariables.Where((t, i) => t != _usedVariables[i]).Any())
                 return true;
             // Сравниваем размер и состав массива состояний
-            if (origStateList.Count() != _stateList.Count())
+            if (origStateList.Count() != _connectorList.Count())
                 return true;
             for (var i = 0; i < origStateList.Count(); i++)
             {
-                if (_stateList.ElementAt(i).Id != origStateList.ElementAt(i).Id)
+                if (_connectorList.ElementAt(i).Id != origStateList.ElementAt(i).Id)
                     return true;
             }
             // Проверяем совпадение формул
@@ -177,7 +177,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
         private void OnDoubleClick(object sender, MouseButtonEventArgs e)
         {
             var dep = (DependencyObject)e.OriginalSource;
-            _selecedRowAndColumn.OnMouseDoubleClick(dep);
+            _selectedRowAndColumn.OnMouseDoubleClick(dep);
         }        
         
         private void AddStateClick(object sender, RoutedEventArgs e)
@@ -187,11 +187,11 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
                 return;
             var ads = new Connector
                 {
-                    Id = _stateList.Count == 0 ? 0 : _stateList.Select(x => x.Id).Max() + 1,
-                    Order = _stateList.Count == 0 ? 0 : _stateList.Select(x => x.Order).Max() + 1,
+                    Id = _connectorList.Count == 0 ? 0 : _connectorList.Select(x => x.Id).Max() + 1,
+                    Order = _connectorList.Count == 0 ? 0 : _connectorList.Select(x => x.Order).Max() + 1,
                     Name = stateNewName
                 };
-            _stateList.Add(ads);
+            _connectorList.Add(ads);
             ShowData();
         }
 
@@ -216,7 +216,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
         private void RemoveVariableClick(object sender, RoutedEventArgs e)
         {
             var variables = _assignedAccessDescriptor.GetAllUsedVariables();
-            var selectedCellIndex = _selecedRowAndColumn.GetSelectedCellIndex();
+            var selectedCellIndex = _selectedRowAndColumn.GetSelectedCellIndex();
             if (selectedCellIndex < _additionalColumnsCount || selectedCellIndex - 1 > variables.Count())
                 return;
             var varId = _usedVariables[selectedCellIndex - _additionalColumnsCount];
@@ -226,7 +226,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
                 MessageBoxResult.Yes)
             {
                 _usedVariables.Remove(selectedVar.Id);
-                foreach (var state in _stateList)
+                foreach (var state in _connectorList)
                     _localFormulaKeeper.RemoveFormulaByVariableIdAndOwnerId(_assignedAccessDescriptor.GetId(), selectedVar.Id, state.Id);
                 ShowData();
             }
@@ -235,19 +235,19 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
         private void StatesGridGotFocus(object sender, RoutedEventArgs e)
         {
             var dep = (DependencyObject)e.OriginalSource;
-            _selecedRowAndColumn.OnMouseDoubleClick(dep);
+            _selectedRowAndColumn.OnMouseDoubleClick(dep);
         }
 
         private void RemoveStateClick(object sender, RoutedEventArgs e)
         {
-            var rowIndex = _selecedRowAndColumn.GetSelectedRowIndex();
+            var rowIndex = _selectedRowAndColumn.GetSelectedRowIndex();
             if (rowIndex == -1)
                 return;
             var stateName = (string)_dataTable.Rows[rowIndex].ItemArray[_stateNameColumnIndex];
             var stateId = GetStateIdByName(stateName);
             if (MessageBox.Show(LanguageManager.GetPhrase(Phrases.EditorMessageRemoveStateFromAccessDescriptor) + " '" + stateName + "'?", LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader), MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
-                _stateList.RemoveAll(x => x.Id == stateId);
+                _connectorList.RemoveAll(x => x.Id == stateId);
                 foreach (var usedVariable in _usedVariables)
                     _localFormulaKeeper.RemoveFormulaByVariableIdAndOwnerId(_assignedAccessDescriptor.GetId(), usedVariable, stateId);
                 ShowData();
@@ -256,7 +256,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
 
         private void RenameStateClick(object sender, RoutedEventArgs e)
         {
-            var rowIndex = _selecedRowAndColumn.GetSelectedRowIndex();
+            var rowIndex = _selectedRowAndColumn.GetSelectedRowIndex();
             if (rowIndex == -1)
                 return;
             var stateOldName = (string)_dataTable.Rows[rowIndex].ItemArray[_stateNameColumnIndex];
@@ -264,7 +264,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             var stateNewName = SelectStateName();
             if (stateNewName == null)
                 return;
-            _stateList.Single(x => x.Name == stateOldName).Name = stateNewName;
+            _connectorList.Single(x => x.Name == stateOldName).Name = stateNewName;
             ShowData();
         }
         /// <summary>
@@ -294,7 +294,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
         /// <returns>id состояния. -1, если не найдено</returns>
         private int GetStateIdByName(string name)
         {
-            foreach (var s in _stateList.Where(s => s.Name == name))
+            foreach (var s in _connectorList.Where(s => s.Name == name))
                 return s.Id;
             return -1;
         }
@@ -305,10 +305,10 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
         /// <param name="e"></param>
         private void SelectDefaultStateClick(object sender, RoutedEventArgs e)
         {
-            var rowIndex = _selecedRowAndColumn.GetSelectedRowIndex();
+            var rowIndex = _selectedRowAndColumn.GetSelectedRowIndex();
             if (rowIndex == -1)
                 return;
-            var stateId = _stateList[rowIndex].Id;
+            var stateId = _connectorList[rowIndex].Id;
             _defaultState = stateId == _defaultState ? -1 : stateId;
             ShowData();
         }
@@ -319,7 +319,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
         private void ApplyInternalStructuresDataChangesToAccessDescriptor()
         {
             _assignedAccessDescriptor.OverwriteUsedVariables(_usedVariables);
-            _assignedAccessDescriptor.OverwriteStates(_stateList.ToList());
+            _assignedAccessDescriptor.OverwriteStates(_connectorList.ToList());
             _assignedAccessDescriptor.OverwriteFormulaKeeper(_localFormulaKeeper);
             if (_assignedAccessDescriptor is IDefautValueAbility)
             {
@@ -339,11 +339,11 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             {
                 var arr = _dataTable.Rows[stateIndex].ItemArray.ToList();
                 var stateNewName = (string)_dataTable.Rows[stateIndex].ItemArray[_stateNameColumnIndex];
-                _stateList[stateIndex].Name = stateNewName;
+                _connectorList[stateIndex].Name = stateNewName;
                 // Удаляем колонку State и DefaultState
                 arr.RemoveRange(0, _additionalColumnsCount);
                 for (var varIndex = 0; varIndex < arr.Count; varIndex++)
-                    _localFormulaKeeper.StoreVariableFormula(arr[varIndex] is string ? (string)arr[varIndex] : "", _assignedAccessDescriptor.GetId(), _usedVariables[varIndex], _stateList[stateIndex].Id);
+                    _localFormulaKeeper.StoreVariableFormula(arr[varIndex] is string ? (string)arr[varIndex] : "", _assignedAccessDescriptor.GetId(), _usedVariables[varIndex], _connectorList[stateIndex].Id);
             }
         }
     }

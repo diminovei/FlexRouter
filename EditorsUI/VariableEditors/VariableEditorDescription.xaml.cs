@@ -23,8 +23,6 @@ namespace FlexRouter.EditorsUI.VariableEditors
         }
         public bool IsDataChanged()
         {
-            if (_editableVariable == null)
-                return true;
             return !Utils.AreStringsEqual(_description.Text, _editableVariable.Description);
         }
 

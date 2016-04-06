@@ -39,8 +39,6 @@ namespace FlexRouter.EditorsUI.VariableEditors
 
         public bool IsDataChanged()
         {
-            if (_editableVariable == null)
-                return true;
             return !Utils.AreStringsEqual(_moduleName.Text, _editableVariable.ModuleName) ||
                    !Utils.AreStringsEqual(_relativeOffset.Text, _editableVariable.Offset.ToString("X"));
         }

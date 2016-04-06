@@ -9,14 +9,14 @@ namespace FlexRouter.ControlProcessors.Helpers
     /// <summary>
     /// Интерфейс ControlProcessor'ов 
     /// </summary>
-    public interface IControlProcessor
+    public interface IControlProcessor : IITemWithId
     {
         /// <summary>
         /// Возможно ли инвертировать контрол? Нужно для редакторов
         /// </summary>
         /// <returns></returns>
         bool HasInvertMode();
-        Guid GetId();
+//        Guid GetId();
         /// <summary>
         /// Вернуть текстовое имя ControlProcessor
         /// </summary>
@@ -46,6 +46,7 @@ namespace FlexRouter.ControlProcessors.Helpers
         /// Должен вызываться при изменении состава коннекторов к AccessDescriptor (по-старому, состояний)
         /// </summary>
         void OnAssignmentsChanged();
+        Guid GetAssignedAccessDescriptorId();
         void Save(XmlTextWriter writer);
         void Load(XPathNavigator reader);
     }

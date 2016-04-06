@@ -30,8 +30,6 @@ namespace FlexRouter.EditorsUI.VariableEditors
         }
         public bool IsDataChanged()
         {
-            if (_editableVariable == null)
-                return true;
             return !Utils.AreStringsEqual(_offset.Text, _editableVariable.Offset.ToString("X"));
         }
         /// <summary>

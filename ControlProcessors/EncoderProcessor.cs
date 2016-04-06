@@ -8,7 +8,7 @@ using FlexRouter.Localizers;
 
 namespace FlexRouter.ControlProcessors
 {
-    internal class EncoderProcessor : ControlProcessorBase<IDescriptorPrevNext>, ICollector
+    internal class EncoderProcessor : CollectorBase<IDescriptorPrevNext>, ICollector
     {
         public EncoderProcessor(DescriptorBase accessDescriptor) : base(accessDescriptor)
         {
@@ -28,23 +28,35 @@ namespace FlexRouter.ControlProcessors
             return LanguageManager.GetPhrase(Phrases.HardwareEncoder);
         }
 
-        public void ProcessControlEvent(ControlEventBase controlEvent)
+        protected override void OnNewControlEvent(ControlEventBase controlEvent)
         {
             var ev = controlEvent as EncoderEvent;
-            if (ev == null)
-                return;
-
-            if (controlEvent.Hardware.GetHardwareGuid() != Connections[0].GetAssignedHardware())
-                return;
-
-            if (!((DescriptorBase)AccessDescriptor).IsPowerOn())
-                return;
 
             var direction = Connections[0].GetInverseState() ? !ev.RotateDirection : ev.RotateDirection;
             if (direction)
                 AccessDescriptor.SetNextState(ev.ClicksCount);
             else
                 AccessDescriptor.SetPreviousState(ev.ClicksCount);
+        }
+
+        protected override void OnTick()
+        {
+        }
+
+        protected override bool IsControlEventSuitable(ControlEventBase controlEvent)
+        {
+            var ev = controlEvent as EncoderEvent;
+            if (ev == null)
+                return false;
+
+            if (controlEvent.Hardware.GetHardwareGuid() != Connections[0].GetAssignedHardware())
+                return false;
+            return true;
+        }
+
+        protected override bool IsNeedToRepeatControlEventOnPowerOn()
+        {
+            return false;
         }
     }
 }

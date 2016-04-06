@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
@@ -36,9 +37,20 @@ namespace FlexRouter.Hardware.Keyboard
             }
             return true;
         }
-        public override int[] GetCapacity(ControlProcessorHardware cph, DeviceSubType deviceSubType)
+        public override Capacity GetCapacity(ControlProcessorHardware cph, DeviceSubType deviceSubType)
         {
-            return (cph.ModuleType == HardwareModuleType.Button && deviceSubType == DeviceSubType.Control) ? Enumerable.Range(0, 255).ToArray() : null;
+            if (cph.ModuleType != HardwareModuleType.Button)
+                return new Capacity { DeviceSubtypeIsNotSuitableForCurrentHardware = true };
+
+            switch (deviceSubType)
+            {
+                case DeviceSubType.Motherboard:
+                    return new Capacity { Names = GetConnectedDevices().ToArray() };
+                case DeviceSubType.Control:
+                    return new Capacity {Names = Enumerable.Range(0, 255).ToArray().Select(x=>x.ToString(CultureInfo.InvariantCulture)).ToArray()};
+                default:
+                    return new Capacity { DeviceSubtypeIsNotSuitableForCurrentHardware = true };
+            }
         }
     }
 }

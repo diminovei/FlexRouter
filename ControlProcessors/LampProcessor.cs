@@ -40,7 +40,7 @@ namespace FlexRouter.ControlProcessors
             if (string.IsNullOrEmpty(Connections[0].GetAssignedHardware()))
                 return null;
 
-            var ad = Profile.GetAccessDesciptorById(AssignedAccessDescriptorId);
+            var ad = Profile.AccessDescriptor.GetAccessDesciptorById(AssignedAccessDescriptorId);
             var lineState = ((DescriptorBinaryOutput)ad).GetLineState();
             var powerState = ad.IsPowerOn();
             if (lineState == _previousState && powerState == _previousPowerState)
@@ -58,7 +58,7 @@ namespace FlexRouter.ControlProcessors
         public IEnumerable<ControlEventBase> GetClearEvent()
         {
             if (string.IsNullOrEmpty(Connections[0].GetAssignedHardware()))
-                return null;
+                return new ControlEventBase[0];
             var ev = new LampEvent
             {
                 Hardware = ControlProcessorHardware.GenerateByGuid(Connections[0].GetAssignedHardware()),

@@ -9,7 +9,7 @@ using FlexRouter.ProfileItems;
 
 namespace FlexRouter.AccessDescriptors.Helpers
 {
-    public abstract class DescriptorBase : IAccessDescriptor, ITreeItem
+    public abstract class DescriptorBase : ProfileItemPrivacy, IAccessDescriptor, ITreeItem
     {
         private DescriptorBase _parentAccessDescriptorId;
 
@@ -104,7 +104,6 @@ namespace FlexRouter.AccessDescriptors.Helpers
         {
             _name = name;
         }
-
         /// <summary>
         ///  -1 - значит ещё не зарегистрирован в профиле
         /// </summary>

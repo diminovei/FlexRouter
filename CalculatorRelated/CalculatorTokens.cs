@@ -22,20 +22,4 @@
         public bool Value;
         public ProcessingLogicFormulaError Error;
     }
-/*    public enum TokenType
-    {
-        Unknown,
-        Formatter,
-        Number,
-        LogicOperation,
-        MathOperation,
-        Bracket,
-        Boolean
-    }*/
-
-
-/*    public class CalcTokenNegative : CalcTokenBase
-    {
-        public CalcLogicOperation LogicOperation;
-    }*/
 }

@@ -14,7 +14,7 @@ namespace FlexRouter.ControlProcessors
     // Event. Pos, Min, Max. - какое число Min/Max может дать Event
     // MinMax - какими числами мы оперируем (приводим Event к ним)
     // MinMax - искусственное ограничение.
-    internal class AxisRangeProcessor : ControlProcessorBase<IDescriptorRangeExt>, ICollector
+    internal class AxisRangeProcessor : CollectorBase <IDescriptorRangeExt>, ICollector
     {
         /// <summary>
         /// Значение, искусственно ограничивающее движение бегунка в меньшую сторону (нужен не весь ход потенциометра)
@@ -68,18 +68,32 @@ namespace FlexRouter.ControlProcessors
         }
 
         
-        public void ProcessControlEvent(ControlEventBase controlEvent)
+        protected override void OnNewControlEvent(ControlEventBase controlEvent)
         {
-            if (controlEvent.Hardware.GetHardwareGuid() != Connections[0].GetAssignedHardware())
-                return;
-            var ev = controlEvent as AxisEvent;
-            if (ev == null)
-                return;
-            if (!((DescriptorBase)AccessDescriptor).IsPowerOn())
-                return;
             var relativePosition = CalculateRelativeAxisPosition(AxisDefaultRange.GetAxisDefaultMinimum(), AxisDefaultRange.GetAxisDefaultMaximum(), controlEvent);
             var positionPercentage = GetPercent(relativePosition, _axisMinimum, _axisMaximum);
             AccessDescriptor.SetPositionInPercents(positionPercentage);
+        }
+
+        protected override void OnTick()
+        {
+        }
+
+        protected override bool IsControlEventSuitable(ControlEventBase controlEvent)
+        {
+            var ev = controlEvent as AxisEvent;
+            if (ev == null)
+                return false;
+
+            if (controlEvent.Hardware.GetHardwareGuid() != Connections[0].GetAssignedHardware())
+                return false;
+
+            return true;
+        }
+
+        protected override bool IsNeedToRepeatControlEventOnPowerOn()
+        {
+            return true;
         }
 
         public double GetPercent(double position, int minimum, int maximum)
@@ -96,8 +110,7 @@ namespace FlexRouter.ControlProcessors
         public int CalculateRelativeAxisPosition(int minimum, int maximum, ControlEventBase controlEvent)
         {
             var ev = controlEvent as AxisEvent;
-            if (ev == null)
-                return 0;
+
             double relativeEventPosition = ev.Position;
             if (ev.Position > ev.MaximumValue)
                 relativeEventPosition = ev.MaximumValue;

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
-using SlimDX.XAudio2;
 
 namespace FlexRouter.Hardware.Arcc
 {

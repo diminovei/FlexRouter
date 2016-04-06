@@ -1,5 +1,4 @@
-﻿using FlexRouter.AccessDescriptors.Helpers;
-using FlexRouter.EditorsUI.Helpers;
+﻿using FlexRouter.EditorsUI.Helpers;
 using FlexRouter.Helpers;
 using FlexRouter.Localizers;
 using FlexRouter.VariableWorkerLayer;
@@ -31,8 +30,6 @@ namespace FlexRouter.EditorsUI.VariableEditors
 
         public bool IsDataChanged()
         {
-            if (_editableVariable == null)
-                return true;
             return !Utils.AreStringsEqual(_variableSize.Text, VariableSizeLocalizer.SizeBySizeType(_editableVariable.GetVariableSize()));
         }
 

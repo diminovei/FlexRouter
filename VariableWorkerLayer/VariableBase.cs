@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using System.Globalization;
 using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.Helpers;
@@ -8,7 +7,7 @@ using FlexRouter.ProfileItems;
 
 namespace FlexRouter.VariableWorkerLayer
 {
-    public abstract class VariableBase : IVariable, ITreeItem
+    public abstract class VariableBase : ProfileItemPrivacy, IVariable, ITreeItem, IITemWithId
     {
         public Guid Id { get; set; }
         public Guid PanelId { get; set; }
@@ -78,5 +77,15 @@ namespace FlexRouter.VariableWorkerLayer
         public abstract string GetName();
         public abstract Bitmap GetIcon();
         public abstract bool IsEqualTo(object obj);
+
+        public Guid GetId()
+        {
+            return Id;
+        }
+
+        public void SetId(Guid id)
+        {
+            Id = id;
+        }
     }
 }

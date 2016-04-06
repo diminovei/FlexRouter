@@ -1,4 +1,4 @@
-﻿namespace FlexRouter.Helpers
+﻿namespace FlexRouter.Problems
 {
     public class Problem
     {

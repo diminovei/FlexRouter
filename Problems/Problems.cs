@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using FlexRouter.Helpers;
 
-namespace FlexRouter.Helpers
+namespace FlexRouter.Problems
 {
     /// <summary>
     /// Класс хранение актуальных проблем

@@ -5,7 +5,6 @@
         public MemoryVariableSize Size;
         private double? _valueToSet;
         private double? _valueInMemory;
-        private double? _prevValueToSet;
 
         public double? GetValueInMemory()
         {
@@ -22,14 +21,6 @@
         public void SetValueToSet(double? value)
         {
             _valueToSet = value;
-        }
-        public double? GetPrevValueToSet()
-        {
-            return _prevValueToSet;
-        }
-        public void SetPrevValueToSet(double? value)
-        {
-            _prevValueToSet = value;
         }
         public MemoryVariableSize GetVariableSize()
         {

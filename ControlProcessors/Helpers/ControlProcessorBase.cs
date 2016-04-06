@@ -95,7 +95,7 @@ namespace FlexRouter.ControlProcessors.Helpers
             return Connections.Select(c => c.GetAssignedHardware()).ToArray();
         }
         protected Guid AssignedAccessDescriptorId;
-        public Guid GetAssignedAccessDescriptor()
+        public Guid GetAssignedAccessDescriptorId()
         {
             return AssignedAccessDescriptorId;
         }

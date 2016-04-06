@@ -149,13 +149,5 @@ namespace FlexRouter.VariableWorkerLayer.MethodFsuipc
             _fsuipcVariablesForRead.Clear();
             _fsuipcVariablesForWrite.Clear();
         }
-        public double? GetValue(Guid id)
-        {
-            if(!_fsuipcVariablesForRead.ContainsKey(id))
-                return -1;
-//            return _fsuipcVariablesForRead[id].Variable.GetValueInMemory();
-            var varConverter = new VariableConverter();
-            return varConverter.ArrayToValue(_fsuipcVariablesForRead[id].Buffer, _fsuipcVariablesForRead[id].Variable.GetVariableSize());
-        }
     }
 }

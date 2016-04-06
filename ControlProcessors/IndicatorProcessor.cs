@@ -7,11 +7,10 @@ using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
 using FlexRouter.Localizers;
-using FlexRouter.ProfileItems;
 
 namespace FlexRouter.ControlProcessors
 {
-    class IndicatorProcessor : ControlProcessorBase<IIndicatorMethods>, IVisualizer
+    class IndicatorProcessor : ControlProcessorBase<IIndicatorMethods>, IVisualizer, IITemWithId
     {
         private string _previousIndicatorText;
 
@@ -22,7 +21,7 @@ namespace FlexRouter.ControlProcessors
         protected override Type GetAssignmentsType()
         {
             return typeof(Assignment);
-        } 
+        }
 
         public override string GetDescription()
         {
@@ -37,8 +36,9 @@ namespace FlexRouter.ControlProcessors
         {
             if (string.IsNullOrEmpty(Connections[0].GetAssignedHardware()))
                 return null;
-            var ad = Profile.GetAccessDesciptorById(AssignedAccessDescriptorId);
-            var text = ((IIndicatorMethods) ad).GetIndicatorText();
+            var text = AccessDescriptor.GetIndicatorText();
+//            var ad = Profile.AccessDescriptor.GetAccessDesciptorById(AssignedAccessDescriptorId);
+//            var text = ((IIndicatorMethods)ad).GetIndicatorText();
             if (text == _previousIndicatorText)
                 return null;
             _previousIndicatorText = text;
@@ -53,14 +53,14 @@ namespace FlexRouter.ControlProcessors
         public IEnumerable<ControlEventBase> GetClearEvent()
         {
             if (string.IsNullOrEmpty(Connections[0].GetAssignedHardware()))
-                return null;
+                return new ControlEventBase[0];
             var ev = new IndicatorEvent
             {
                 Hardware = ControlProcessorHardware.GenerateByGuid(Connections[0].GetAssignedHardware()),
-                IndicatorText = "",
+                IndicatorText = "       ",
             };
             // Требуется для того, чтобы при изменении, например, числа цифр в индикаторе не оставались гореть цифры
-            _previousIndicatorText = "";
+            _previousIndicatorText = string.Empty;
             return new List<ControlEventBase> { ev };
         }
     }

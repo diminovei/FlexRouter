@@ -51,7 +51,7 @@ namespace FlexRouter.Hardware.Helpers
                 device.Value.Dump(allHardwareInUse);
         }
 
-        public abstract int[] GetCapacity(ControlProcessorHardware cph, DeviceSubType deviceSubType);
+        public abstract Capacity GetCapacity(ControlProcessorHardware cph, DeviceSubType deviceSubType);
 
         /// <summary>
         ///     Подключить все устройства

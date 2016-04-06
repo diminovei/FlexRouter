@@ -42,7 +42,7 @@ namespace FlexRouter
                     Messenger.AddMessage(MessageToMainForm.ChangeConnectedDevice, device);
             }
             else
-                Profile.InitializeAccessDescriptors();
+                Profile.AccessDescriptor.InitializeAccessDescriptors();
             // Запускаем роутер после дампа, чтобы не получилось, что индикаторы и лампы не зажигаются, хотя фактически режимы включены
             _mode = Mode.Work;
             _routerCoreThread = new Thread(ThreadLoop) { IsBackground = true };
@@ -50,7 +50,7 @@ namespace FlexRouter
             Messenger.AddMessage(MessageToMainForm.RouterStarted);
             if (_mode == Mode.Stop)
             {
-                Profile.InitializeAccessDescriptors();
+                Profile.AccessDescriptor.InitializeAccessDescriptors();
                 Dump();
             }
             return true;
@@ -79,7 +79,8 @@ namespace FlexRouter
         }
         private void ThreadLoop()
         {
-            //var counter = 0;
+            var currentEventCounter = 0;
+            const int softDumpPortion = 10;
             var stopwatch = new Stopwatch();
             while (true)
             {
@@ -88,27 +89,31 @@ namespace FlexRouter
                 stopwatch.Start();
                 Profile.VariableStorage.SynchronizeVariables();
                 Work();
-
-                if ((!ApplicationSettings.ControlsSynchronizationIsOff) != Profile.VariableStorage.IsResistVariableChangesFromOutsideModeOn())
+                if (!ApplicationSettings.ControlsSynchronizationIsOff)
                 {
-                    Profile.VariableStorage.SetResistVariableChangesFromOutsideMode(!ApplicationSettings.ControlsSynchronizationIsOff);
-                    if (!ApplicationSettings.ControlsSynchronizationIsOff)
-                        SoftDump();
+                    var eventsCache = HardwareManager.SoftDump();
+                    if (eventsCache != null)
+                    {
+                        var softDumpEvents = eventsCache.Skip(currentEventCounter).Take(softDumpPortion).ToArray();
+                        if (softDumpEvents.Length != 0)
+                        {
+                            currentEventCounter += softDumpPortion;
+                            foreach (var controlEvent in softDumpEvents)
+                            {
+                                controlEvent.IsSoftDumpEvent = true;
+                                Profile.ControlProcessor.SendEvent(controlEvent);
+                            }
+                                
+                        }
+                        else
+                            currentEventCounter = 0;
+                    }
                 }
-                    
                 stopwatch.Stop();
-                var delay = 200;
+                const int delay = 200;
                 if (stopwatch.ElapsedMilliseconds < delay)
                     Thread.Sleep(delay - (int)stopwatch.ElapsedMilliseconds);
             }
-        }
-        private void SoftDump()
-        {
-            var eventsCache = HardwareManager.SoftDump();
-            if (eventsCache == null) 
-                return;
-            foreach (var controlEvent in eventsCache)
-                Profile.SendEventToControlProcessors(controlEvent);
         }
         private void Work()
         {
@@ -123,19 +128,19 @@ namespace FlexRouter
             // Обрабатываем все события
             foreach (var controlEvent in events)
             {
-                Profile.SendEventToControlProcessors(controlEvent);
+                Profile.ControlProcessor.SendEvent(controlEvent);
                 //if(controlEvent.Hardware.ModuleType!=HardwareModuleType.Axis)
                     Messenger.AddMessage(MessageToMainForm.NewHardwareEvent, controlEvent);
             }
             var outgoing = new List<ControlEventBase>();
             var outputWasOn = new List<string>();
 
-            var newOutgoingEvents = Profile.GetControlProcessorsNewEvents();
+            var newOutgoingEvents = Profile.ControlProcessor.GetNewEvents();
             foreach (var newOutgoingEvent in newOutgoingEvents)
             {
                 // В том случае, когда на один индикатор назначены 2 деcкриптора. Переключение "коммутатором"
                 // более ранний по ID дескриптор установил текст при переключении коммутатора, а более поздний выключил питание. В итоге индикатор пуст
-                if (newOutgoingEvent.Hardware.ModuleType == HardwareModuleType.Indicator || newOutgoingEvent.Hardware.ModuleType == HardwareModuleType.BinaryOutput)
+                if (newOutgoingEvent.Hardware.ModuleType == HardwareModuleType.LedMatrixIndicator || newOutgoingEvent.Hardware.ModuleType == HardwareModuleType.Indicator || newOutgoingEvent.Hardware.ModuleType == HardwareModuleType.BinaryOutput)
                 {
                     var isPowerOff = false;
 
@@ -158,20 +163,20 @@ namespace FlexRouter
             }
             outputWasOn.Clear();
             HardwareManager.PostOutgoingEvents(outgoing);
-            Profile.TickControlProcessors();
+            Profile.ControlProcessor.Tick();
         }
         /// <summary>
         /// Гасим все лампы и индикаторы, присутствующие в профиле
         /// </summary>
         private void ShutDownOutputHardware()
         {
-            var clearEvents = Profile.GetControlProcessorsClearEvents();
+            var clearEvents = Profile.ControlProcessor.GetShutDownEventsForAllControlProcessors();
                 HardwareManager.PostOutgoingEvents(clearEvents.ToList());
         }
         public void Dump()
         {
-            var assignments = Profile.GetControlProcessorAssignments();
-            System.Diagnostics.Debug.Print("Dump command");
+            var assignments = Profile.ControlProcessor.GetAllAssignedHardwares();
+            Debug.Print("Dump command");
             HardwareManager.Dump(assignments);
         }
     }

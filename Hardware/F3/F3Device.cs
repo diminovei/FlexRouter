@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Windows.Controls;
-using System.Windows.Threading;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
 
@@ -13,7 +11,7 @@ namespace FlexRouter.Hardware.F3
         /// <summary>
         /// Антидребезг осей
         /// </summary>
-        private AxisDebouncer _axisDebouncer = new AxisDebouncer();
+        private readonly AxisDebouncer _axisDebouncer = new AxisDebouncer();
         /// <summary>
         /// Структура, описывающая материнскую плату F3/L3
         /// </summary>

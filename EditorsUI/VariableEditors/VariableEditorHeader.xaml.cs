@@ -13,12 +13,10 @@ namespace FlexRouter.EditorsUI.VariableEditors
     public partial class VariableEditorHeader : IEditor
     {
         private readonly IVariable _editableVariable;
-        private bool _isNewVariable;
         private readonly Phrases _variableType;
-        public VariableEditorHeader(IVariable variable, Phrases variableType, bool isNewVariable, string selectedItemPanelName)
+        public VariableEditorHeader(IVariable variable, Phrases variableType, string selectedItemPanelName)
         {
             _editableVariable = variable;
-            _isNewVariable = isNewVariable;
             _variableType = variableType;
             InitializeComponent();
             Localize();
@@ -35,8 +33,6 @@ namespace FlexRouter.EditorsUI.VariableEditors
         }
         public bool IsDataChanged()
         {
-            if (_isNewVariable)
-                return true;
             return !Utils.AreStringsEqual(_variableName.Text, _editableVariable.Name) ||
                    !Utils.AreStringsEqual(_panel.Text, Profile.PanelStorage.GetPanelById(_editableVariable.PanelId).Name);
         }
@@ -59,12 +55,7 @@ namespace FlexRouter.EditorsUI.VariableEditors
         {
             _editableVariable.Name = _variableName.Text;
             _editableVariable.PanelId = Profile.PanelStorage.GetPanelByName(_panel.Text).Id;
-            //if (_isNewVariable)
-            //{
-                Profile.VariableStorage.StoreVariable(_editableVariable);
-            //    _isNewVariable = false;
-            //}
-            
+            Profile.VariableStorage.StoreVariable(_editableVariable);
         }
         public void Localize()
         {

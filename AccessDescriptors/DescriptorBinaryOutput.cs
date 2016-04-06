@@ -7,7 +7,7 @@ using FlexRouter.Localizers;
 
 namespace FlexRouter.AccessDescriptors
 {
-    public class DescriptorBinaryOutput : DescriptorOutputBase, IBinaryOutputMethods
+    public class DescriptorBinaryOutput : DescriptorOutputBase, IBinaryOutputMethods, IITemWithId
     {
         public override string GetDescriptorType()
         {

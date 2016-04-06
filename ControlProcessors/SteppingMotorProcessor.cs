@@ -28,18 +28,16 @@ namespace FlexRouter.ControlProcessors
         {
             return typeof(Assignment);
         } 
-
         public override string GetDescription()
         {
-            return LanguageManager.GetPhrase(Phrases.HardwareIndicator);
+            return LanguageManager.GetPhrase(Phrases.HardwareSteppingMotor);
         }
-
         public IEnumerable<ControlEventBase> GetNewEvent()
         {
             if (string.IsNullOrEmpty(Connections[0].GetAssignedHardware()))
                 return null;
 
-            var ad = Profile.GetAccessDesciptorById(AssignedAccessDescriptorId);
+            var ad = Profile.AccessDescriptor.GetAccessDesciptorById(AssignedAccessDescriptorId);
             var position = ((DescriptorIndicator)ad).GetIndicatorValue();
             if (position == null || position == _previousPosition)
                 return null;
@@ -64,7 +62,7 @@ namespace FlexRouter.ControlProcessors
         }
         // ToDo: временно, пока не разобрался, куда это девать. Это минимальные и максимальные значения, которые могут быть переданы AccessDescriptor на двигатель
         private int _minimumValue = 0;
-        private int _maximumValue = 500;
+        private int _maximumValue = 4320;
         /// <summary>
         /// Сколько значений на один оборот
         /// </summary>

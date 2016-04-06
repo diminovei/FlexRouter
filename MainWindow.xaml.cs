@@ -17,40 +17,36 @@
 //CP: колибруем начальную позицию
 //CP: колибруем позицию окончания (только для 1)
 
-
-//  ***************************** Проблемы профиля:
-// Назначаем СПУ.Режим, на назначении последнего тумблера удаляем. Не получается. Писать почему.
-//      Bug: бага в тушке. Если включить ввод ЗК на ПН-5, а затем выключить стабилизацию крена будут гореть и Сброс программы и ввод ЗК
-//  ***************************** Пока не подтвердилось
-// Автомат тяги работает не корректно. Не автоматит, не устанавливает в 2 "режим 2"
-// Стабилизация по высоте включается, а лампа не загорается. Нужно разбираться
-//  ***************************** Сделать
-//  Не отображается значение переменной в памяти. Из-за принудительной синхронизации?
-//      При удалении элемента перестраивать дерево и переходить на следующий элемент
+//  ***************************** Исправить в следующей версии
+//  Кнопка: в приватный профиль/в общий профиль
 //      Сделать умную синхронизацию деревьев (удалять то, что исчезло, добавлять то, что появилось вместо полной перерисовки)
-//      Пройтись по всем ToDo и доделать
-//      AD для управления яркостью
+//  Bug: бага в тушке. Если включить ввод ЗК на ПН-5, а затем выключить стабилизацию крена будут гореть и Сброс программы и ввод ЗК (проверить, как работает в роутере)
+//  ***************************** Бэклог
+//      ToDo: Стабилизация по высоте включается, а лампа не загорается. Нужно разбираться (похоже, у меня плохо припаян светодиод. Перепроверить)
 //      Железо:
+//          AD для управления яркостью
 //          В джойстике поддержать все оси и хатку
 //          Поддержка L3/F3 - шаговики
 //          Сделать переинициализацию роутера быстрой
 //          При изменении настройки JoystickBindByInstanceGuid переинициализировать железо
 //      AxisMultistate (управление набором значений при помощи оси, например, замена крана закрылков или галетных переключателей)
 //      Реализовать функции (FromBCD, ToBCD, получить дробную часть)
-//      Refactoring: Вынести ускоряющийся Repeater из ButtonPlusMinisConrolProcessor и сделать его общим
-//      Refactoring: Нужно унести управление StopSearch из MainWindow в CPEditor
-//      Refactoring: правильно не сохранять в готовый объект (например, переменную) о частям из разных элементов панели, а сохранить в отдельных экземпляр, вернуть его, а затем сохранить. Нужно для возможности контроля перед сохранением на наличие дубликатов
-//      Проверить работу с профилем на многопоточность. Обращение к AD, CP, VAR только через методы класса Profile (даже внутри этого класса) при сохранении загрузке. И всё через lock
-//      Bug: Если удалить CP, то остаётся выбораннам пункт (например, "Лампа", но нет селекта в дереве(?)), но по кнопке Create ничего не происходит
 //      Работа с окнами
 //          Редактирование окон
 //          Редактирование описателя "Клики мышью (Multistate)"
 //          Редактирование описателя "Клики мышью (Range)"
-//      Bug: биндинг не работает, если в названии переменной (колонки) "плохой" символ. Точка, слэш
+//      Bug: биндинг не работает, если в названии переменной (колонки) "плохой" символ. Точка, слэш или пробел в конце
 //  ***************************** Не срочно (или не нужно):
-//      Проверить корректность срабатывания "данные изменились, сохранить?" в переменных, AD, CP
-//      Возможность втыкать и вытыкать железо во время работы роутера
-//      При изменении имени переменной предупреждать, что нужно обновить данные в AD, если открытый AD использует эту переменную (узнать в FormulaKeeper)
+//  	Если удалить CP, то остаётся выбораннам пункт (например, "Лампа", но нет селекта в дереве(?)), но по кнопке Create ничего не происходит
+//      При удалении элемента перестраивать дерево и переходить на следующий элемент
+//  Возможность втыкать и вытыкать железо во время работы роутера
+//  При изменении имени переменной предупреждать, что нужно обновить данные в AD, если открытый AD использует эту переменную (узнать в FormulaKeeper)
+//  Refactoring: Вынести ускоряющийся Repeater из ButtonPlusMinisConrolProcessor и сделать его общим
+//  Refactoring: Нужно унести управление StopSearch из MainWindow в CPEditor
+//  Refactoring: правильно не сохранять в готовый объект (например, переменную) по частям из разных элементов панели, а сохранить в отдельных экземпляр, вернуть его, а затем сохранить. Нужно для возможности контроля перед сохранением на наличие дубликатов
+//  Пройтись по всем ToDo и доделать
+//  Проверить работу с профилем на многопоточность. Обращение к AD, CP, VAR только через методы класса Profile (даже внутри этого класса) при сохранении загрузке. И всё через lock
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -103,6 +99,7 @@ namespace FlexRouter
     /// </summary>
     public partial class MainWindow
     {
+        private const string PrivacyMarker = "*";
         private RouterState _routerState = RouterState.Stopped;
         private readonly Core _routerCore = new Core();
         private DispatcherTimer _timer;
@@ -138,6 +135,7 @@ namespace FlexRouter
             
             _turnControlsSynchronizationOff.IsChecked = ApplicationSettings.ControlsSynchronizationIsOff;
             _joystickBindByInstanceGuid.IsChecked = ApplicationSettings.JoystickBindByInstanceGuid;
+            _disablePersonalProfile.IsChecked = ApplicationSettings.DisablePersonalProfile;
 
             InitializeCalculator();
 
@@ -164,10 +162,10 @@ namespace FlexRouter
         {
             lock (_locker)
             {
-                if (!Problems.ProblemListWasChanged)
+                if (!Problems.Problems.ProblemListWasChanged)
                     return;
                 _statusList.Items.Clear();
-                var problems = Problems.GetProblemList();
+                var problems = Problems.Problems.GetProblemList();
                 foreach (var s in problems)
                     _statusList.Items.Add(CreateListViewItem(s.IsFixed ? s.Name : s.Name + " - " + s.Description,
                         s.IsFixed ? Properties.Resources.Ok : Properties.Resources.Fail));
@@ -228,7 +226,7 @@ namespace FlexRouter
             _saveVariable.Content = LanguageManager.GetPhrase(Phrases.CommonButtonSave);
             _selectProfileLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelProfile);
             _selectLanguageLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelLanguage);
-            _formulaResultLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelFormulaResult) + " (Dec/Hex/Bool)";
+            _formulaResultLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelFormulaResult);
             _copyFormulaToClipboard.Content = LanguageManager.GetPhrase(Phrases.CommonLabelCopyToClipboard);
             _addVarToFormula.Content = LanguageManager.GetPhrase(Phrases.CommonLabelCopyVariableToFormula);
             _errorLabel.Content = LanguageManager.GetPhrase(Phrases.CommonLabelError);
@@ -243,6 +241,8 @@ namespace FlexRouter
             _varAndPanelNameToClipboard.Content = LanguageManager.GetPhrase(Phrases.EditorVariableAndPanelNameToClipboard);
             _cloneAccessDescriptor.Content = LanguageManager.GetPhrase(Phrases.EditorCloneAccessDescriptor);
             _cloneVariable.Content = LanguageManager.GetPhrase(Phrases.EditorCloneVariable);
+            _disablePersonalProfileLabel.Content = LanguageManager.GetPhrase(Phrases.EditorDisablePersonalProfile);
+            _mergePersonalAndPublicProfile.Content = LanguageManager.GetPhrase(Phrases.EditorMergePersonalProfileWithPublic);
             VisualizeRouterState();
         }
         /// <summary>
@@ -481,7 +481,7 @@ namespace FlexRouter
 
                 _accessDescriptorPanel.Children.Clear();
                 Profile.RemoveAccessDescriptor(((DescriptorBase) item.Object).GetId());
-                Profile.SaveCurrentProfile();
+                Profile.Save(ApplicationSettings.DisablePersonalProfile);
                 RenewTrees();
             }
         }
@@ -503,7 +503,7 @@ namespace FlexRouter
                 MessageBoxResult.Yes)
             {
                 Profile.PanelStorage.RemovePanel(panel);
-                Profile.SaveCurrentProfile();
+                Profile.Save(ApplicationSettings.DisablePersonalProfile);
                 RenewTrees();
             }
         }
@@ -544,14 +544,14 @@ namespace FlexRouter
             if (treeItemType == TreeItemType.ControlProcessor)
             {
                 FillCreateControlProcessorList();
-                var controlProcessor = Profile.GetControlProcessorByAccessDescriptorId(((DescriptorBase)item).GetId());
+                var controlProcessor = Profile.ControlProcessor.GetControlProcessor(((DescriptorBase)item).GetId());
                 ShowControlProcessor(controlProcessor);
                 // ToDo: нужно не отсюда вызывать, а давать CP панелям знать, что выбран другой узел дерева и нужно завершать поиск
                 HardwareManager.StopComponentSearch();
             }
 
             if (treeItemType == TreeItemType.Variable)
-                ShowVariable((IVariable)item, false);
+                ShowVariable((IVariable)item);
         }
 
         private string GetSelectedItemPanelName(TreeView tree)
@@ -578,7 +578,7 @@ namespace FlexRouter
             return null;
         }
 
-        private void ShowVariable(IVariable variable, bool isNew)
+        private void ShowVariable(IVariable variable)
         {
             var selectedItemPanelName = GetSelectedItemPanelName(_variablesTree);
             if (variable == null)
@@ -589,7 +589,7 @@ namespace FlexRouter
 
             if (variable is MemoryPatchVariable)
             {
-                editors.Add(new VariableEditorHeader(variable, Phrases.EditorHeaderMemoryPatch, isNew, selectedItemPanelName));
+                editors.Add(new VariableEditorHeader(variable, Phrases.EditorHeaderMemoryPatch, selectedItemPanelName));
                 editors.Add(new MemoryPatchVariableEditor(variable));
                 editors.Add(new VariableSizeEditor(variable as IMemoryVariable));
                 editors.Add(new VariableValueEditor(variable));
@@ -597,7 +597,7 @@ namespace FlexRouter
             }
             if (variable is FsuipcVariable)
             {
-                editors.Add(new VariableEditorHeader(variable, Phrases.EditorHeaderFsuipc, isNew, selectedItemPanelName));
+                editors.Add(new VariableEditorHeader(variable, Phrases.EditorHeaderFsuipc, selectedItemPanelName));
                 editors.Add(new FsuipcVariableEditor(variable));
                 editors.Add(new VariableSizeEditor(variable as IMemoryVariable));
                 editors.Add(new VariableValueEditor(variable));
@@ -605,8 +605,7 @@ namespace FlexRouter
             }
             if (variable is FakeVariable)
             {
-                editors.Add(new VariableEditorHeader(variable, Phrases.EditorHeaderFakeVariable, isNew,
-                    selectedItemPanelName));
+                editors.Add(new VariableEditorHeader(variable, Phrases.EditorHeaderFakeVariable, selectedItemPanelName));
                 editors.Add(new VariableSizeEditor(variable as IMemoryVariable));
                 editors.Add(new VariableValueEditor(variable));
                 editors.Add(new VariableEditorDescription(variable));
@@ -630,7 +629,7 @@ namespace FlexRouter
                 {
                     Tag = panel,
                     Name = TreeItemType.Panel.ToString(),
-                    Header = panel.Name
+                    Header = panel.GetPrivacyType() == ProfileItemPrivacyType.Private ? PrivacyMarker + panel.Name : panel.Name
                 };
 
                 var ad = Profile.GetSortedVariablesListByPanelId(panel.Id);
@@ -638,7 +637,9 @@ namespace FlexRouter
                 {
 
                     var icon = GetIcon(TreeItemType.Variable, adesc.Id);
-                    var treeAdItem = CreateTreeViewItem(adesc.Name, adesc, TreeItemType.Variable, icon);
+                    var nodeName = ((adesc as VariableBase).GetPrivacyType() == ProfileItemPrivacyType.Private) ? PrivacyMarker + adesc.Name : adesc.Name;
+
+                    var treeAdItem = CreateTreeViewItem(nodeName, adesc, TreeItemType.Variable, icon);
                     treeAdItem.Name = TreeItemType.Variable.ToString();
                     treeRootItem.Items.Add(treeAdItem);
                 }
@@ -717,7 +718,7 @@ namespace FlexRouter
         {
             var variable = GetObjectToCreateFromCombobox(_accessMethods, _variablesPanel);
             if ((variable as IVariable) != null)
-                ShowVariable((IVariable) variable, true);
+                ShowVariable((IVariable) variable);
             if ((variable as Panel) != null)
                 ShowPanel((Panel) variable, _variablesPanel);
             FillVariablesToCreateList();
@@ -739,10 +740,10 @@ namespace FlexRouter
                 var message = LanguageManager.GetPhrase(Phrases.EditorMessageCantRemoveVariableInUse) + "\n\n";
                 foreach (var vl in variableLinks)
                 {
-                    var ad = Profile.GetAccessDesciptorById(vl);
+                    var ad = Profile.AccessDescriptor.GetAccessDesciptorById(vl);
                     if (ad != null)
                     {
-                        var adName = Profile.PanelStorage.GetPanelById(ad.GetAssignedPanelId()).GetNameOfProfileItemType() + "." + ad.GetName();
+                        var adName = Profile.PanelStorage.GetPanelById(ad.GetAssignedPanelId()).Name + "." + ad.GetName();
                         message += LanguageManager.GetPhrase(Phrases.EditorAccessDescriptor) + " '" + adName + "'" +
                                    "\n";
                     }
@@ -766,7 +767,7 @@ namespace FlexRouter
             {
                 _variablesPanel.Children.Clear();
                 Profile.VariableStorage.RemoveVariable(((IVariable) item.Object).Id);
-                Profile.SaveCurrentProfile();
+                Profile.Save(ApplicationSettings.DisablePersonalProfile);
                 RenewVariablesTrees();
             }
         }
@@ -861,7 +862,7 @@ namespace FlexRouter
             }
             if (controlProcessor is LedMatrixIndicatorProcessor)
             {
-                editors.Add(new AssignEditorForOutput(controlProcessor, false, HardwareModuleType.Indicator));
+                editors.Add(new AssignEditorForOutput(controlProcessor, false, HardwareModuleType.LedMatrixIndicator));
             }
             if (controlProcessor is LampProcessor)
             {
@@ -898,16 +899,16 @@ namespace FlexRouter
             if (controlProcessor != null)
             {
                 var oldControlProcessorId = (((DescriptorBase) treeSelectedItem.Object)).GetId();
-                if (Profile.GetControlProcessorByAccessDescriptorId(oldControlProcessorId) != null)
-                    Profile.RemoveControlProcessor(oldControlProcessorId);
-                Profile.RegisterControlProcessor(controlProcessor, oldControlProcessorId);
-                var ad = Profile.GetAccessDesciptorById(oldControlProcessorId) as DescriptorMultistateBase;
+                if (Profile.ControlProcessor.GetControlProcessor(oldControlProcessorId) != null)
+                    Profile.ControlProcessor.RemoveControlProcessor(oldControlProcessorId);
+                Profile.ControlProcessor.AddControlProcessor(controlProcessor, oldControlProcessorId);
+                var ad = Profile.AccessDescriptor.GetAccessDesciptorById(oldControlProcessorId) as DescriptorMultistateBase;
                 if (ad != null)
                 {
                     controlProcessor.OnAssignmentsChanged();
                 }
                 ShowControlProcessor(controlProcessor);
-                Profile.SaveCurrentProfile();
+                Profile.Save(ApplicationSettings.DisablePersonalProfile);
                 FillCreateControlProcessorList();
             }
         }
@@ -935,8 +936,11 @@ namespace FlexRouter
                 MessageBoxResult.Yes)
             {
                 _controlProcessorsPanel.Children.Clear();
-                Profile.RemoveControlProcessor(((DescriptorBase) item.Object).GetId());
-                Profile.SaveCurrentProfile();
+                var id = ((DescriptorBase) item.Object).GetId();
+                var events = Profile.ControlProcessor.GetShutDownEvents(id);
+                HardwareManager.PostOutgoingEvents(events);
+                Profile.ControlProcessor.RemoveControlProcessor(id);
+                Profile.Save(ApplicationSettings.DisablePersonalProfile);
                 RenewTrees();
             }
         }
@@ -1011,7 +1015,7 @@ namespace FlexRouter
         private void OnAnySaveButtonClicked(StackPanel panel, bool isVariableTree)
         {
             // Требуется для того, чтобы при изменении, например, числа цифр в индикаторе не оставались гореть цифры
-            var clearEvents = Profile.GetControlProcessorsClearEvents();
+            var clearEvents = Profile.ControlProcessor.GetShutDownEventsForAllControlProcessors();
             HardwareManager.PostOutgoingEvents(clearEvents.ToList());
             
             // Перерисовать дерево, развернуть необходимый узел и выделить переменную/дексриптор/панель. Нужно при переезде из одной панели в другую
@@ -1036,13 +1040,13 @@ namespace FlexRouter
             foreach (var child in panel.Children)
                 ((IEditor) child).Save();
 
-            Profile.UpdateControlProcessorsAssignments();
+            Profile.ControlProcessor.UpdateAssignments();
 
             if(isVariableTree)
                 RenewVariablesTrees();
             else
                 RenewTrees();
-            Profile.SaveCurrentProfile();
+            Profile.Save(ApplicationSettings.DisablePersonalProfile);
             _routerCore.Start();
         }
 
@@ -1131,24 +1135,25 @@ namespace FlexRouter
             vtk.RememberState(ref tree);
             var panels = Profile.PanelStorage.GetSortedPanelsList();
             tree.Items.Clear();
-            var adAll = Profile.GetSortedAccessDesciptorList();
+            var adAll = Profile.AccessDescriptor.GetSortedAccessDesciptorList();
             foreach (var panel in panels)
             {
                 var treeRootItem = new TreeViewItem
                 {
                     Tag = panel,
                     Name = TreeItemType.Panel.ToString(),
-                    Header = panel.Name
+                    Header = panel.GetPrivacyType() == ProfileItemPrivacyType.Private ? PrivacyMarker + panel.Name : panel.Name
                 };
 
-                var ad = Profile.GetSortedAccessDesciptorListByPanelId(panel.Id);
+                var ad = Profile.AccessDescriptor.GetSortedAccessDesciptorListByPanelId(panel.Id);
                 foreach (var adesc in ad)
                 {
                     if (adesc.IsDependent())
                         continue;
 
                     var icon = GetIcon(tit, adesc.GetId());
-                    var treeAdItem = CreateTreeViewItem(adesc.GetName(), adesc, tit, icon);
+                    var nodeName = (tit == TreeItemType.AccessDescriptor && adesc.GetPrivacyType() == ProfileItemPrivacyType.Private) ? PrivacyMarker + adesc.GetName() : adesc.GetName();
+                    var treeAdItem = CreateTreeViewItem(nodeName, adesc, tit, icon);
                     treeAdItem.Tag = adesc;
                     treeAdItem.Name = tit.ToString();
 
@@ -1162,8 +1167,11 @@ namespace FlexRouter
                         if (a.GetDependency().GetId() != adesc.GetId())
                             continue;
                         icon = GetIcon(tit, a.GetId());
-                        var treeDependentItem = CreateTreeViewItem(Profile.PanelStorage.GetPanelById(a.GetAssignedPanelId()).Name + "." + a.GetName(), a,
-                                tit, icon);
+                        var depNodeName = Profile.PanelStorage.GetPanelById(a.GetAssignedPanelId()).Name + "." + a.GetName();
+                        if (adesc.GetPrivacyType() == ProfileItemPrivacyType.Private)
+                            depNodeName = PrivacyMarker + depNodeName;
+
+                        var treeDependentItem = CreateTreeViewItem(depNodeName, a, tit, icon);
                         treeAdItem.Items.Add(treeDependentItem);
                     }
                 }
@@ -1224,7 +1232,7 @@ namespace FlexRouter
         {
             if (tit == TreeItemType.ControlProcessor)
             {
-                var cp = Profile.GetControlProcessorByAccessDescriptorId(itemId);
+                var cp = Profile.ControlProcessor.GetControlProcessor(itemId);
                 if (cp == null)
                     return Properties.Resources.ConnectedNot;
                 var assignments = cp.GetAssignments();
@@ -1243,7 +1251,7 @@ namespace FlexRouter
             }
             if (tit == TreeItemType.AccessDescriptor)
             {
-                var descriptor = Profile.GetAccessDesciptorById(itemId);
+                var descriptor = Profile.AccessDescriptor.GetAccessDesciptorById(itemId);
                 return descriptor.GetIcon();
             }
             return null;
@@ -1502,7 +1510,7 @@ namespace FlexRouter
         private void FillSelectProfileCombobox(string selectedItemText = null)
         {
             _selectProfile.Items.Clear();
-            var profiles = Profile.GetProfileList();
+            var profiles = Profile.GetProfileList(ProfileItemPrivacyType.Public.ToString());
             foreach (var profile in profiles)
             {
                 var cbi = new ComboBoxItem {Content = profile.Key, Tag = profile.Value};
@@ -1568,12 +1576,8 @@ namespace FlexRouter
         {
             if (profileName == null)
                 return false;
-            var profileList = Profile.GetProfileList();
-            if (!profileList.ContainsKey(profileName))
-                return false;
-            var profilePath = profileList[profileName];
             PauseRouterOnChangeProfile();
-            var loadResult = Profile.LoadProfile(profilePath);
+            var loadResult = Profile.LoadProfileByName(profileName);
             ResumeRouterOnChangeProfile();
             return loadResult;
         }
@@ -1586,7 +1590,7 @@ namespace FlexRouter
         private void CreateNewProfileClick(object sender, RoutedEventArgs e)
         {
             PauseRouterOnChangeProfile();
-            Profile.CreateNewProfile();
+            Profile.CreateNewProfile(ApplicationSettings.DisablePersonalProfile);
             FillSelectProfileCombobox(ApplicationSettings.DefaultProfile);
             ResumeRouterOnChangeProfile();
         }
@@ -1614,7 +1618,7 @@ namespace FlexRouter
         /// <param name="e"></param>
         private void RenameProfileClick(object sender, RoutedEventArgs e)
         {
-            var name = Profile.RenameProfile();
+            var name = Profile.RenameProfile(ApplicationSettings.DisablePersonalProfile);
             if (name == null)
                 return;
             SetTitle(name);
@@ -1657,7 +1661,7 @@ namespace FlexRouter
             {
                 var newItem = ((VariableBase) treeSelectedItem.Object).GetCopy();
                 newItem.Name = newItem.Name + "(2)";
-                ShowVariable(newItem, true);
+                ShowVariable(newItem);
                 newItem.Id = GlobalId.GetNew();
             }
             if ((treeSelectedItem.Object as Panel) != null)
@@ -1687,6 +1691,26 @@ namespace FlexRouter
                 ShowPanel(newItem, _accessDescriptorPanel);
                 newItem.SetId(GlobalId.GetNew());
             }
+        }
+        private void _disablePersonalProfile_Checked(object sender, RoutedEventArgs e)
+        {
+            ApplicationSettings.DisablePersonalProfile = true;
+        }
+        private void _disablePersonalProfile_Unchecked(object sender, RoutedEventArgs e)
+        {
+            ApplicationSettings.DisablePersonalProfile = false;
+        }
+
+        private void _mergePersonalAndPublicProfile_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show(LanguageManager.GetPhrase(Phrases.EditorMessageSureToMovePrivateProfileToPublic), LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+                return;
+            _routerCore.Pause();
+            Profile.MakeAllItemsPublic();
+            RenewVariablesTrees();
+            RenewTrees();
+            Profile.Save(ApplicationSettings.DisablePersonalProfile);
+            _routerCore.Start();
         }
     }
 }

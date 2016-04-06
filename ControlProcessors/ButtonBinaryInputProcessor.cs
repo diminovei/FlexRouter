@@ -14,7 +14,7 @@ using FlexRouter.Localizers;
 
 namespace FlexRouter.ControlProcessors
 {
-    class ButtonBinaryInputProcessor : ControlProcessorBase<IDescriptorMultistateWithDefault>, ICollector
+    class ButtonBinaryInputProcessor : CollectorBase<IDescriptorMultistateWithDefault>, ICollector
     {
         public ButtonBinaryInputProcessor(DescriptorBase accessDescriptor)
             : base(accessDescriptor)
@@ -50,17 +50,14 @@ namespace FlexRouter.ControlProcessors
         {
             return _usedHardware.Keys.ToArray();
         }
-
         ///// <summary>
         ///// Словарь [код, stateId]. Если в словаре есть код, который сейчас набран кнопками - включаем указанный ConnectorId
         ///// </summary>
         //private readonly List<Assignment> _stateAssignments = new List<Assignment>();
-        
         public override string GetDescription()
         {
             return LanguageManager.GetPhrase(Phrases.HardwareBinaryInput);
         }
-
         /// <summary>
         /// Получить id состояния, которое нужно включить в AccessDescriptor
         /// </summary>
@@ -73,13 +70,12 @@ namespace FlexRouter.ControlProcessors
             return activatedState == null ? -1 : activatedState.GetConnector().Id;
         }
         
-        public void ProcessControlEvent(ControlEventBase controlEvent)
+        protected override void OnNewControlEvent(ControlEventBase controlEvent)
         {
             var ev = controlEvent as ButtonEvent;
-            if (ev == null)
-                return;
+
             var hw = controlEvent.Hardware.GetHardwareGuid();
-            
+
             // Если такое железо не назначено - прекращаем обработку
             if (!_usedHardware.ContainsKey(hw))
                 return;
@@ -98,6 +94,21 @@ namespace FlexRouter.ControlProcessors
             {
                 AccessDescriptor.SetDefaultState();
             }
+        }
+
+        protected override void OnTick()
+        {
+        }
+
+        protected override bool IsControlEventSuitable(ControlEventBase controlEvent)
+        {
+            var ev = controlEvent as ButtonEvent;
+            return ev != null;
+        }
+
+        protected override bool IsNeedToRepeatControlEventOnPowerOn()
+        {
+            return true;
         }
 
         protected override void SaveAdditionals(XmlTextWriter writer)

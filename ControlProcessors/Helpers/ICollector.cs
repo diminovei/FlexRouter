@@ -12,5 +12,7 @@ namespace FlexRouter.ControlProcessors.Helpers
         /// </summary>
         /// <param name="controlEvent"></param>
         void ProcessControlEvent(ControlEventBase controlEvent);
+
+        void Tick();
     }
 }

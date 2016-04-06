@@ -6,6 +6,8 @@ using FlexRouter.AccessDescriptors.Helpers;
 using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.ControlProcessors.AssignedHardware;
 using FlexRouter.ControlProcessors.Helpers;
+using FlexRouter.Hardware;
+using FlexRouter.Hardware.F3;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
 using FlexRouter.Localizers;
@@ -92,7 +94,7 @@ namespace FlexRouter.ControlProcessors
         {
             if (string.IsNullOrEmpty(Connections[0].GetAssignedHardware()))
                 return null;
-            var ad = Profile.GetAccessDesciptorById(AssignedAccessDescriptorId);
+            var ad = Profile.AccessDescriptor.GetAccessDesciptorById(AssignedAccessDescriptorId);
             var text = ((IIndicatorMethods) ad).GetIndicatorText();
             if (text == _previousIndicatorText)
                 return null;
@@ -103,7 +105,7 @@ namespace FlexRouter.ControlProcessors
         public IEnumerable<ControlEventBase> GetClearEvent()
         {
             if (string.IsNullOrEmpty(Connections[0].GetAssignedHardware()))
-                return null;
+                return new ControlEventBase[0];
             var eventArray = new List<ControlEventBase>();
 
             var digitsNumber = ((DescriptorIndicator)AccessDescriptor).GetNumberOfDigits();
@@ -206,8 +208,13 @@ namespace FlexRouter.ControlProcessors
                     }
                 }
                 ev.Hardware.BlockId += addToBlock;
-                ev.Hardware.ControlId = (uint) (addToControlId + i.Value);
-
+                ev.Hardware.ControlId = (uint)(addToControlId + i.Value);
+                //if (ev.Hardware.ControlId >= 8)
+                //    ev.Hardware.ControlId = 15 - (ev.Hardware.ControlId - 8);
+                // Если вышли за пределы блоков - не сохраняем  событие
+                var capacity = HardwareManager.GetCapacity(ev.Hardware, DeviceSubType.Block);
+                if (capacity.Names.Length == 0 || capacity.DeviceSubtypeIsNotSuitableForCurrentHardware || ev.Hardware.BlockId > capacity.Names.Select(x => int.Parse(x)).Max())
+                    continue;
                 eventArray.Add(ev);
             }
             return eventArray;

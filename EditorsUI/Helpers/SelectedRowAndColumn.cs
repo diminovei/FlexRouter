@@ -6,7 +6,7 @@ using System.Windows.Media;
 
 namespace FlexRouter.EditorsUI.Helpers
 {
-    class SelecedRowAndColumn
+    class SelectedRowAndColumn
     {
         private int _selectedRowIndex = -1;
         private int _selectedCellIndex = -1;

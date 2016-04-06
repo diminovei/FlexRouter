@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Linq;
 using System.Xml;
+using System.Xml.XPath;
 using FlexRouter.Helpers;
+using FlexRouter.Problems;
 using FlexRouter.ProfileItems;
 using FlexRouter.VariableWorkerLayer.MethodFakeVariable;
 using FlexRouter.VariableWorkerLayer.MethodFsuipc;
@@ -18,23 +18,22 @@ namespace FlexRouter.VariableWorkerLayer
         private readonly MemoryPatchMethod _memoryPatchMethodInstance = new MemoryPatchMethod();
         private readonly FsuipcMethod _fsuipcMethodInstance = new FsuipcMethod();
         private readonly List<string> _notFoundModules = new List<string>();
-        private bool _resistVariableChangesFromOutsideModeOn;
         private InitializationState _memoryPatchState;
         private InitializationState _fsuipcState;
 
         private void InitializeMemoryPatchMethod()
         {
             if (_memoryPatchState != null)
-                Problems.AddOrUpdateProblem(_memoryPatchState.System, _memoryPatchState.ErrorMessage, ProblemHideOnFixOptions.HideDescription, true);
+                Problems.Problems.AddOrUpdateProblem(_memoryPatchState.System, _memoryPatchState.ErrorMessage, ProblemHideOnFixOptions.HideDescription, true);
             _memoryPatchState = _memoryPatchMethodInstance.Initialize(Profile.GetMainManagedProcessName());
-            Problems.AddOrUpdateProblem(_memoryPatchState.System, _memoryPatchState.ErrorMessage, ProblemHideOnFixOptions.HideDescription, _memoryPatchState.IsOk);
+            Problems.Problems.AddOrUpdateProblem(_memoryPatchState.System, _memoryPatchState.ErrorMessage, ProblemHideOnFixOptions.HideDescription, _memoryPatchState.IsOk);
         }
         private void InitializeFsuipcMethod()
         {
             if (_fsuipcState != null)
-                Problems.AddOrUpdateProblem(_fsuipcState.System, _fsuipcState.ErrorMessage, ProblemHideOnFixOptions.HideDescription, true);
+                Problems.Problems.AddOrUpdateProblem(_fsuipcState.System, _fsuipcState.ErrorMessage, ProblemHideOnFixOptions.HideDescription, true);
             _fsuipcState = _fsuipcMethodInstance.Initialize();
-            Problems.AddOrUpdateProblem(_fsuipcState.System, _fsuipcState.ErrorMessage, ProblemHideOnFixOptions.HideDescription, _fsuipcState.IsOk);
+            Problems.Problems.AddOrUpdateProblem(_fsuipcState.System, _fsuipcState.ErrorMessage, ProblemHideOnFixOptions.HideDescription, _fsuipcState.IsOk);
         }
 
         private void Initialize()
@@ -46,17 +45,6 @@ namespace FlexRouter.VariableWorkerLayer
         /// Сопротивляться ли изменению переменных извне
         /// </summary>
         /// <param name="isOn">true - сопротивляться</param>
-        public void SetResistVariableChangesFromOutsideMode(bool isOn)
-        {
-            _resistVariableChangesFromOutsideModeOn = isOn;
-        }
-        /// <summary>
-        /// Сопротивляться ли изменению переменных извне
-        /// </summary>
-        public bool IsResistVariableChangesFromOutsideModeOn()
-        {
-            return _resistVariableChangesFromOutsideModeOn;
-        }
         public string[] GetModulesList()
         {
             return _memoryPatchMethodInstance.GetModulesList();
@@ -82,16 +70,15 @@ namespace FlexRouter.VariableWorkerLayer
                     SynchronizeFsuipcVariable(variable as FsuipcVariable);
             }
             _fsuipcMethodInstance.Process();
-            foreach (var variable in _variables.Values.OfType<FsuipcVariable>())
-            {
-                variable.SetValueInMemory(_fsuipcMethodInstance.GetValue(variable.Id));
-                //if (!_resistVariableChangesFromOutsideModeOn && variable.GetValueToSet() == variable.GetPrevValueToSet())
-                //{
-                //    variable.SetValueToSet(variable.GetValueInMemory());
-                //    variable.SetPrevValueToSet(variable.GetValueInMemory());
-                //}
-            }
-                
+            //foreach (var variable in _variables.Values)
+            //{
+            //    if(!(variable is FsuipcVariable))
+            //        continue;
+            //    var mem = (variable as FsuipcVariable).GetValueInMemory();
+            //    var toWrite = (variable as FsuipcVariable).GetValueToSet();
+            //    if (mem == toWrite)
+            //        (variable as FsuipcVariable).SetValueToSet(null);
+            //}
             var modules = string.Empty;
             foreach (var nfm in _notFoundModules)
             {
@@ -100,7 +87,7 @@ namespace FlexRouter.VariableWorkerLayer
                 modules += nfm;
             }
 
-            Problems.AddOrUpdateProblem("MemoryPatcherModules", "not found - " + modules, ProblemHideOnFixOptions.HideItemAndDescription, modules.Length == 0);
+            Problems.Problems.AddOrUpdateProblem("MemoryPatcherModules", "not found - " + modules, ProblemHideOnFixOptions.HideItemAndDescription, modules.Length == 0);
         }
         /// <summary>
         /// Получить переменную по её идентификатору
@@ -118,6 +105,16 @@ namespace FlexRouter.VariableWorkerLayer
         public IEnumerable<IVariable> GetAllVariables()
         {
             return _variables.Select(v => v.Value);    
+        }
+        public void MakeAllItemsPublic()
+        {
+            lock (_variables)
+            {
+                foreach (var item in _variables)
+                {
+                    (item.Value as VariableBase).SetPrivacyType(ProfileItemPrivacyType.Public);
+                }
+            }
         }
         /// <summary>
         /// Зарегистрировать переменную
@@ -138,14 +135,49 @@ namespace FlexRouter.VariableWorkerLayer
                 return;
             _variables.Remove(variableId);
         }
-        public void SaveAllVariables(XmlTextWriter writer)
+        public void Load(XPathNavigator nav, string profileMainNodeName, ProfileItemPrivacyType profileItemPrivacyType)
         {
+            var navPointer = nav.Select("/" + profileMainNodeName + "/Variables/Variable");
+            while (navPointer.MoveNext())
+            {
+                var type = navPointer.Current.GetAttribute("Type", navPointer.Current.NamespaceURI);
+                IVariable variable = null;
+                if (type == "FsuipcVariable")
+                    variable = new FsuipcVariable();
+                if (type == "MemoryPatchVariable")
+                    variable = new MemoryPatchVariable();
+                if (type == "FakeVariable")
+                    variable = new FakeVariable();
+                if (variable != null)
+                {
+                    variable.Load(navPointer.Current);
+                    (variable as VariableBase).SetPrivacyType(profileItemPrivacyType);
+                    StoreVariable(variable);
+                }
+            }
+        }
+        /// <summary>
+        /// Есть ли у панели дочерние элементы
+        /// </summary>
+        /// <param name="panelId"></param>
+        /// <returns></returns>
+        public bool IsPanelInUse(Guid panelId)
+        {
+            return _variables.Any(v => v.Value.PanelId == panelId);
+        }
+        public void SaveAllVariables(XmlTextWriter writer, ProfileItemPrivacyType profileItemPrivacyType)
+        {
+            if (profileItemPrivacyType == ProfileItemPrivacyType.Private && ApplicationSettings.DisablePersonalProfile)
+                return;
             foreach (var v in _variables)
             {
-                writer.WriteStartElement("Variable");
-                v.Value.Save(writer);
-                writer.WriteEndElement();
-                writer.WriteString("\n");
+                if ((v.Value as VariableBase).GetPrivacyType() == profileItemPrivacyType || ApplicationSettings.DisablePersonalProfile)
+                {
+                    writer.WriteStartElement("Variable");
+                    v.Value.Save(writer);
+                    writer.WriteEndElement();
+                    writer.WriteString("\n");
+                }
             }
         }
         /// <summary>
@@ -227,24 +259,15 @@ namespace FlexRouter.VariableWorkerLayer
         private void SynchronizeMemoryPatchVariable(MemoryPatchVariable mpv)
         {
             var valueToSet = mpv.GetValueToSet();
-            if (valueToSet != null)
+            if (valueToSet != null && valueToSet != mpv.GetValueInMemory())
             {
-                if (
-                    (_resistVariableChangesFromOutsideModeOn && valueToSet != mpv.GetValueInMemory())
-                    || (!_resistVariableChangesFromOutsideModeOn && valueToSet != mpv.GetPrevValueToSet())
-                    )
+                var writeVarResult = _memoryPatchMethodInstance.SetVariableValue(mpv.ModuleName, mpv.Offset, mpv.GetVariableSize(), (double)valueToSet);
+                if (writeVarResult.Code == MemoryPatchVariableErrorCode.ModuleNotFound)
                 {
-                    var writeVarResult = _memoryPatchMethodInstance.SetVariableValue(mpv.ModuleName, mpv.Offset, mpv.GetVariableSize(), (double)valueToSet);
-                    if (writeVarResult.Code == MemoryPatchVariableErrorCode.ModuleNotFound)
-                    {
-                        if (!_notFoundModules.Contains(mpv.ModuleName))
-                            _notFoundModules.Add(mpv.ModuleName);
-                        Initialize();
-                    }
-                    else
-                    {
-                        mpv.SetPrevValueToSet(valueToSet);
-                    }
+                    if (!_notFoundModules.Contains(mpv.ModuleName))
+                        _notFoundModules.Add(mpv.ModuleName);
+                    Initialize();
+                    return;
                 }
             }
             var readVarResult = _memoryPatchMethodInstance.GetVariableValue(mpv.ModuleName, mpv.Offset, mpv.GetVariableSize());
@@ -255,61 +278,34 @@ namespace FlexRouter.VariableWorkerLayer
                 Initialize();
             }
             else
+            {
                 mpv.SetValueInMemory(readVarResult.Value);
+                mpv.SetValueToSet(readVarResult.Value);
+            }
+                
         }
-        //private void SynchronizeMemoryPatchVariable(MemoryPatchVariable mpv)
-        //{
-        //    // Если переменная не инициализирована или нет данных для записи, переменную нужно прочитать
-        //    if (mpv.GetValueInMemory() == null || mpv.GetValueToSet() == null)
-        //    {
-        //        var readVarResult = _memoryPatchMethodInstance.GetVariableValue(mpv.ModuleName, mpv.Offset, mpv.GetVariableSize());
-        //        if (readVarResult.Code == MemoryPatchVariableErrorCode.ModuleNotFound)
-        //        {
-        //            if (!_notFoundModules.Contains(mpv.ModuleName))
-        //                _notFoundModules.Add(mpv.ModuleName);
-        //            //mpv.SetValueToSet(null);
-        //            mpv.SetValueInMemory(null);
-        //            Initialize();
-        //        }
-        //        else
-        //            mpv.SetValueInMemory(readVarResult.Value);
-        //    }
-        //    else
-        //    {
-        //        var valueToSet = mpv.GetValueToSet();
-        //        if (valueToSet == null) 
-        //            return;
-        //        var writeVarResult = _memoryPatchMethodInstance.SetVariableValue(mpv.ModuleName, mpv.Offset, mpv.GetVariableSize(), (double)valueToSet);
-        //        if (writeVarResult.Code == MemoryPatchVariableErrorCode.ModuleNotFound)
-        //        {
-        //            if (!_notFoundModules.Contains(mpv.ModuleName))
-        //                _notFoundModules.Add(mpv.ModuleName);
-        //            Initialize();
-        //        }
-        //        else
-        //        {
-        //            mpv.SetValueInMemory(writeVarResult.Value);
-        //            mpv.SetValueToSet(null);
-        //        }
-        //    }
-        //}
+
         private void SynchronizeFsuipcVariable(FsuipcVariable mpv)
         {
-            if (mpv.GetValueToSet() != null)
+            //if (mpv.GetValueToSet()!=null && mpv.GetValueToSet() == mpv.GetValueInMemory())
+            //    mpv.SetValueToSet(null);
+
+            var vts = mpv.GetValueToSet();
+
+            if (vts != null)
             {
-                if (
-                        (_resistVariableChangesFromOutsideModeOn && mpv.GetValueToSet() != mpv.GetValueInMemory())
-                        || (!_resistVariableChangesFromOutsideModeOn && mpv.GetValueToSet() != mpv.GetPrevValueToSet())
-                    )
+                if (!_fsuipcMethodInstance.AddVariableToWrite(mpv))
                 {
-                    if (_fsuipcMethodInstance.AddVariableToWrite(mpv))
-                        mpv.SetPrevValueToSet(mpv.GetValueToSet());
-                    else
-                        InitializeFsuipcMethod();
+                    InitializeFsuipcMethod();
+                    return;
                 }
+                mpv.SetValueToSet(null);
             }
+
             if (!_fsuipcMethodInstance.AddVariableToRead(mpv))
+            {
                 InitializeFsuipcMethod();
+            }
         }
     }
 }

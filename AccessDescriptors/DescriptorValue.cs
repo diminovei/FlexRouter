@@ -12,7 +12,7 @@ using FlexRouter.ProfileItems;
 
 namespace FlexRouter.AccessDescriptors
 {
-    public class DescriptorValue : DescriptorMultistateBase, IDescriptorMultistateWithDefault, IDefautValueAbility, IRepeaterInDescriptor
+    public class DescriptorValue : DescriptorMultistateBase, IDescriptorMultistateWithDefault, IDefautValueAbility, IRepeaterInDescriptor, IITemWithId
     {
         public override string GetDescriptorType()
         {

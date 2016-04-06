@@ -85,7 +85,7 @@ namespace FlexRouter
 //            RegisterAccessDescriptor(ad, true);
 
 //            var cp = new ButtonProcessor(ad.GetId());
-//            var cpId = RegisterControlProcessor(cp, ad.GetId());
+//            var cpId = Add(cp, ad.GetId());
 //            //            ad.AssignControlProcessor(cpId);
 //            cp.AssignHardware(1, "Arcc:2905A4F9|Button|1|81");
 
@@ -105,7 +105,7 @@ namespace FlexRouter
 //            RegisterAccessDescriptor(ad3, true);
 
 //            /*            var cp3 = new ButtonBinaryInputProcessor(ad3.GetId());
-//                        var cpId3 = RegisterControlProcessor(cp3);
+//                        var cpId3 = Add(cp3);
 //                        ad3.AssignControlProcessor(cpId3);*/
 
 
@@ -125,7 +125,7 @@ namespace FlexRouter
 
 //            var ecp = new EncoderProcessor(encoderAdId);
 //            ecp.AssignHardware("Arcc:2905A4F9|Encoder|1|4");
-//            var ecpId = RegisterControlProcessor(ecp, ad1.GetId());
+//            var ecpId = Add(ecp, ad1.GetId());
 //            //            ad1.AssignControlProcessor(ecpId);
 //            ecp.SetInversion(true);
 //            /////////// Indicator
@@ -137,7 +137,7 @@ namespace FlexRouter
 //            var indicatorId = RegisterAccessDescriptor(indicatorAd, true);
 //            var icp = new IndicatorProcessor(indicatorId);
 //            icp.AssignHardware("Arcc:2905A4F9|Indicator|8|0");
-//            var icpId = RegisterControlProcessor(icp, indicatorAd.GetId());
+//            var icpId = Add(icp, indicatorAd.GetId());
 //            //            indicatorAd.AssignControlProcessor(icpId);
 //            /////////// BinaryOutput
 //            var boAd = new DescriptorBinaryOutput();
@@ -148,7 +148,7 @@ namespace FlexRouter
 //            var boId = RegisterAccessDescriptor(boAd, true);
 //            var lcp = new LampProcessor(boId);
 //            lcp.AssignHardware("Arcc:2905A4F9|BinaryOutput|1|7");
-//            var lcpId = RegisterControlProcessor(lcp, boAd.GetId());
+//            var lcpId = Add(lcp, boAd.GetId());
 //            //           boAd.AssignControlProcessor(lcpId);
 //        }
 //*/

@@ -38,6 +38,10 @@ namespace FlexRouter.Helpers
             return z.NewId;
         }
 
+        static public void Clear()
+        {
+            PrepToGuids.Clear();
+        }
         //static public void Save()
         //{
         //    using (var file = new System.IO.StreamWriter(@"d:\idtoguid.txt"))

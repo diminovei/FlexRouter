@@ -78,6 +78,8 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
                 return LanguageManager.GetPhrase(Phrases.HardwareEncoder);
             if (hardwareModuleType == HardwareModuleType.Indicator)
                 return LanguageManager.GetPhrase(Phrases.HardwareIndicator);
+            if (hardwareModuleType == HardwareModuleType.LedMatrixIndicator)
+                return LanguageManager.GetPhrase(Phrases.HardwareIndicator);
             if (hardwareModuleType == HardwareModuleType.BinaryOutput)
                 return LanguageManager.GetPhrase(Phrases.HardwareBinaryOutput);
             if (hardwareModuleType == HardwareModuleType.Axis)

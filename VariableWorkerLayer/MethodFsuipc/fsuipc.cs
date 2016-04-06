@@ -219,7 +219,6 @@ namespace FsuipcSdk
 		{
 
 			string szName = ""; 
-			string szTemp = "";
 			bool fWideFS = false;
 			int nTry = -1;
 			int i = -1;

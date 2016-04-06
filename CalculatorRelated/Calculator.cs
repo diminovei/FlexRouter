@@ -162,6 +162,8 @@ namespace FlexRouter.CalculatorRelated
                 var conditionFormulaState = ConditionFormulaState.Idle;
                 foreach (var token in tokenizedFormula)
                 {
+                    if (conditionFormulaState == ConditionFormulaState.LogicPartWasFalseSkipMathPart && !(token is CalcTokenFormulaSeparator))
+                        continue;
                     // Если встретили ?
                     if (token is CalcTokenIfStatement)
                     {

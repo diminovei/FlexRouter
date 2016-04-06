@@ -15,7 +15,7 @@ using FlexRouter.VariableWorkerLayer;
 
 namespace FlexRouter.AccessDescriptors
 {
-    public class DescriptorRange : DescriptorRangeBase, IDescriptorPrevNext, IDescriptorRangeExt, IRepeaterInDescriptor, IDescriptorMultistateWithDefault
+    public class DescriptorRange : DescriptorRangeBase, IDescriptorPrevNext, IDescriptorRangeExt, IRepeaterInDescriptor, IDescriptorMultistateWithDefault, IITemWithId
     {
         private readonly CalculatorVariableAccessAddon _calculatorVariableAccessAddonCachedValues = new CalculatorVariableAccessAddon(true);
         /// <summary>
@@ -67,7 +67,6 @@ namespace FlexRouter.AccessDescriptors
         private double CalculateNewValue(double value, double stepValue, int repeats, double minimumValue, double maximumValue, bool nextState)
         {
             double min, max;
-            const double epsilon = 0.0000001;
             const int roundDigit = 5;
             // Определяем направление и задаём минимум и максимум
             if (minimumValue < maximumValue)

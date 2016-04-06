@@ -18,7 +18,7 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
     partial class AssignEditorForBinaryInput : IEditor, IControlProcessorEditor
     {
         private readonly HardwareModuleType _hardwareSupported;
-        private readonly SelecedRowAndColumn _selecedRowAndColumn = new SelecedRowAndColumn();
+        private readonly SelectedRowAndColumn _selectedRowAndColumn = new SelectedRowAndColumn();
         private readonly AssignEditorHelper _assignEditorHelper;
         private readonly ButtonBinaryInputProcessor _assignedControlProcessor;
         private DataTable _dataTable = new DataTable();
@@ -26,12 +26,6 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
         private readonly SortedDictionary<string, bool> _activeButtonsList = new SortedDictionary<string, bool>();
         
         private bool _initializationModeOn;
-        internal class ActiveButtonItem
-        {
-            internal string Button;
-            internal bool State;
-        }
-
         /// <summary>
         /// Заполнить форму данными из описателя доступа
         /// </summary>
@@ -67,8 +61,6 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
         private void ShowData()
         {
             AssignmentGrid.ItemsSource = _assignEditorHelper.GetGridData();
-            if (AssignmentGrid.Columns.Count != 0)
-                AssignmentGrid.Columns[0].Visibility = Visibility.Hidden;
         }
         private string GetCurrentControlsCode()
         {
@@ -77,7 +69,7 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
 
         public void Save()
         {
-            var selectedRowIndex = _selecedRowAndColumn.GetSelectedRowIndex();
+            var selectedRowIndex = _selectedRowAndColumn.GetSelectedRowIndex();
             if (selectedRowIndex == -1 || AssignmentGrid.Columns.Count == 0) 
                 return;
             _assignedControlProcessor.SetInvolvedHardwareWithCurrentStates(_activeButtonsList);
@@ -109,12 +101,12 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
         //
         private void OnDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            _selecedRowAndColumn.OnMouseDoubleClick((DependencyObject)e.OriginalSource);
+            _selectedRowAndColumn.OnMouseDoubleClick((DependencyObject)e.OriginalSource);
         }
 
         private void StatesGridGotFocus(object sender, RoutedEventArgs e)
         {
-            _selecedRowAndColumn.OnMouseDoubleClick((DependencyObject)e.OriginalSource);
+            _selectedRowAndColumn.OnMouseDoubleClick((DependencyObject)e.OriginalSource);
         }
         /// <summary>
         /// Функция обрабатывает нажатие кнопки или кручение энкодера
@@ -147,7 +139,9 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
 
         private void AssignmentGridLoaded(object sender, RoutedEventArgs e)
         {
-            AssignmentGrid.Columns[0].Visibility = Visibility.Hidden;
+            if (AssignmentGrid.Columns.Count != 0)
+                AssignmentGrid.Columns[0].Visibility = Visibility.Hidden;
+            SelectDataGridRow.SelectRowByIndex(AssignmentGrid, 0);
         }
 
         private void InitializeChecked(object sender, RoutedEventArgs e)

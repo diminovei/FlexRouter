@@ -51,13 +51,12 @@ namespace FlexRouter.AccessDescriptors
     //     </summary>
     //    private int _pointerInstrumentOneTurnRange;
 
-public class DescriptorIndicator : DescriptorOutputBase, IIndicatorMethods
+public class DescriptorIndicator : DescriptorOutputBase, IIndicatorMethods, IITemWithId
     {
         public override string GetDescriptorType()
         {
             return LanguageManager.GetPhrase(Phrases.EditorTypeMemoryIndicator);
         }
-
         public override Bitmap GetIcon()
         {
             return Properties.Resources.Indicator;
@@ -161,7 +160,6 @@ public class DescriptorIndicator : DescriptorOutputBase, IIndicatorMethods
 
             return res;
         }
-
         public override Connector[] GetConnectors(object controlProcessor, bool withDefaultState = false)
         {
             var connectors = new List<Connector>();
@@ -169,7 +167,6 @@ public class DescriptorIndicator : DescriptorOutputBase, IIndicatorMethods
             connectors.Add(c);
             return connectors.ToArray();
         }
-
         public override void SaveAdditionals(XmlWriter writer)
         {
             base.SaveAdditionals(writer);

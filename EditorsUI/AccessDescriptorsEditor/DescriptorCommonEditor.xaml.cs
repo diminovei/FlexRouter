@@ -62,7 +62,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
         public void Save()
         {
             GlobalFormulaKeeper.Instance.RemoveFormulasByOwnerId(_assignedAccessDescriptor.GetId());
-            Profile.RegisterAccessDescriptor(_assignedAccessDescriptor);
+            Profile.AccessDescriptor.RegisterAccessDescriptor(_assignedAccessDescriptor);
             _assignedAccessDescriptor.SetName(_accessDescriptorName.Text);
             _assignedAccessDescriptor.SetAssignedPanelId(Profile.PanelStorage.GetPanelByName(_assignedPanel.Text).Id);
             _assignedAccessDescriptor.SetUsePanelPowerFormulaFlag(_usePanelPowerFormula.IsChecked == true);

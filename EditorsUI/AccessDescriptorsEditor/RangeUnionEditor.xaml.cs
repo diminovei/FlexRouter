@@ -69,7 +69,7 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
             var selectedAdId = d.GetSelectedItemId();
             if (selectedAdId == Guid.Empty)
                 return;
-            var ad = Profile.GetAccessDesciptorById(selectedAdId);
+            var ad = Profile.AccessDescriptor.GetAccessDesciptorById(selectedAdId);
             if (!(ad is DescriptorRange))
             {
                 var message = LanguageManager.GetPhrase(Phrases.EditorAccessDescriptorTypeIsNotSuitable);
@@ -84,12 +84,12 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
                 MessageBox.Show(message, header, MessageBoxButton.OK, MessageBoxImage.Stop);
                 return;
             }
-            if (Profile.GetControlProcessorByAccessDescriptorId(ad.GetId())!=null)
+            if (Profile.ControlProcessor.GetControlProcessor(ad.GetId()) != null)
             {
                 var message = LanguageManager.GetPhrase(Phrases.EditorDependentAssignmentWasRemoved);
                 var header = LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader);
                 MessageBox.Show(message, header, MessageBoxButton.OK, MessageBoxImage.Information);
-                Profile.RemoveControlProcessor(ad.GetId());
+                Profile.ControlProcessor.RemoveControlProcessor(ad.GetId());
             }
             AddDescriptorToList(ad);
         }

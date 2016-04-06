@@ -1,10 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Input;
-using FlexRouter.AccessDescriptors.Helpers;
-using FlexRouter.ControlProcessors;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.EditorsUI.Helpers;
-using FlexRouter.Hardware;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
 using FlexRouter.Localizers;
@@ -17,7 +14,7 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
     partial class AssignEditor : IEditor, IControlProcessorEditor
     {
         private readonly HardwareModuleType _hardwareSupported;
-        private readonly SelecedRowAndColumn _selecedRowAndColumn = new SelecedRowAndColumn();
+        private readonly SelectedRowAndColumn _selectedRowAndColumn = new SelectedRowAndColumn();
         private readonly AssignEditorHelper _assignEditorHelper;
 
         public AssignEditor(IControlProcessor processor, bool enableInverse, HardwareModuleType hardwareSupported)
@@ -34,12 +31,10 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
         private void ShowData()
         {
             AssignmentGrid.ItemsSource = _assignEditorHelper.GetGridData();
-            if(AssignmentGrid.Columns.Count!=0)
-                AssignmentGrid.Columns[0].Visibility = Visibility.Hidden;
         }
         public void Save()
         {
-            var selectedRowIndex = _selecedRowAndColumn.GetSelectedRowIndex();
+            var selectedRowIndex = _selectedRowAndColumn.GetSelectedRowIndex();
 //            if (selectedRowIndex == -1 || AssignmentGrid.Columns.Count == 0) 
 //                return;
             _assignEditorHelper.Save(selectedRowIndex, _hardware.Text);
@@ -71,12 +66,12 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
         //
         private void OnDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            _selecedRowAndColumn.OnMouseDoubleClick((DependencyObject)e.OriginalSource);
+            _selectedRowAndColumn.OnMouseDoubleClick((DependencyObject)e.OriginalSource);
         }
 
         private void StatesGrid_GotFocus(object sender, RoutedEventArgs e)
         {
-            _selecedRowAndColumn.OnMouseDoubleClick((DependencyObject)e.OriginalSource);
+            _selectedRowAndColumn.OnMouseDoubleClick((DependencyObject)e.OriginalSource);
         }
         /// <summary>
         /// Функция обрабатывает нажатие кнопки или кручение энкодера
@@ -101,7 +96,9 @@ namespace FlexRouter.EditorsUI.ControlProcessorEditors
 
         private void AssignmentGridLoaded(object sender, RoutedEventArgs e)
         {
-            AssignmentGrid.Columns[0].Visibility = Visibility.Hidden;
+            if(AssignmentGrid.Columns.Count!=0)
+                AssignmentGrid.Columns[0].Visibility = Visibility.Hidden;
+            SelectDataGridRow.SelectRowByIndex(AssignmentGrid, 0);
         }
     }
 }

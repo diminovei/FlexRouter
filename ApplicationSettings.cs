@@ -24,6 +24,7 @@ namespace FlexRouter
         public static string DefaultLanguage { get; set; }
         public static bool ControlsSynchronizationIsOff { get; set; }
         public static bool JoystickBindByInstanceGuid { get; set; }
+        public static bool DisablePersonalProfile { get; set; }
 
         public static bool LoadSettings()
         {
@@ -48,13 +49,7 @@ namespace FlexRouter
                 DefaultLanguage = settingsNav.Current.GetAttribute("DefaultLanguage", settingsNav.Current.NamespaceURI);
                 ControlsSynchronizationIsOff = settingsNav.Current.GetAttribute("ControlsSynchronizationIsOff", settingsNav.Current.NamespaceURI).ToLower().Contains("true");
                 JoystickBindByInstanceGuid = settingsNav.Current.GetAttribute("JoystickBindByInstanceGuid", settingsNav.Current.NamespaceURI).ToLower().Contains("true");
-                
-                //RepeaterFirstPause =
-                //    uint.TryParse(
-                //        settingsNav.Current.GetAttribute("RepeaterFirstPause", settingsNav.Current.NamespaceURI),
-                //        out repeater)
-                //        ? repeater
-                //        : DefaultRepeaterFirstPause;
+                DisablePersonalProfile = settingsNav.Current.GetAttribute("DisablePersonalProfile", settingsNav.Current.NamespaceURI).ToLower().Contains("false");
                 return true;
             }
             catch (Exception)
@@ -82,6 +77,7 @@ namespace FlexRouter
                         writer.WriteAttributeString("DefaultLanguage", DefaultLanguage);
                         writer.WriteAttributeString("ControlsSynchronizationIsOff", ControlsSynchronizationIsOff.ToString());
                         writer.WriteAttributeString("JoystickBindByInstanceGuid", JoystickBindByInstanceGuid.ToString());
+                        writer.WriteAttributeString("DisablePersonalProfile", JoystickBindByInstanceGuid.ToString());
                         writer.WriteEndElement();
                         writer.WriteEndElement();
                         writer.WriteEndDocument();

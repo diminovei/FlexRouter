@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.Remoting;
 using System.Windows.Documents;
@@ -55,8 +56,20 @@ namespace FlexRouter.Hardware.F3
         /// <param name="cph">Железо</param>
         /// <param name="deviceSubType">Какая часть железа интересует (модуль, блок, контрол)</param>
         /// <returns>список значений, которое может принимать параметр</returns>
-        public override int[] GetCapacity(ControlProcessorHardware cph, DeviceSubType deviceSubType)
+        public override Capacity GetCapacity(ControlProcessorHardware cph, DeviceSubType deviceSubType)
         {
+            if (deviceSubType == DeviceSubType.Motherboard)
+            {
+                if (cph.ModuleType == HardwareModuleType.Axis
+                    || cph.ModuleType == HardwareModuleType.BinaryOutput
+                    || cph.ModuleType == HardwareModuleType.Button
+                    || cph.ModuleType == HardwareModuleType.LedMatrixIndicator
+                    || cph.ModuleType == HardwareModuleType.SteppingMotor)
+                    return new Capacity { Names = GetConnectedDevices().ToArray() };
+                return new Capacity { DeviceSubtypeIsNotSuitableForCurrentHardware = true };
+            }
+            if (!Devices.ContainsKey(cph.MotherBoardId))
+                return new Capacity { DeviceSubtypeIsNotSuitableForCurrentHardware = true };
             var device = (F3Device)Devices[cph.MotherBoardId];
             var outInfo = device.OutInfo;
 
@@ -71,11 +84,11 @@ namespace FlexRouter.Hardware.F3
                 case HardwareModuleType.BinaryOutput:
                     type = f3ioAPI.OutType.oLed;
                     break;
-                case HardwareModuleType.Indicator:
+                case HardwareModuleType.LedMatrixIndicator:
                     type = f3ioAPI.OutType.oLed;
                     break;
                 default:
-                    return null;
+                    return new Capacity { DeviceSubtypeIsNotSuitableForCurrentHardware = true };
                     
             }
             // Выбираем все модули, которые могут управлять указанным типом железа (HardwareModuleType)
@@ -89,37 +102,39 @@ namespace FlexRouter.Hardware.F3
             
             // Если запрашивался диапазон значений для модуля - возвращаем результат
             if (deviceSubType == DeviceSubType.ExtensionBoard)
-                return extensionDeviceCapacity.ToArray();
+                return new Capacity { Names = extensionDeviceCapacity.ToArray().Select(x => x.ToString(CultureInfo.InvariantCulture)).ToArray()};
 
             // Если запрашивался диапазон для блока, возвращаем все блоки, управляющие нужным типом (например, нужны блоки, управляющие светодиодами. 
             // При этом, нужно исключить блок, управляющий яркостью или шаговыми двигателями)
             if (deviceSubType == DeviceSubType.Block)
             {
                 if (!extensionDeviceCapacity.Contains((int) cph.ModuleId))
-                    return null;
+                    return new Capacity { DeviceSubtypeIsNotSuitableForCurrentHardware = true };
                 var block = new List<int>();
                 for (var i = 0; i < outInfo.device[cph.ModuleId].BlockCount; i++)
                 {
                     if (outInfo.device[cph.ModuleId].Block[i].Type == type)
                         block.Add(i);
                 }
-                return block.ToArray();
+                return new Capacity { Names = block.ToArray().Select(x => x.ToString(CultureInfo.InvariantCulture)).ToArray() };
             }
                 
 
             if (deviceSubType != DeviceSubType.Control)
-                return null;
+                return new Capacity { DeviceSubtypeIsNotSuitableForCurrentHardware = true };
             // У модуля шагового двигателя шаги задаются в блоке, поэтому нет такого понятия как Control
             if (cph.ModuleType == HardwareModuleType.SteppingMotor)
-                return null;
+                return new Capacity { DeviceSubtypeIsNotSuitableForCurrentHardware = true };
             // Параноидальная проверка. Если указанный модуль не существует
             if (!extensionDeviceCapacity.Contains((int)cph.ModuleId))
-                return null;
+                return new Capacity { DeviceSubtypeIsNotSuitableForCurrentHardware = true };
             // Если число блоков модуля равно нулю (такого быть не должно)
             if (outInfo.device[cph.ModuleId].BlockCount == 0)
-                return null;
+                return new Capacity { DeviceSubtypeIsNotSuitableForCurrentHardware = true };
             
-            return cph.ModuleType == HardwareModuleType.Indicator ? new[] { 0, 8 } : Enumerable.Range(0, outInfo.device[cph.ModuleId].Block[cph.BlockId].Capacity).ToArray();
+            return cph.ModuleType == HardwareModuleType.LedMatrixIndicator
+                ? new Capacity { Names = new[] { 0, 8 }.ToArray().Select(x => x.ToString(CultureInfo.InvariantCulture)).ToArray() }
+                : new Capacity { Names = Enumerable.Range(0, outInfo.device[cph.ModuleId].Block[cph.BlockId].Capacity).ToArray().Select(x => x.ToString(CultureInfo.InvariantCulture)).ToArray()};
         }
     }
 }

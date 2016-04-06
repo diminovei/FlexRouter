@@ -9,7 +9,7 @@ namespace FlexRouter.ProfileItems
     /// </summary>
     public class PanelStorage
     {
-        private readonly Dictionary<Guid, Panel> _panelsStorage = new Dictionary<Guid, Panel>();
+        private readonly Dictionary<Guid, Panel> _storage = new Dictionary<Guid, Panel>();
 
         //public delegate void OnChangeDelegate();
         //private event OnChangeDelegate OnChange;
@@ -20,40 +20,50 @@ namespace FlexRouter.ProfileItems
         public void StorePanel(Panel panel)
         {
             var id = panel.Id;
-            _panelsStorage[id] = panel;
+            _storage[id] = panel;
             //OnChange();
+        }
+        public void MakeAllItemsPublic()
+        {
+            lock (_storage)
+            {
+                foreach (var item in _storage)
+                {
+                    item.Value.SetPrivacyType(ProfileItemPrivacyType.Public);
+                }
+            }
         }
 
         public Panel[] GetAllPanels()
         {
-            return _panelsStorage.Values.ToArray();
+            return _storage.Values.ToArray();
         }
         public void RemovePanel(Panel panel)
         {
-            if (!_panelsStorage.ContainsKey(panel.Id))
+            if (!_storage.ContainsKey(panel.Id))
                 return;
-            _panelsStorage.Remove(panel.Id);
+            _storage.Remove(panel.Id);
             //OnChange();
         }
 
         public IOrderedEnumerable<Panel> GetSortedPanelsList()
         {
-            return _panelsStorage.Values.OrderBy(panel => panel.Name);
+            return _storage.Values.OrderBy(panel => panel.Name);
         }
 
         public Panel GetPanelById(Guid id)
         {
-            return !_panelsStorage.ContainsKey(id) ? null : _panelsStorage[id];
+            return !_storage.ContainsKey(id) ? null : _storage[id];
         }
 
         public Panel GetPanelByName(string name)
         {
-            return (from p in _panelsStorage where p.Value.Name == name select p.Value).FirstOrDefault();
+            return (from p in _storage where p.Value.Name == name select p.Value).FirstOrDefault();
         }
 
         public void Clear()
         {
-            _panelsStorage.Clear();
+            _storage.Clear();
         }
     }
 }

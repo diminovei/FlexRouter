@@ -107,6 +107,11 @@
     <Compile Include="ApplicationSettings.cs" />
     <Compile Include="ControlProcessors\AssignedHardware\Assignment.cs" />
     <Compile Include="ControlProcessors\AssignedHardware\IAssignment.cs" />
+    <Compile Include="ControlProcessors\Helpers\CollectorBase.cs" />
+    <Compile Include="EditorsUI\Helpers\SelectDataGridRow.cs" />
+    <Compile Include="IITemWithId.cs" />
+    <Compile Include="ProfileItems\AccessDescriptorsStorage.cs" />
+    <Compile Include="ProfileItems\ControlProcessorsStorage.cs" />
     <Compile Include="ControlProcessors\Helpers\ICollector.cs" />
     <Compile Include="ControlProcessors\Helpers\IRepeater.cs" />
     <Compile Include="ControlProcessors\Helpers\IVisualizer.cs" />
@@ -226,11 +231,13 @@
     <Compile Include="Hardware\HardwareEvents\LampEvent.cs" />
     <Compile Include="Hardware\Joystick\JoystickDevice.cs" />
     <Compile Include="Hardware\Joystick\JoystickDevicesManager.cs" />
+    <Compile Include="Localizers\Phrases.cs" />
     <Compile Include="MessagesToMainForm\IMessage.cs" />
     <Compile Include="MessagesToMainForm\MessageToMainForm.cs" />
     <Compile Include="MessagesToMainForm\ObjectMessage.cs" />
     <Compile Include="MessagesToMainForm\SimpleMessage.cs" />
     <Compile Include="MessagesToMainForm\TextMessage.cs" />
+    <Compile Include="ProfileItems\ProfilePrivacyType.cs" />
     <Compile Include="ProfileItems\PanelStorage.cs" />
     <Compile Include="Problems\Problem.cs" />
     <Compile Include="Problems\ProblemHideOnFixOptions.cs" />
@@ -257,7 +264,7 @@
     <Compile Include="EditorsUI\AccessDescriptorsEditor\DescriptorValueEditor.xaml.cs">
       <DependentUpon>DescriptorValueEditor.xaml</DependentUpon>
     </Compile>
-    <Compile Include="EditorsUI\Helpers\SelecedRowAndColumn.cs" />
+    <Compile Include="EditorsUI\Helpers\SelectedRowAndColumn.cs" />
     <Compile Include="Examples.cs" />
     <Compile Include="Hardware\Arcc\ArccDevice.cs" />
     <Compile Include="Hardware\Arcc\ArccDevicesManager.cs" />
@@ -279,6 +286,7 @@
     <Compile Include="EditorsUI\Helpers\TreeViewHelper.cs" />
     <Compile Include="EditorsUI\Helpers\TreeViewStateKeeper.cs" />
     <Compile Include="Helpers\Utils.cs" />
+    <Compile Include="ProfileItems\TreeCache.cs" />
     <Compile Include="RouterState.cs" />
     <Compile Include="TreeItem.cs" />
     <Compile Include="TreeItemType.cs" />

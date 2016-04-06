@@ -106,9 +106,14 @@ namespace FlexRouterUnitTests
         public void CheckConditions()
         {
             var calc = new Calculator();
+
             var result = calc.ComputeFormula("1==1 ? 11");
             Assert.AreNotEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
             Assert.AreEqual(11, result.CalculatedDoubleValue);
+
+            result = calc.ComputeFormula("1!=1 ? 11");
+            Assert.AreNotEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
+            Assert.AreEqual(FormulaError.FormulaIsEmpty, result.GetFormulaCheckResult());
 
             result = calc.ComputeFormula("1!=1 ? 11 ; 12");
             Assert.AreNotEqual(TypeOfComputeFormulaResult.Error, result.GetFormulaComputeResultType());
@@ -273,7 +278,7 @@ namespace FlexRouterUnitTests
             valueAccessDescriptor.AssignDefaultStateId(0);
             valueAccessDescriptor.SetAssignedPanelId(panelId3);
             valueAccessDescriptor.SetName("AccessDescriptor1");
-            var valueAccessDescriptorId = Profile.RegisterAccessDescriptor(valueAccessDescriptor);
+            var valueAccessDescriptorId = Profile.AccessDescriptor.RegisterAccessDescriptor(valueAccessDescriptor);
 
 
             // Encoder
@@ -289,14 +294,14 @@ namespace FlexRouterUnitTests
             rangeAccessDescriptor.SetMaximumValueFormula("4");
             rangeAccessDescriptor.SetStepFormula("0.5");
 //            rangeAccessDescriptor.IsLooped = true;
-            var rangeAccessDescriptorId = Profile.RegisterAccessDescriptor(rangeAccessDescriptor);
+            var rangeAccessDescriptorId = Profile.AccessDescriptor.RegisterAccessDescriptor(rangeAccessDescriptor);
             var tempFile = Path.GetTempFileName();
 
-            Profile.SaveProfileAs(tempFile);
+            Profile.SaveAs(tempFile);
             Profile.Clear();
-            Profile.LoadProfile(tempFile);
+            Profile.Load(tempFile, ProfileItemPrivacyType.Public);
 
-            var valueDescriptor = (DescriptorValue)Profile.GetAccessDesciptorById(valueAccessDescriptorId);
+            var valueDescriptor = (DescriptorValue)Profile.AccessDescriptor.GetAccessDesciptorById(valueAccessDescriptorId);
             Profile.VariableStorage.WriteValue(firstTestVariableId, 0);
             Profile.VariableStorage.WriteValue(secondTestVariableId, 0);
             Profile.VariableStorage.WriteValue(thirdTestVariableId, 0);

@@ -13,9 +13,9 @@ namespace FlexRouter.Helpers
     {
         public static bool AreStringsEqual(string one, string two)
         {
-            if (one == string.Empty)
+            if (string.IsNullOrEmpty(one))
                 one = null;
-            if (two == string.Empty)
+            if (string.IsNullOrEmpty(two))
                 two = null;
             return one == two;
         }

@@ -61,7 +61,6 @@ namespace FlexRouter.VariableWorkerLayer
                 buffer = BitConverter.GetBytes((ulong)value);
             if (variableSize == MemoryVariableSize.EightBytesSigned)
                 buffer = BitConverter.GetBytes((long)value);
-
             if (variableSize == MemoryVariableSize.FourBytesFloat)
                 buffer = BitConverter.GetBytes((float)value);
             if (variableSize == MemoryVariableSize.EightByteFloat)

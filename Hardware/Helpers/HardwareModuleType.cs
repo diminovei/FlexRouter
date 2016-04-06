@@ -11,6 +11,7 @@
         Encoder,
         BinaryOutput,
         Indicator,
-        SteppingMotor
+        SteppingMotor,
+        LedMatrixIndicator
     }
 }
