@@ -1,0 +1,1 @@
+move folders from !Configuration to folder with flexrouter.exe

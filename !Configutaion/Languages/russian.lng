@@ -21,6 +21,7 @@
   <Phrase Name="EditorVariableModule" Value = "Модуль"/>
   <Phrase Name="EditorVariableSize" Value = "Размер"/>
   <Phrase Name="EditorVariableRelativeOffset" Value = "Смещение"/>
+  <Phrase Name="EditorVariableNameInMapFile" Value = "Имя в .map файле"/>
   <Phrase Name="EditorVariableHexValue" Value = "Hex значение в памяти"/>
   <Phrase Name="EditorVariableDecValue" Value = "Dec значение в памяти"/>
   <Phrase Name="EditorDescription" Value = "Описание"/>
@@ -88,6 +89,14 @@
   <Phrase Name="EditorSelectAnItemFirst" Value = "Сначала выберите один из пунктов"/>
   <Phrase Name="EditorDependentAssignmentWasRemoved" Value = "Назначение на зависимый узел удалено"/>
   <Phrase Name="EditorMessageTheSameVariableIsExist" Value = "Переменная не будет сохранена, потому что уже существует другая, работающая с тем же адресом"/>
+  <Phrase Name="EditorMessageSureToMovePrivateProfileToPublic" Value = "Вы уверены, что хотите переместить персональную часть профиля в публичный профиль?"/>
+
+  <Phrase Name="EditorNoVariableSelected" Value = "Переменная не выбрана"/>
+  <Phrase Name="EditorNoItemInTreeSelected" Value = "Сначала выберите элемент в дереве"/>
+  <Phrase Name="EditorNoItemToCreateSelected" Value = "В выпадающем списке нужно выбрать что именно требуется создать"/>
+  <Phrase Name="EditorPanelIsNotAnObjectToAssignHardware" Value = "На панель нельзя назначить железо (соответственно, нельзя и очистить назначение)"/>
+  <Phrase Name="EditorNoTreeItemAndItemToCreateSelected" Value = "В дереве нужно выбрать объект назначения, а затем в выпадающе списке тип железа, которое нужно назначить"/>
+  <Phrase Name="EditorNoChangesToSave" Value = "Не было внесено никаких изменений, поэтому, сохранять нечего. Отредактируйте что-нибудь, а затем сохраните"/>
 
   <Phrase Name="MessageBoxErrorHeader" Value = "Ошибка"/>
   <Phrase Name="MessageBoxWarningHeader" Value = "Предупреждение"/>
@@ -101,6 +110,8 @@
   <Phrase Name="EditorCreateProfile" Value = "Создание нового профиля"/>
   <Phrase Name="EditorProfileName" Value = "Имя профиля"/>
   <Phrase Name="EditorMainProcessName" Value = "Процесс симулятора"/>
+  <Phrase Name="EditorMergePersonalProfileWithPublic" Value="Персональную часть профиля в публичную" />
+  <Phrase Name="EditorDisablePersonalProfile" Value="Отключить персональный профиль" />
 
   <Phrase Name="HardwareButton" Value = "Кнопка"/>
   <Phrase Name="HardwareEncoder" Value = "Энкодер"/>
@@ -110,6 +121,7 @@
   <Phrase Name="HardwareAxis" Value = "Ось"/>
   <Phrase Name="HardwareButtonPlusMinus" Value = "Кнопки +-"/>
   <Phrase Name="HardwareBinaryInput" Value = "Бинарный ввод"/>
+  <Phrase Name="HardwareSteppingMotor" Value = "Шаговый двигатель"/>
 
   <Phrase Name="FormulaErrorUnexpectedSymbols" Value = "Неизвестный символ"/>
   <Phrase Name="FormulaErrorSimilarTokensOneByOne" Value = "Два однотипных токена подряд"/>
@@ -154,7 +166,7 @@
   <Phrase Name="CommonButtonRename" Value = "Переименовать"/>
   <Phrase Name="CommonLabelLanguage" Value = "Язык (Language)"/>
   <Phrase Name="CommonLabelProfile" Value = "Профиль"/>
-  <Phrase Name="CommonLabelFormulaResult" Value = "Результат"/>
+  <Phrase Name="CommonLabelFormulaResult" Value = "Результат (Dec/Hex/Bool)"/>
   <Phrase Name="CommonLabelCopyToClipboard" Value = "Формулу в буфер обмена"/>
   <Phrase Name="CommonLabelCopyVariableToFormula" Value = "Вставить переменную в формулу"/>
   <Phrase Name="CommonLabelProfileManagement" Value = "Управление профилем"/>
@@ -173,4 +185,21 @@
   <Phrase Name="CycleTypeUnreachableMaximum" Value = "Недостижимый максимум [min;max)"/>
   <Phrase Name="CycleTypeReachableMinMax" Value = "Простой [min;max]"/>
   <Phrase Name="CycleTypeNone" Value = "Выключен"/>
+
+  <Phrase Name="MapFileUIGroup" Value = "Получение и обновление данных из .map файлов (для опытных пользователей)"/>
+  <Phrase Name="MapFileUIHeaderInitializeNames" Value = "Связать переменные профиля с .map файлом"/>
+  <Phrase Name="MapFileUIHeaderUpdateOffsets" Value = "Обновить смещения переменных"/>
+  <Phrase Name="MapFileUISelectModule" Value = "Выберите модуль"/>
+  <Phrase Name="MapFileUISearchVariablesNameInMapFile" Value = "Искать переменные в .map файле"/>
+  <Phrase Name="MapFileUISearchVariablesOffsetInMapFile" Value = "Искать смещения в .map файле"/>
+  <Phrase Name="MapFileUIExactMatch" Value = "Точные совпадения"/>
+  <Phrase Name="MapFileUIRelativeMatch" Value = "Неточные совпадения"/>
+  <Phrase Name="MapFileUINotFoundOffsets" Value = "Не найдено"/>
+  <Phrase Name="MapFileUISaveMatchesToFile" Value = "Сохранить в .csv"/>
+  <Phrase Name="MapFileUIApplyAndSave" Value = "Применить и сохранить профиль"/>
+  <Phrase Name="MapFileUIMessageBoxDone" Value = "Готово"/>
+  <Phrase Name="MapFileUISelectMapFileToLoad" Value = "Выберите, пожалуйста, .map файл для загрузки"/>
+  <Phrase Name="MapFileUISelectCsvFileToSave" Value = "Выберите, пожалуйста, .csv файл для сохранения"/>
+  <Phrase Name="MapFileUIModeInitializeVarNames" Value = "Связать переменные с .map файлов"/>
+  <Phrase Name="MapFileUIModeUpdateVarOffsets" Value = "Обновить смещения из .map файла"/>
 </FlexRouterProfile>

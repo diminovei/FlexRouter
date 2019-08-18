@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<FlexRouterProfile Type="Language" Name="Русский">
+  <Phrase Name="MainFormName" Value = "Flex Роутер"/>
+
+  <Phrase Name="SizeByte" Value = "1 байт целое"/>
+  <Phrase Name="SizeByteSigned" Value = "1 байт целое со знаком"/>
+  <Phrase Name="SizeTwoBytes" Value = "2 байта целое"/>
+  <Phrase Name="SizeTwoBytesSigned" Value = "2 байта целое со знаком"/>
+  <Phrase Name="SizeFourBytes" Value = "4 байта целое"/>
+  <Phrase Name="SizeFourBytesSigned" Value = "4 байта целое со знаком"/>
+  <Phrase Name="SizeFourBytesFloat" Value = "4 байта с точкой"/>
+  <Phrase Name="SizeEightBytes" Value = "8 байт целое"/>
+  <Phrase Name="SizeEightBytesSigned" Value = "8 байт целое со знаком"/>
+  <Phrase Name="SizeEightByteFloat" Value = "8 байт с точкой"/>
+
+  <Phrase Name="EditorPanel" Value = "Панель"/>
+  <Phrase Name="EditorAccessDescriptor" Value = "Описатель доступа"/>
+  <Phrase Name="EditorName" Value = "Имя"/>
+  <Phrase Name="EditorBadSymbols" Value = "неразрешённые символы"/>
+  <Phrase Name="EditorPanelName" Value = "Панель"/>
+  <Phrase Name="EditorVariableModule" Value = "Модуль"/>
+  <Phrase Name="EditorVariableSize" Value = "Размер"/>
+  <Phrase Name="EditorVariableRelativeOffset" Value = "Смещение"/>
+  <Phrase Name="EditorVariableNameInMapFile" Value = "Имя в .map файле"/>
+  <Phrase Name="EditorVariableHexValue" Value = "Hex значение в памяти"/>
+  <Phrase Name="EditorVariableDecValue" Value = "Dec значение в памяти"/>
+  <Phrase Name="EditorDescription" Value = "Описание"/>
+  <Phrase Name="EditorDigitsAfterPoint" Value = "Знаков после запятой"/>
+  <Phrase Name="EditorDigitsTotalNumber" Value = "Всего знаков"/>
+  <Phrase Name="EditorAbsoluteOffset" Value = "Абсолютное смещение"/>
+  <Phrase Name="EditorConvertAbsoluteOffsetToRelative" Value = "В относительное"/>
+  <Phrase Name="EditorPowerFormula" Value = "Формула подачи питания"/>
+  <Phrase Name="EditorUsePanelPowerFormula" Value = "Использовать формулу питания панели"/>
+  <Phrase Name="EditorOutputFormula" Value = "Формула выходных данных"/>
+  <Phrase Name="EditorRangeMinimumValue" Value = "Минимум"/>
+  <Phrase Name="EditorRangeMaximumValue" Value = "Максимум"/>
+  <Phrase Name="EditorRangeDefaultValue" Value = "По-умолчанию"/>
+  <Phrase Name="EditorRangeStep" Value = "Шаг"/>
+  <Phrase Name="EditorLoopRange" Value = "Цикличность"/>
+  <Phrase Name="EditorRangeGetValueFormula" Value = "Формула для получения значения"/>
+  <Phrase Name="EditorState" Value = "Состояние"/>
+  <Phrase Name="EditorHardware" Value = "Железо"/>
+  <Phrase Name="EditorInvert" Value = "Инверсия"/>
+  <Phrase Name="EditorToggleEmulator" Value = "Эмулятор фиксации"/>
+  <Phrase Name="EditorRepeater" Value = "Повторитель"/>
+  <Phrase Name="EditorHardwareMotherboard" Value = "Материнская плата"/>
+  <Phrase Name="EditorHardwareModule" Value = "Модуль"/>
+  <Phrase Name="EditorHardwareBlock" Value = "Блок"/>
+  <Phrase Name="EditorHardwareControl" Value = "Элемент"/>
+  <Phrase Name="EditorRenameState" Value = "Переименовать состояние"/>
+  <Phrase Name="EditorRemoveState" Value = "Удалить состояние"/>
+  <Phrase Name="EditorAddState" Value = "Добавить состояние"/>
+  <Phrase Name="EditorAddVariable" Value = "Добавить переменную"/>
+  <Phrase Name="EditorRemoveVariable" Value = "Удалить переменную"/>
+  <Phrase Name="EditorCloneVariable" Value = "Клонировать"/>
+  <Phrase Name="EditorCloneAccessDescriptor" Value = "Клонировать"/>
+  <Phrase Name="EditorDefaultStateColumnHeader" Value = "По-умолчанию"/>
+  <Phrase Name="EditorSetDefaultState" Value = "По-умолчанию"/>
+  <Phrase Name="EditorAxisReset" Value = "Сброс"/>
+  <Phrase Name="EditorAxisCalibrate" Value = "Калибровка"/>
+  <Phrase Name="EditorAxisLimitsLabel" Value = "Ограничение хода"/>
+  <Phrase Name="EditorVariableIsAlreadyExists" Value = "Выбранная переменная уже добавлена"/>
+  <Phrase Name="EditorDependentDescriptorsList" Value = "Список зависимых описателей"/>
+  <Phrase Name="EditorStartInitializeBinaryInputButtonsList" Value = "Инициализировать"/>
+  <Phrase Name="EditorStopInitializeBinaryInputButtonsList" Value = "Готово"/>
+  <Phrase Name="EditorVariableAndPanelNameToClipboard" Value = "Имя переменной в буфер обмена"/>
+
+  <Phrase Name="EditorTypeMemoryMultistate" Value = "Доступ к памяти (набор значений)"/>
+  <Phrase Name="EditorTypeMemoryIndicator" Value = "Доступ к памяти (управление индикатором)"/>
+  <Phrase Name="EditorTypeMemoryBinaryOutput" Value = "Доступ к памяти (бинарный вывод)"/>
+  <Phrase Name="EditorTypeMemoryRange" Value = "Доступ к памяти (диапазон значений)"/>
+  <Phrase Name="EditorTypeRangeUnion" Value = "Объединение (диапазон значений)"/>
+
+  <Phrase Name="EditorMessageAbsoluteOffsetIsOutOfModule" Value = "Смещение не соответствует ни одному модулю"/>
+  <Phrase Name="EditorMessageAbsoluteIsNotAhexNumber" Value = "Смещение должно представлять из себя число в формате hex"/>
+  <Phrase Name="EditorMessageDataIsIncorrect" Value = "Незаполнены или заполнены неверно следующие поля:"/>
+  <Phrase Name="EditorMessageRemoveVariableFromAccessDescriptor" Value = "Действительно отказаться от использования переменной"/>
+  <Phrase Name="EditorMessageRemoveStateFromAccessDescriptor" Value = "Действительно удалить состояние"/>
+  <Phrase Name="EditorMessageStateNameIsAlreadyExist" Value = "Такое имя уже существует"/>
+  <Phrase Name="EditorMessageInputStateName" Value = "Введите имя состояния"/>
+  <Phrase Name="EditorMessageRemoveAccessDescriptor" Value = "Удалить описатель доступа"/>
+  <Phrase Name="EditorMessageRemovePanel" Value = "Удалить панель"/>
+  <Phrase Name="EditorMessageRemoveControlProcessor" Value = "Удалить процессор"/>
+  <Phrase Name="EditorMessageCantRemoveNotEmptyPanel" Value = "Перед тем как удалить панель, нужно удалить все описатели доступа и переменные, принадлежащие панели"/>
+  <Phrase Name="EditorMessageCantRemoveVariableInUse" Value = "Нельзя удалить переменную, так как её используют:"/>
+  <Phrase Name="EditorMessageRemoveVariable" Value = "Удалить переменную"/>
+  <Phrase Name="EditorAccessDescriptorTypeIsNotSuitable" Value = "Неподходящий тип описателя доступа"/>
+  <Phrase Name="EditorAccessDescriptorIsAlreadyInList" Value = "Это описатель уже есть в списке"/>
+  <Phrase Name="EditorSelectAnItemFirst" Value = "Сначала выберите один из пунктов"/>
+  <Phrase Name="EditorDependentAssignmentWasRemoved" Value = "Назначение на зависимый узел удалено"/>
+  <Phrase Name="EditorMessageTheSameVariableIsExist" Value = "Переменная не будет сохранена, потому что уже существует другая, работающая с тем же адресом"/>
+  <Phrase Name="EditorMessageSureToMovePrivateProfileToPublic" Value = "Вы уверены, что хотите переместить персональную часть профиля в публичный профиль?"/>
+
+  <Phrase Name="EditorNoVariableSelected" Value = "Переменная не выбрана"/>
+  <Phrase Name="EditorNoItemInTreeSelected" Value = "Сначала выберите элемент в дереве"/>
+  <Phrase Name="EditorNoItemToCreateSelected" Value = "В выпадающем списке нужно выбрать что именно требуется создать"/>
+  <Phrase Name="EditorPanelIsNotAnObjectToAssignHardware" Value = "На панель нельзя назначить железо (соответственно, нельзя и очистить назначение)"/>
+  <Phrase Name="EditorNoTreeItemAndItemToCreateSelected" Value = "В дереве нужно выбрать объект назначения, а затем в выпадающе списке тип железа, которое нужно назначить"/>
+  <Phrase Name="EditorNoChangesToSave" Value = "Не было внесено никаких изменений, поэтому, сохранять нечего. Отредактируйте что-нибудь, а затем сохраните"/>
+
+  <Phrase Name="MessageBoxErrorHeader" Value = "Ошибка"/>
+  <Phrase Name="MessageBoxWarningHeader" Value = "Предупреждение"/>
+  <Phrase Name="MessageBoxUnsavedEditorData" Value = "Изменённые данные не сохранены. Продолжить?"/>
+
+  <Phrase Name="EditorHeaderMemoryPatch" Value = "Прямой доступ к памяти"/>
+  <Phrase Name="EditorHeaderFsuipc" Value = "Fsuipc"/>
+  <Phrase Name="EditorHeaderPanel" Value = "Панель"/>
+  <Phrase Name="EditorHeaderFakeVariable" Value = "Коммутатор"/>
+
+  <Phrase Name="EditorCreateProfile" Value = "Создание нового профиля"/>
+  <Phrase Name="EditorProfileName" Value = "Имя профиля"/>
+  <Phrase Name="EditorMainProcessName" Value = "Процесс симулятора"/>
+  <Phrase Name="EditorMergePersonalProfileWithPublic" Value="Персональную часть профиля в публичную" />
+  <Phrase Name="EditorDisablePersonalProfile" Value="Отключить персональный профиль" />
+
+  <Phrase Name="HardwareButton" Value = "Кнопка"/>
+  <Phrase Name="HardwareEncoder" Value = "Энкодер"/>
+  <Phrase Name="HardwareIndicator" Value = "Индикатор"/>
+  <Phrase Name="HardwareLedMatrixIndicator" Value = "Индикатор из матрицы светодиодов"/>
+  <Phrase Name="HardwareBinaryOutput" Value = "Лампа"/>
+  <Phrase Name="HardwareAxis" Value = "Ось"/>
+  <Phrase Name="HardwareButtonPlusMinus" Value = "Кнопки +-"/>
+  <Phrase Name="HardwareBinaryInput" Value = "Бинарный ввод"/>
+  <Phrase Name="HardwareSteppingMotor" Value = "Шаговый двигатель"/>
+
+  <Phrase Name="FormulaErrorUnexpectedSymbols" Value = "Неизвестный символ"/>
+  <Phrase Name="FormulaErrorSimilarTokensOneByOne" Value = "Два однотипных токена подряд"/>
+  <Phrase Name="FormulaErrorTokenMustBeOperation" Value = "Ожидался токен-действие"/>
+  <Phrase Name="FormulaErrorTokenMustBeValue" Value = "Ожидался токен-значение"/>
+  <Phrase Name="FormulaErrorLastTokenCantBeOperation" Value = "Последний токен не может быть действием"/>
+  <Phrase Name="FormulaErrorOpeningBracketNotClosed" Value = "Не закрыта скобка"/>
+  <Phrase Name="FormulaErrorClosingBracketNotOpened" Value = "Не хватает открывающей скобки"/>
+  <Phrase Name="FormulaErrorMultiplyPointInNumber" Value = "Число не может иметь более одной точки"/>
+  <Phrase Name="FormulaErrorTokenPointsAbsentItem" Value = "Токен указывает на отсутствующую сущность"/>
+  <Phrase Name="FormulaErrorPointCantBeLastSymbolOfNumber" Value = "Точка не может быть последним символом числа"/>
+  <Phrase Name="FormulaErrorUnknownMathOperation" Value = "Неизвестная математическая операция"/>
+  <Phrase Name="FormulaErrorUnknownLogicOperation" Value = "Неизвестная логическая операция"/>
+  <Phrase Name="FormulaErrorCantOperateMathAndLogicValues" Value = "Нельзя обработать операцию между математическим и логическим токеном"/>
+  <Phrase Name="FormulaErrorThisFormulaPartMustBeLogic" Value = "Эта часть формулы должна быть логической"/>
+  <Phrase Name="FormulaErrorThisFormulaPartMustBeMath" Value = "Эта часть формулы должна быть математической"/>
+  <Phrase Name="FormulaErrorDivisionByZero" Value = "Деление на ноль"/>
+  <Phrase Name="FormulaErrorException" Value = "Исключение. Пошлите формулу автору роутера"/>
+
+  <Phrase Name="SettingsMessageNotLoadedControlProcrssorsCount" Value = "Число назначений, которые не удалось импортировать из-за отсутствия описателей доступа"/>
+  <Phrase Name="SettingsMessageInputNewProfileName" Value = "Введите имя для нового профиля"/>
+  <Phrase Name="SettingsMessageProfileNameIsAlreadyExist" Value = "Такое имя профиля уже существует"/>
+  <Phrase Name="SettingsMessageRemoveProfile" Value = "Удалить профиль?"/>
+  <Phrase Name="SettingsExportProfileDialogHeader" Value = "Экспортировать профиль"/>
+  <Phrase Name="SettingsImportProfileDialogHeader" Value = "Импортировать профиль"/>
+  <Phrase Name="SettingsMessageInputProfileNewName" Value = "Выберете имя профиля"/>
+  <Phrase Name="SettingsTurnControlsSynchronizationOff" Value = "Отключить регулярную синхронизацию реальных и виртуальных тумблеров"/>
+  <Phrase Name="SettingsJoystickBindByInstanceGuid" Value = "Использовать внутренний Guid джойстика (если роутер находит только один экземпляр джойстика)"/>
+  <Phrase Name="SettingsHardwareGuidConflict" Value = "Несколько джойстиков имеют одинаковый идентификатор. Включите галку 'Использовать внутренний Guid джойстика' на вкладке 'Настройка' и перезапустите роутер"/>
+
+  <Phrase Name="TabInfo" Value = "Информация"/>
+  <Phrase Name="TabSettings" Value = "Настройки"/>
+  <Phrase Name="TabAccessDescriptors" Value = "Описатели доступа"/>
+  <Phrase Name="TabVariables" Value = "Переменные"/>
+  <Phrase Name="TabControlProcessors" Value = "Коммутация"/>
+  <Phrase Name="TabFormulaEditor" Value = "Редактор формул"/>
+
+  <Phrase Name="CommonButtonCreate" Value = "Создать"/>
+  <Phrase Name="CommonButtonSave" Value = "Сохранить"/>
+  <Phrase Name="CommonButtonRemove" Value = "Удалить"/>
+  <Phrase Name="CommonButtonClearAssignment" Value = "Очистить назначение"/>
+  <Phrase Name="CommonButtonRename" Value = "Переименовать"/>
+  <Phrase Name="CommonLabelLanguage" Value = "Язык (Language)"/>
+  <Phrase Name="CommonLabelProfile" Value = "Профиль"/>
+  <Phrase Name="CommonLabelFormulaResult" Value = "Результат (Dec/Hex/Bool)"/>
+  <Phrase Name="CommonLabelCopyToClipboard" Value = "Формулу в буфер обмена"/>
+  <Phrase Name="CommonLabelCopyVariableToFormula" Value = "Вставить переменную в формулу"/>
+  <Phrase Name="CommonLabelProfileManagement" Value = "Управление профилем"/>
+  <Phrase Name="CommonLabelError" Value = "Ошибка"/>
+  <Phrase Name="CommonLabelRouterState" Value = "Состояние роутера"/>
+  <Phrase Name="CommonLabelConnectedHardwareList" Value = "Подключенное железо"/>
+  <Phrase Name="CommonLabelProblemsList" Value = "Проблемы"/>
+  <Phrase Name="CommonLabelLastHardwareEvent" Value = "Последнее событие"/>
+  <Phrase Name="CommonStateRunning" Value = "Запущен"/>
+  <Phrase Name="CommonStatePaused" Value = "Приостановлен"/>
+  <Phrase Name="CommonStateStopped" Value = "Остановлен"/>
+  <Phrase Name="CommonProfileManagement" Value = "Управление профилем"/>
+  <Phrase Name="CommonDumpControls" Value = "Синхронизировать состояние кнопок"/>
+
+  <Phrase Name="CycleTypeUnreachableMinimum" Value = "Недостижимый минимум (min;max]"/>
+  <Phrase Name="CycleTypeUnreachableMaximum" Value = "Недостижимый максимум [min;max)"/>
+  <Phrase Name="CycleTypeReachableMinMax" Value = "Простой [min;max]"/>
+  <Phrase Name="CycleTypeNone" Value = "Выключен"/>
+
+  <Phrase Name="MapFileUIGroup" Value = "Получение и обновление данных из .map файлов (для опытных пользователей)"/>
+  <Phrase Name="MapFileUIHeaderInitializeNames" Value = "Связать переменные профиля с .map файлом"/>
+  <Phrase Name="MapFileUIHeaderUpdateOffsets" Value = "Обновить смещения переменных"/>
+  <Phrase Name="MapFileUISelectModule" Value = "Выберите модуль"/>
+  <Phrase Name="MapFileUISearchVariablesNameInMapFile" Value = "Искать переменные в .map файле"/>
+  <Phrase Name="MapFileUISearchVariablesOffsetInMapFile" Value = "Искать смещения в .map файле"/>
+  <Phrase Name="MapFileUIExactMatch" Value = "Точные совпадения"/>
+  <Phrase Name="MapFileUIRelativeMatch" Value = "Неточные совпадения"/>
+  <Phrase Name="MapFileUINotFoundOffsets" Value = "Не найдено"/>
+  <Phrase Name="MapFileUISaveMatchesToFile" Value = "Сохранить в .csv"/>
+  <Phrase Name="MapFileUIApplyAndSave" Value = "Применить и сохранить профиль"/>
+  <Phrase Name="MapFileUIMessageBoxDone" Value = "Готово"/>
+  <Phrase Name="MapFileUISelectMapFileToLoad" Value = "Выберите, пожалуйста, .map файл для загрузки"/>
+  <Phrase Name="MapFileUISelectCsvFileToSave" Value = "Выберите, пожалуйста, .csv файл для сохранения"/>
+  <Phrase Name="MapFileUIModeInitializeVarNames" Value = "Связать переменные с .map файлов"/>
+  <Phrase Name="MapFileUIModeUpdateVarOffsets" Value = "Обновить смещения из .map файла"/>
+</FlexRouterProfile>

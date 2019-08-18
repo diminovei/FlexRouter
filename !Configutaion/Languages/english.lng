@@ -21,6 +21,7 @@
   <Phrase Name="EditorVariableModule" Value = "Module"/>
   <Phrase Name="EditorVariableSize" Value = "Variable size"/>
   <Phrase Name="EditorVariableRelativeOffset" Value = "Offset"/>
+  <Phrase Name="EditorVariableNameInMapFile" Value = "Name in .map file"/>
   <Phrase Name="EditorVariableHexValue" Value = "Hex value in memory"/>
   <Phrase Name="EditorVariableDecValue" Value = "Dex value in memory"/>
   <Phrase Name="EditorDigitsAfterPoint" Value = "Digits after point"/>
@@ -90,9 +91,17 @@
   <Phrase Name="EditorAccessDescriptorIsAlreadyInList" Value = "Access descriptor is already in list"/>
   <Phrase Name="EditorSelectAnItemFirst" Value = "Select an item first"/>
   <Phrase Name="EditorMessageTheSameVariableIsExist" Value = "Variable will not be saved because another one use the same address:"/>
+  <Phrase Name="EditorMessageSureToMovePrivateProfileToPublic" Value = "Are you sure to move private part of profile to public?"/>
+
+  <Phrase Name="EditorNoVariableSelected" Value = "No variavle selected"/>
+  <Phrase Name="EditorNoItemInTreeSelected" Value = "Select item in tree first"/>
+  <Phrase Name="EditorNoItemToCreateSelected" Value = "No item to create selected. Choose item to create in drop-down list"/>
+  <Phrase Name="EditorPanelIsNotAnObjectToAssignHardware" Value = "Panel (in tree) is not an object to assign hardware"/>
+  <Phrase Name="EditorNoTreeItemAndItemToCreateSelected" Value = "No item to create selected. Choose item in tree and then in drop-down list"/>
+  <Phrase Name="EditorNoChangesToSave" Value = "There are no changes to save. Edit something and then press Save button again"/>
 
   <Phrase Name="MessageBoxErrorHeader" Value = "Error"/>
-  <Phrase Name="MessageBoxWarningHeader" Value = "Error"/>
+  <Phrase Name="MessageBoxWarningHeader" Value = "Warning"/>
   <Phrase Name="MessageBoxUnsavedEditorData" Value = "Changed editor data was not saved. Continue?"/>
 
   <Phrase Name="EditorHeaderMemoryPatch" Value = "Direct memory access"/>
@@ -103,6 +112,8 @@
   <Phrase Name="EditorCreateProfile" Value = "Create new profile"/>
   <Phrase Name="EditorProfileName" Value = "Profile name"/>
   <Phrase Name="EditorMainProcessName" Value = "Process to patch"/>
+  <Phrase Name="EditorMergePersonalProfileWithPublic" Value="Move personal profile to public" />
+  <Phrase Name="EditorDisablePersonalProfile" Value="Disable personal profile" />
 
   <Phrase Name="HardwareButton" Value = "Button"/>
   <Phrase Name="HardwareEncoder" Value = "Encoder"/>
@@ -112,6 +123,7 @@
   <Phrase Name="HardwareAxis" Value = "Axis"/>
   <Phrase Name="HardwareButtonPlusMinus" Value = "Buttons +-"/>
   <Phrase Name="HardwareBinaryInput" Value = "Binary input"/>
+  <Phrase Name="HardwareSteppingMotor" Value = "Stepping motor"/>
 
   <Phrase Name="FormulaErrorUnexpectedSymbols" Value = "Unexpected symbol"/>
   <Phrase Name="FormulaErrorSimilarTokensOneByOne" Value = "Similar tokens one after another"/>
@@ -156,7 +168,7 @@
   <Phrase Name="CommonButtonRename" Value = "Rename"/>
   <Phrase Name="CommonLabelLanguage" Value = "Language"/>
   <Phrase Name="CommonLabelProfile" Value = "Profile"/>
-  <Phrase Name="CommonLabelFormulaResult" Value = "Result"/>
+  <Phrase Name="CommonLabelFormulaResult" Value = "Result (Dec/Hex/Bool)"/>
   <Phrase Name="CommonLabelCopyToClipboard" Value = "Copy formula to clipboard"/>
   <Phrase Name="CommonLabelCopyVariableToFormula" Value = "Paste variable to formula"/>
   <Phrase Name="CommonLabelProfileManagement" Value = "Manage profile"/>
@@ -175,4 +187,21 @@
   <Phrase Name="CycleTypeUnreachableMaximum" Value = "Unreachable maximum [min;max)"/>
   <Phrase Name="CycleTypeReachableMinMax" Value = "Simple [min;max]"/>
   <Phrase Name="CycleTypeNone" Value = "None"/>
+
+  <Phrase Name="MapFileUIGroup" Value = "Initialize and update data from .map file (for advanced users)"/>
+  <Phrase Name="MapFileUIHeaderInitializeNames" Value = "Associate profile variabeles to .map file"/>
+  <Phrase Name="MapFileUIHeaderUpdateOffsets" Value = "Update variables offset from .map file"/>
+  <Phrase Name="MapFileUISelectModule" Value = "Select module to associate"/>
+  <Phrase Name="MapFileUISearchVariablesNameInMapFile" Value = "Search variables name in .map file"/>
+  <Phrase Name="MapFileUISearchVariablesOffsetInMapFile" Value = "Search variables offset in .map file"/>
+  <Phrase Name="MapFileUIExactMatch" Value = "Exact match"/>
+  <Phrase Name="MapFileUIRelativeMatch" Value = "Relative match"/>
+  <Phrase Name="MapFileUINotFoundOffsets" Value = "Not found"/>
+  <Phrase Name="MapFileUISaveMatchesToFile" Value = "Save to .csv"/>
+  <Phrase Name="MapFileUIApplyAndSave" Value = "Apply to profile and save"/>
+  <Phrase Name="MapFileUIMessageBoxDone" Value = "Done"/>
+  <Phrase Name="MapFileUISelectMapFileToLoad" Value = "Please select .map file to load"/>
+  <Phrase Name="MapFileUISelectCsvFileToSave" Value = "Please select .csv file to save"/>
+  <Phrase Name="MapFileUIModeInitializeVarNames" Value = "Initialize variables name from .map file"/>
+  <Phrase Name="MapFileUIModeUpdateVarOffsets" Value = "Update variables offset from .map file"/>
 </FlexRouterProfile>
