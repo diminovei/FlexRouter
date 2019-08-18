@@ -7,7 +7,6 @@ using FlexRouter.AccessDescriptors.Interfaces;
 using FlexRouter.ControlProcessors.AssignedHardware;
 using FlexRouter.ControlProcessors.Helpers;
 using FlexRouter.Hardware;
-using FlexRouter.Hardware.F3;
 using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
 using FlexRouter.Localizers;
@@ -213,7 +212,7 @@ namespace FlexRouter.ControlProcessors
                 //    ev.Hardware.ControlId = 15 - (ev.Hardware.ControlId - 8);
                 // Если вышли за пределы блоков - не сохраняем  событие
                 var capacity = HardwareManager.GetCapacity(ev.Hardware, DeviceSubType.Block);
-                if (capacity.Names.Length == 0 || capacity.DeviceSubtypeIsNotSuitableForCurrentHardware || ev.Hardware.BlockId > capacity.Names.Select(x => int.Parse(x)).Max())
+                if (capacity.Names.Length == 0 || capacity.DeviceSubtypeIsNotSuitableForCurrentHardware || ev.Hardware.BlockId > capacity.Names.Select(int.Parse).Max())
                     continue;
                 eventArray.Add(ev);
             }

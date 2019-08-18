@@ -123,6 +123,9 @@
                     <Button x:Name="_removeProfile" HorizontalAlignment="Right" VerticalAlignment="Top" Content="Remove" Grid.Column="1" Margin="0,122,10,0" Click="RemoveProfileClick" Width="115"/>
                     <Button x:Name="_renameProfile" HorizontalAlignment="Right" VerticalAlignment="Top" Content="Rename" Grid.Column="1" Margin="0,149,10,0" Click="RenameProfileClick" Width="115"/>
                     <Button x:Name="_mergePersonalAndPublicProfile" HorizontalAlignment="Left" VerticalAlignment="Top" Content="Merge personal and public" Grid.Column="1" Margin="17,149,0,0" Width="250" Click="_mergePersonalAndPublicProfile_Click"/>
+                    <GroupBox x:Name="_mapFileGroup" Grid.Column="1" Header="GroupBox" HorizontalAlignment="Left" Height="100" Margin="10,277,0,0" VerticalAlignment="Top" Width="737"/>
+                    <Button x:Name="_initializeVarNamesFromMapFile" HorizontalAlignment="Right" VerticalAlignment="Top" Content="init from map" Grid.Column="1" Margin="0,301,20,0" Width="115" RenderTransformOrigin="-0.53,-1.35" Click="_initializeVarNamesFromMapFile_Click"/>
+                    <Button x:Name="_updateVarOffsetsFromMapFile" HorizontalAlignment="Right" VerticalAlignment="Top" Content="update from map" Grid.Column="1" Margin="0,347,20,0"  Width="115" RenderTransformOrigin="-0.53,-1.35" Click="_updateVarOffsetsFromMapFile_Click"/>
                 </Grid>
             </TabItem>
         </TabControl>

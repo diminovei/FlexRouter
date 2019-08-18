@@ -57,10 +57,6 @@ public class DescriptorIndicator : DescriptorOutputBase, IIndicatorMethods, IITe
         {
             return LanguageManager.GetPhrase(Phrases.EditorTypeMemoryIndicator);
         }
-        public override Bitmap GetIcon()
-        {
-            return Properties.Resources.Indicator;
-        }
         /// <summary>
         /// Количество цифр после запятой в тексте, передаваемом на индикатор
         /// </summary>

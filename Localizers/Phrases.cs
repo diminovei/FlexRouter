@@ -20,6 +20,7 @@ namespace FlexRouter.Localizers
         EditorBadSymbols,
         EditorPanelName,
         EditorVariableRelativeOffset,
+        EditorVariableNameInMapFile,
         EditorVariableModule,
         EditorVariableSize,
         EditorVariableHexValue,
@@ -62,7 +63,13 @@ namespace FlexRouter.Localizers
         EditorVariableAndPanelNameToClipboard,
         EditorMessageTheSameVariableIsExist,
         EditorMessageSureToMovePrivateProfileToPublic,
-        
+        EditorNoItemToCreateSelected,
+        EditorNoTreeItemAndItemToCreateSelected,
+        EditorNoChangesToSave,
+        EditorPanelIsNotAnObjectToAssignHardware,
+        EditorNoItemInTreeSelected,
+        EditorNoVariableSelected,
+
         EditorMessageAbsoluteOffsetIsOutOfModule,
         EditorMessageAbsoluteIsNotAhexNumber,
         EditorMessageDataIsIncorrect,
@@ -177,6 +184,23 @@ namespace FlexRouter.Localizers
         CycleTypeUnreachableMaximum,
         CycleTypeNone,
         SettingsJoystickBindByInstanceGuid,
-        EditorDigitsTotalNumber
+        EditorDigitsTotalNumber,
+
+        MapFileUIHeaderInitializeNames,
+        MapFileUIHeaderUpdateOffsets,
+        MapFileUISelectModule,
+        MapFileUISearchVariablesNameInMapFile,
+        MapFileUISearchVariablesOffsetInMapFile,
+        MapFileUIExactMatch,
+        MapFileUIRelativeMatch,
+        MapFileUINotFoundOffsets,
+        MapFileUISaveMatchesToFile,
+        MapFileUIApplyAndSave,
+        MapFileUIMessageBoxDone,
+        MapFileUISelectMapFileToLoad,
+        MapFileUISelectCsvFileToSave,
+        MapFileUIGroup,
+        MapFileUIModeInitializeVarNames,
+        MapFileUIModeUpdateVarOffsets
     }
 }

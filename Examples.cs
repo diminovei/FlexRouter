@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Management;
 using System.Threading;
-using FlexRouter.VariableSynchronization;
 using System.Diagnostics;
 using FlexRouter.VariableWorkerLayer;
+using FlexRouter.VariableWorkerLayer.MethodClick;
 using FlexRouter.VariableWorkerLayer.MethodFsuipc;
 
 namespace FlexRouter

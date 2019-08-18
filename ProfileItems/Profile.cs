@@ -152,7 +152,8 @@ namespace FlexRouter.ProfileItems
             var nav = xp.CreateNavigator();
             var navPointer = nav.Select("/" + ProfileHeader);
             navPointer.MoveNext();
-            _currentProfileName = navPointer.Current.GetAttribute("Name", navPointer.Current.NamespaceURI);
+            if(profileItemPrivacyType == ProfileItemPrivacyType.Public)
+                _currentProfileName = navPointer.Current.GetAttribute("Name", navPointer.Current.NamespaceURI);
             if (!Guid.TryParse(navPointer.Current.GetAttribute("Id", navPointer.Current.NamespaceURI), out _currentProfileId))
             {
                 _currentProfileId = GlobalId.GetNew();
@@ -211,7 +212,8 @@ namespace FlexRouter.ProfileItems
                     // Заголовок
                     writer.WriteStartElement(ProfileHeader);
                     writer.WriteAttributeString("Type", profileItemPrivacyType.ToString());
-                    writer.WriteAttributeString("Name", profileName);
+                    if (profileItemPrivacyType == ProfileItemPrivacyType.Public)
+                        writer.WriteAttributeString("Name", profileName);
                     writer.WriteAttributeString("Id", _currentProfileId.ToString());
 
                     // Панели
@@ -260,7 +262,6 @@ namespace FlexRouter.ProfileItems
             AccessDescriptor.Clear();
             VariableStorage.Clear();
             PanelStorage.Clear();
-            GlobalId.Clear();
             GlobalFormulaKeeper.Instance.ClearAll();
             _mainSimulatorProcess = string.Empty;
             _currentProfileName = null;

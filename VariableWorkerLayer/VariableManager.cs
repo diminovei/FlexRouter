@@ -41,13 +41,9 @@ namespace FlexRouter.VariableWorkerLayer
             InitializeMemoryPatchMethod();
             InitializeFsuipcMethod();
         }
-        /// <summary>
-        /// Сопротивляться ли изменению переменных извне
-        /// </summary>
-        /// <param name="isOn">true - сопротивляться</param>
-        public string[] GetModulesList()
+        public string[] GetListOfModulesLoadedInManagedProcess()
         {
-            return _memoryPatchMethodInstance.GetModulesList();
+            return _memoryPatchMethodInstance.GetListOfModulesLoadedInManagedProcess();
         }
         public ModuleAndOffset? ConvertAbsoleteOffsetToRelative(uint absoluteOffset)
         {

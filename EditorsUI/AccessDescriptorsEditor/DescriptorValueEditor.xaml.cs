@@ -168,7 +168,6 @@ namespace FlexRouter.EditorsUI.AccessDescriptorsEditor
         {
             // ToDo: проверить корректность формул
             return new EditorFieldsErrors(null);
-     //       throw new NotImplementedException();
         }
 
         //

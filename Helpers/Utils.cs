@@ -56,7 +56,6 @@ namespace FlexRouter.Helpers
             var folder = Path.Combine(location, subFolder);
             return folder;
         }
-
         //public class ProfileInfo
         //{
         //    public ProfileInfo(string name, string path)

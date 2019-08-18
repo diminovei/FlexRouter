@@ -21,11 +21,6 @@ namespace FlexRouter.VariableWorkerLayer.MethodFsuipc
             return LanguageManager.GetPhrase(Phrases.EditorHeaderFsuipc);
         }
 
-        public override Bitmap GetIcon()
-        {
-            return Properties.Resources.FsuipcVariable;
-        }
-
         public int Offset;
         public override void SaveAdditionals(XmlTextWriter writer)
         {

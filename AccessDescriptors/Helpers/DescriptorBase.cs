@@ -9,7 +9,7 @@ using FlexRouter.ProfileItems;
 
 namespace FlexRouter.AccessDescriptors.Helpers
 {
-    public abstract class DescriptorBase : ProfileItemPrivacy, IAccessDescriptor, ITreeItem
+    public abstract class DescriptorBase : ProfileItemPrivacy, IAccessDescriptor
     {
         private DescriptorBase _parentAccessDescriptorId;
 
@@ -165,22 +165,10 @@ namespace FlexRouter.AccessDescriptors.Helpers
 
         public void LoadHeader(XPathNavigator reader)
         {
-            if (!Guid.TryParse(reader.GetAttribute("Id", reader.NamespaceURI), out Id))
-            {
-                // ToDo: удалить
-                Id = GlobalId.GetByOldId(ObjType.AccessDescriptor, int.Parse(reader.GetAttribute("Id", reader.NamespaceURI)));
-                if(Id == Guid.Empty)
-                    Id = GlobalId.Register(ObjType.AccessDescriptor, int.Parse(reader.GetAttribute("Id", reader.NamespaceURI)));
-            }
+            Id = Guid.Parse(reader.GetAttribute("Id", reader.NamespaceURI));
             GlobalFormulaKeeper.Instance.RemoveFormulasByOwnerId(GetId());
 
-            if (!Guid.TryParse(reader.GetAttribute("PanelId", reader.NamespaceURI), out _panelId))
-            {
-                // ToDo: удалить
-                _panelId = GlobalId.GetByOldId(ObjType.Panel, int.Parse(reader.GetAttribute("PanelId", reader.NamespaceURI)));
-                if(_panelId == Guid.Empty)
-                    _panelId = GlobalId.Register(ObjType.Panel, int.Parse(reader.GetAttribute("PanelId", reader.NamespaceURI)));
-            }
+            _panelId = Guid.Parse(reader.GetAttribute("PanelId", reader.NamespaceURI));
             _name = reader.GetAttribute("Name", reader.NamespaceURI);
             var powerFormula = reader.GetAttribute("PowerFormula", reader.NamespaceURI);
             SetPowerFormula(powerFormula);
@@ -202,6 +190,5 @@ namespace FlexRouter.AccessDescriptors.Helpers
         }
 
         public abstract string GetDescriptorType();
-        public abstract System.Drawing.Bitmap GetIcon();
     }
 }

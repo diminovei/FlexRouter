@@ -6,7 +6,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Forms;
 
-namespace FlexRouter.VariableSynchronization
+namespace FlexRouter.VariableWorkerLayer.MethodClick
 {
     /// <summary>
     /// Описание окна для процессора макросов

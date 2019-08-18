@@ -10,7 +10,7 @@ using FlexRouter.Localizers;
 
 namespace FlexRouter.ControlProcessors
 {
-    class IndicatorProcessor : ControlProcessorBase<IIndicatorMethods>, IVisualizer, IITemWithId
+    class IndicatorProcessor : ControlProcessorBase<IIndicatorMethods>, IVisualizer
     {
         private string _previousIndicatorText;
 
@@ -37,8 +37,6 @@ namespace FlexRouter.ControlProcessors
             if (string.IsNullOrEmpty(Connections[0].GetAssignedHardware()))
                 return null;
             var text = AccessDescriptor.GetIndicatorText();
-//            var ad = Profile.AccessDescriptor.GetAccessDesciptorById(AssignedAccessDescriptorId);
-//            var text = ((IIndicatorMethods)ad).GetIndicatorText();
             if (text == _previousIndicatorText)
                 return null;
             _previousIndicatorText = text;

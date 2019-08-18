@@ -2,7 +2,7 @@
 
 namespace FlexRouter.AccessDescriptors.Interfaces
 {
-    public interface IAccessDescriptor
+    public interface IAccessDescriptor : IITemWithId
     {
         string GetDescriptorType();
         DescriptorBase GetCopy();

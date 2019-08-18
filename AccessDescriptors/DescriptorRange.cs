@@ -31,14 +31,6 @@ namespace FlexRouter.AccessDescriptors
             return LanguageManager.GetPhrase(Phrases.EditorTypeMemoryRange);
         }
         /// <summary>
-        /// Получить битмап иконки этого описателя
-        /// </summary>
-        /// <returns></returns>
-        public override Bitmap GetIcon()
-        {
-            return Properties.Resources.Encoder;
-        }
-        /// <summary>
         /// Отдельный калькулятор не понимающий [R], для того, чтобы не зацикливаться на получении значения из переменной 
         /// </summary>
         private readonly Calculator _inputValueCalculator = new Calculator();

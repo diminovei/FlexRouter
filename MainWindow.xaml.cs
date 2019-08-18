@@ -17,17 +17,16 @@
 //CP: колибруем начальную позицию
 //CP: колибруем позицию окончания (только для 1)
 
+//  ***************************** Внешнее
+//  бага в тушке. Если включить ввод ЗК на ПН-5, а затем выключить стабилизацию крена будут гореть и Сброс программы и ввод ЗК (проверить, как работает в роутере)
+//  Стабилизация по высоте включается, а лампа не загорается. Нужно разбираться (похоже, у меня плохо припаян светодиод. Перепроверить)
 //  ***************************** Исправить в следующей версии
 //  Кнопка: в приватный профиль/в общий профиль
-//      Сделать умную синхронизацию деревьев (удалять то, что исчезло, добавлять то, что появилось вместо полной перерисовки)
-//  Bug: бага в тушке. Если включить ввод ЗК на ПН-5, а затем выключить стабилизацию крена будут гореть и Сброс программы и ввод ЗК (проверить, как работает в роутере)
 //  ***************************** Бэклог
-//      ToDo: Стабилизация по высоте включается, а лампа не загорается. Нужно разбираться (похоже, у меня плохо припаян светодиод. Перепроверить)
 //      Железо:
 //          AD для управления яркостью
 //          В джойстике поддержать все оси и хатку
 //          Поддержка L3/F3 - шаговики
-//          Сделать переинициализацию роутера быстрой
 //          При изменении настройки JoystickBindByInstanceGuid переинициализировать железо
 //      AxisMultistate (управление набором значений при помощи оси, например, замена крана закрылков или галетных переключателей)
 //      Реализовать функции (FromBCD, ToBCD, получить дробную часть)
@@ -35,23 +34,37 @@
 //          Редактирование окон
 //          Редактирование описателя "Клики мышью (Multistate)"
 //          Редактирование описателя "Клики мышью (Range)"
-//      Bug: биндинг не работает, если в названии переменной (колонки) "плохой" символ. Точка, слэш или пробел в конце
-//  ***************************** Не срочно (или не нужно):
-//  	Если удалить CP, то остаётся выбораннам пункт (например, "Лампа", но нет селекта в дереве(?)), но по кнопке Create ничего не происходит
-//      При удалении элемента перестраивать дерево и переходить на следующий элемент
-//  Возможность втыкать и вытыкать железо во время работы роутера
-//  При изменении имени переменной предупреждать, что нужно обновить данные в AD, если открытый AD использует эту переменную (узнать в FormulaKeeper)
-//  Refactoring: Вынести ускоряющийся Repeater из ButtonPlusMinisConrolProcessor и сделать его общим
-//  Refactoring: Нужно унести управление StopSearch из MainWindow в CPEditor
-//  Refactoring: правильно не сохранять в готовый объект (например, переменную) по частям из разных элементов панели, а сохранить в отдельных экземпляр, вернуть его, а затем сохранить. Нужно для возможности контроля перед сохранением на наличие дубликатов
+//      Биндинг не работает, если в названии переменной (колонки) "плохой" символ. Точка, слэш или пробел в конце
 //  Пройтись по всем ToDo и доделать
-//  Проверить работу с профилем на многопоточность. Обращение к AD, CP, VAR только через методы класса Profile (даже внутри этого класса) при сохранении загрузке. И всё через lock
+//  ***************************** Не срочно (или не нужно):
+
+
+    //Math operators:
+    //5 + 2 = 7	Plus operator
+    //5 - 2 = 3	Munis operator
+    //5 * 2 = 10	Multiply operator
+    //5 % 2 = 1	The % operator computes the remainder after dividing its first operand by its second
+    //5 / 2 = 2.5	The division operator (/) divides its first operand by its second operand
+    //5 : 2 = 2	The division operator (:) divides its first operand by its second operand and gets the interger part of devision
+    //Logic operators
+    //    1 == 1	is true	Equal
+    //    1 != 2 is true	Not
+    //    And,            // &&
+    //    Or,             // ||
+    //    GreaterOrEqual, // >= Именно в таком порядке, чтобы при токенизации сначал проверялось >=, а потом >
+    //    LessOrEqual,    // <=
+    //    Greater,        // >
+    //    Less,           // <
+
+
+
 
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
@@ -76,6 +89,7 @@ using FlexRouter.Hardware.HardwareEvents;
 using FlexRouter.Hardware.Helpers;
 using FlexRouter.Helpers;
 using FlexRouter.Localizers;
+using FlexRouter.ManageMapFiles;
 using FlexRouter.MessagesToMainForm;
 using FlexRouter.ProfileItems;
 using FlexRouter.Properties;
@@ -125,6 +139,7 @@ namespace FlexRouter
 
             InitializeComponent();
             ApplicationSettings.LoadSettings();
+            FillSelectProfileCombobox(ApplicationSettings.DefaultProfile);
             LanguageManager.Initialize();
 
             if (string.IsNullOrEmpty(ApplicationSettings.DefaultLanguage))
@@ -141,9 +156,7 @@ namespace FlexRouter
 
             FillSelectLanguageCombobox();
 
-            var isProfileLoaded = LoadProfile(ApplicationSettings.DefaultProfile);
-            SetTitle(isProfileLoaded ? ApplicationSettings.DefaultProfile : null);
-            FillSelectProfileCombobox(ApplicationSettings.DefaultProfile);
+            LoadProfile(ApplicationSettings.DefaultProfile);
 
             _timer = new DispatcherTimer();
             _timer.Tick += OnTimedEvent;
@@ -243,6 +256,9 @@ namespace FlexRouter
             _cloneVariable.Content = LanguageManager.GetPhrase(Phrases.EditorCloneVariable);
             _disablePersonalProfileLabel.Content = LanguageManager.GetPhrase(Phrases.EditorDisablePersonalProfile);
             _mergePersonalAndPublicProfile.Content = LanguageManager.GetPhrase(Phrases.EditorMergePersonalProfileWithPublic);
+            _initializeVarNamesFromMapFile.Content = LanguageManager.GetPhrase(Phrases.MapFileUIModeInitializeVarNames);
+            _updateVarOffsetsFromMapFile.Content = LanguageManager.GetPhrase(Phrases.MapFileUIModeUpdateVarOffsets);
+            _mapFileGroup.Header = LanguageManager.GetPhrase(Phrases.MapFileUIGroup);
             VisualizeRouterState();
         }
         /// <summary>
@@ -418,6 +434,13 @@ namespace FlexRouter
         private void CreateAccessDescriptorClick(object sender, RoutedEventArgs e)
         {
             var itemToCreate = GetObjectToCreateFromCombobox(_accessDescriptorsToCreateList,_accessDescriptorPanel);
+            if (itemToCreate == null)
+            {
+                var message = LanguageManager.GetPhrase(Phrases.EditorNoItemToCreateSelected);
+                var header = LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader);
+                MessageBox.Show(message, header, MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
             if ((itemToCreate as DescriptorBase) != null)
                 ShowAccessDescriptorEditors((DescriptorBase) itemToCreate);
             if ((itemToCreate as Panel) != null)
@@ -531,6 +554,8 @@ namespace FlexRouter
             panel.Children.Clear();
             if (((TreeViewItem)tree.SelectedItem).Name == TreeItemType.Panel.ToString())
             {
+                if (treeItemType == TreeItemType.ControlProcessor)
+                    return;
                 IEditor ie = new PanelProperties((Panel)((TreeViewItem)tree.SelectedItem).Tag);
                 DockPanel.SetDock((UserControl)ie, Dock.Top);
                 panel.Children.Add((UserControl)ie);
@@ -617,37 +642,6 @@ namespace FlexRouter
             }
         }
 
-        private void ShowVariablesTree(TreeView tree)
-        {
-            var vtk = new TreeViewStateKeeper();
-            vtk.RememberState(ref tree);
-            var panels = Profile.PanelStorage.GetSortedPanelsList();
-            tree.Items.Clear();
-            foreach (var panel in panels)
-            {
-                var treeRootItem = new TreeViewItem
-                {
-                    Tag = panel,
-                    Name = TreeItemType.Panel.ToString(),
-                    Header = panel.GetPrivacyType() == ProfileItemPrivacyType.Private ? PrivacyMarker + panel.Name : panel.Name
-                };
-
-                var ad = Profile.GetSortedVariablesListByPanelId(panel.Id);
-                foreach (var adesc in ad)
-                {
-
-                    var icon = GetIcon(TreeItemType.Variable, adesc.Id);
-                    var nodeName = ((adesc as VariableBase).GetPrivacyType() == ProfileItemPrivacyType.Private) ? PrivacyMarker + adesc.Name : adesc.Name;
-
-                    var treeAdItem = CreateTreeViewItem(nodeName, adesc, TreeItemType.Variable, icon);
-                    treeAdItem.Name = TreeItemType.Variable.ToString();
-                    treeRootItem.Items.Add(treeAdItem);
-                }
-                tree.Items.Add(treeRootItem);
-            }
-            vtk.RestoreState(ref tree);
-        }
-
         private void ShowPanel(Panel item, StackPanel panel)
         {
             if (item == null)
@@ -717,6 +711,13 @@ namespace FlexRouter
         private void CreateVariableClick(object sender, RoutedEventArgs e)
         {
             var variable = GetObjectToCreateFromCombobox(_accessMethods, _variablesPanel);
+            if (variable == null)
+            {
+                var message = LanguageManager.GetPhrase(Phrases.EditorNoItemToCreateSelected);
+                var header = LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader);
+                MessageBox.Show(message, header, MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
             if ((variable as IVariable) != null)
                 ShowVariable((IVariable) variable);
             if ((variable as Panel) != null)
@@ -776,7 +777,12 @@ namespace FlexRouter
         {
             var item = GetTreeSelectedItem(_variablesTree);
             if (item == null || item.Type == TreeItemType.Panel)
+            {
+                var message = LanguageManager.GetPhrase(Phrases.EditorNoVariableSelected);
+                var header = LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader);
+                MessageBox.Show(message, header, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
+            }
             var varPanelAndName = Profile.GetVariableAndPanelNameById(((IVariable) item.Object).Id);
             Clipboard.SetText("[" + varPanelAndName + "]");
         }
@@ -882,18 +888,33 @@ namespace FlexRouter
         private void CreateControlProcessorClick(object sender, RoutedEventArgs e)
         {
             var treeSelectedItem = GetTreeSelectedItem(_controlProcessorsTree);
+            var dropDownListItem = _controlProcessorsList.SelectedItem as ComboBoxItem;
 
-            if (treeSelectedItem == null)
+            if (treeSelectedItem != null)
+            {
+                if (treeSelectedItem.Type == TreeItemType.Panel)
+                {
+                    var message = LanguageManager.GetPhrase(Phrases.EditorPanelIsNotAnObjectToAssignHardware);
+                    var header = LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader);
+                    MessageBox.Show(message, header, MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+                if (dropDownListItem == null)
+                {
+                    var message = LanguageManager.GetPhrase(Phrases.EditorNoItemToCreateSelected);
+                    var header = LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader);
+                    MessageBox.Show(message, header, MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+            }
+            else
+            {
+                var message = LanguageManager.GetPhrase(Phrases.EditorNoTreeItemAndItemToCreateSelected);
+                var header = LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader);
+                MessageBox.Show(message, header, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
-            if (treeSelectedItem.Type == TreeItemType.Panel)
-                return;
+            }
 
-            if (string.IsNullOrEmpty(_controlProcessorsList.Text))
-                return;
-
-            var item = _controlProcessorsList.SelectedItem as ComboBoxItem;
-            if (item == null)
-                return;
             var controlProcessor = (IControlProcessor) ((ComboBoxItem) _controlProcessorsList.SelectedItem).Tag;
 
             if (controlProcessor != null)
@@ -922,79 +943,33 @@ namespace FlexRouter
         {
             var item = GetTreeSelectedItem(_controlProcessorsTree);
             if (item == null)
+            {
+                var message = LanguageManager.GetPhrase(Phrases.EditorNoItemInTreeSelected);
+                var header = LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader);
+                MessageBox.Show(message, header, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
+            }
             if (item.Type == TreeItemType.Panel)
             {
-                RemovePanel((Panel) item.Object);
+                var message = LanguageManager.GetPhrase(Phrases.EditorPanelIsNotAnObjectToAssignHardware);
+                var header = LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader);
+                MessageBox.Show(message, header, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
-            if (
-                MessageBox.Show(
-                    LanguageManager.GetPhrase(Phrases.EditorMessageRemoveControlProcessor) + " '" + item.FullName +
-                    "'?", LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader), MessageBoxButton.YesNo,
-                    MessageBoxImage.Question) ==
-                MessageBoxResult.Yes)
-            {
-                _controlProcessorsPanel.Children.Clear();
-                var id = ((DescriptorBase) item.Object).GetId();
-                var events = Profile.ControlProcessor.GetShutDownEvents(id);
-                HardwareManager.PostOutgoingEvents(events);
-                Profile.ControlProcessor.RemoveControlProcessor(id);
-                Profile.Save(ApplicationSettings.DisablePersonalProfile);
-                RenewTrees();
-            }
-        }
-
-        private static TreeViewItem CreateTreeViewItem(string text, object connectedObject, TreeItemType treeItemType, System.Drawing.Bitmap iconBitmap)
-        {
-            var item = new TreeViewItem();
-
-            if (iconBitmap != null)
-            {
-                // create stack panel
-                var stack = new StackPanel {Orientation = Orientation.Horizontal};
-
-                // create Image
-                var image = new Image();
-                var bc = new WpfBitmapConverter();
-                var icon = (ImageSource) bc.Convert(iconBitmap, typeof (ImageSource), null, CultureInfo.InvariantCulture);
-
-                image.Source = icon;
-                image.Width = 16;
-                image.Height = 16;
-                // Label
-                var lbl = new Label {Content = text};
-
-                // Add into stack
-                stack.Children.Add(image);
-                stack.Children.Add(lbl);
-
-                // assign stack to header
-                item.Header = stack;
-            }
-            else
-                item.Header = text;
-            item.Name = treeItemType.ToString();
-            item.Tag = connectedObject;
-            return item;
+            if (MessageBox.Show(LanguageManager.GetPhrase(Phrases.EditorMessageRemoveControlProcessor) + " '" + item.FullName + "'?", LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) 
+                return;
+            
+            _controlProcessorsPanel.Children.Clear();
+            var id = ((DescriptorBase) item.Object).GetId();
+            var events = Profile.ControlProcessor.GetShutDownEvents(id);
+            HardwareManager.PostOutgoingEvents(events);
+            Profile.ControlProcessor.RemoveControlProcessor(id);
+            Profile.Save(ApplicationSettings.DisablePersonalProfile);
+            RenewTrees();
         }
 
         #endregion
-
-        #region CommonEditorsMethods
-
-        private bool IsNeedToChangeItemInEditor(TreeView tree, StackPanel panel,
-            RoutedPropertyChangedEventArgs<object> e, TreeViewHelper treeHelper)
-        {
-            if (tree.SelectedItem == null)
-                return false;
-            var askUserToSaveVarBeforeSelectionChange = false;
-            if (panel.Children.Count != 0)
-                askUserToSaveVarBeforeSelectionChange = IsPanelDataChanged(panel);
-
-            return !treeHelper.SelectionChanging(tree, e, askUserToSaveVarBeforeSelectionChange);
-        }
-
+        #region TreeRenew
         private void RenewTrees()
         {
             System.Diagnostics.Debug.Print("BeginTree: {0}", DateTime.Now);
@@ -1011,6 +986,236 @@ namespace FlexRouter
             ShowVariablesTree(_variablesForFormulaTree);
             System.Diagnostics.Debug.Print("EndVarTree: {0}", DateTime.Now);
         }
+        private static void ShowTree(TreeView tree, TreeItemType tit)
+        {
+            var vtk = new TreeViewStateKeeper();
+            vtk.RememberState(ref tree);
+            var panels = Profile.PanelStorage.GetSortedPanelsList();
+            tree.Items.Clear();
+            var dependentAccessDescriptors = Profile.AccessDescriptor.GetSortedAccessDesciptorList().Where(x=>x.IsDependent()).ToArray();
+            foreach (var panel in panels)
+            {
+                var treeRootItem = new TreeViewItem
+                {
+                    Tag = panel,
+                    Name = TreeItemType.Panel.ToString(),
+                    Header = panel.GetPrivacyType() == ProfileItemPrivacyType.Private ? PrivacyMarker + panel.Name : panel.Name
+                };
+
+                var ad = Profile.AccessDescriptor.GetSortedAccessDesciptorListByPanelId(panel.Id);
+                foreach (var adesc in ad)
+                {
+                    if (adesc.IsDependent())
+                        continue;
+
+                    var icon = GetIcon(tit, adesc);
+                    var nodeName = (tit == TreeItemType.AccessDescriptor && adesc.GetPrivacyType() == ProfileItemPrivacyType.Private) ? PrivacyMarker + adesc.GetName() : adesc.GetName();
+                    var treeAdItem = CreateTreeViewItem(nodeName, adesc, tit, icon);
+                    treeAdItem.Tag = adesc;
+                    treeAdItem.Name = tit.ToString();
+
+                    treeRootItem.Items.Add(treeAdItem);
+                    if (tit == TreeItemType.ControlProcessor)
+                        continue;
+                    foreach (var a in dependentAccessDescriptors)
+                    {
+                        if (!a.IsDependent())
+                            continue;
+                        if (a.GetDependency().GetId() != adesc.GetId())
+                            continue;
+                        icon = GetIcon(tit, a);
+                        var depNodeName = Profile.PanelStorage.GetPanelById(a.GetAssignedPanelId()).Name + "." + a.GetName();
+                        if (adesc.GetPrivacyType() == ProfileItemPrivacyType.Private)
+                            depNodeName = PrivacyMarker + depNodeName;
+
+                        var treeDependentItem = CreateTreeViewItem(depNodeName, a, tit, icon);
+                        treeAdItem.Items.Add(treeDependentItem);
+                    }
+                }
+                tree.Items.Add(treeRootItem);
+            }
+            vtk.RestoreState(ref tree);
+        }
+        private static IEnumerable<TreeViewItem> GetTreeViewItems(TreeViewItem currentTreeViewItem)
+        {
+            var returnItems = new List<TreeViewItem> {currentTreeViewItem};
+            foreach (var t in currentTreeViewItem.Items)
+            {
+                returnItems.AddRange(GetTreeViewItems((TreeViewItem)t));
+            }
+            return returnItems.ToArray();
+        }
+        private void ShowVariablesTree(TreeView tree)
+        {
+            var vtk = new TreeViewStateKeeper();
+            vtk.RememberState(ref tree);
+            var panels = Profile.PanelStorage.GetSortedPanelsList();
+            tree.Items.Clear();
+            foreach (var panel in panels)
+            {
+                var treeRootItem = new TreeViewItem
+                {
+                    Tag = panel,
+                    Name = TreeItemType.Panel.ToString(),
+                    Header = panel.GetPrivacyType() == ProfileItemPrivacyType.Private ? PrivacyMarker + panel.Name : panel.Name
+                };
+
+                var ad = Profile.GetSortedVariablesListByPanelId(panel.Id);
+                foreach (var adesc in ad)
+                {
+
+                    var icon = GetIcon(TreeItemType.Variable, adesc);
+                    var nodeName = ((adesc as VariableBase).GetPrivacyType() == ProfileItemPrivacyType.Private) ? PrivacyMarker + adesc.Name : adesc.Name;
+
+                    var treeAdItem = CreateTreeViewItem(nodeName, adesc, TreeItemType.Variable, icon);
+                    treeAdItem.Name = TreeItemType.Variable.ToString();
+                    treeRootItem.Items.Add(treeAdItem);
+                }
+                tree.Items.Add(treeRootItem);
+            }
+            vtk.RestoreState(ref tree);
+        }
+        static string GetNameOf<T>(Expression<Func<T>> property)
+        {
+            return (property.Body as MemberExpression).Member.Name;
+        }
+        private static ImageSource GetIcon(TreeItemType treeItemType, object item)
+        {
+            string iconKey = null;
+
+            if (treeItemType == TreeItemType.ControlProcessor)
+            {
+                var cp = Profile.ControlProcessor.GetControlProcessor(((IAccessDescriptor)item).GetId());
+                if (cp == null)
+                {
+                    iconKey = GetNameOf(() => Properties.Resources.ConnectedNot);
+                }
+                else
+                {
+                    var assignments = cp.GetAssignments();
+                    iconKey = assignments.Any(x => x.GetAssignedHardware() == string.Empty) ? GetNameOf(() => Properties.Resources.ConnectedPartially) : GetNameOf(() => Properties.Resources.Connected);
+                }
+            }
+            else
+            {
+                if (item is DescriptorBinaryOutput)
+                    iconKey = GetNameOf(() => Properties.Resources.BinaryOutput);
+                if (item is DescriptorIndicator)
+                    iconKey = GetNameOf(() => Properties.Resources.Indicator);
+                if (item is DescriptorRange)
+                    iconKey = GetNameOf(() => Properties.Resources.Encoder);
+                if (item is DescriptorValue)
+                    iconKey = GetNameOf(() => Properties.Resources.Button);
+                if (item is RangeUnion)
+                    iconKey = GetNameOf(() => Properties.Resources.RangeUnion);
+                if (item is FakeVariable)
+                    iconKey = GetNameOf(() => Properties.Resources.FakeVariable);
+                if (item is FsuipcVariable)
+                    iconKey = GetNameOf(() => Properties.Resources.FsuipcVariable);
+                if (item is MemoryPatchVariable)
+                    iconKey = GetNameOf(() => Properties.Resources.MemoryVariable);
+            }
+            if (iconKey == null)
+                return null;
+            if (IconsCache.ContainsKey(iconKey))
+            {
+                return IconsCache[iconKey];
+            }
+            else
+            {
+                var iconBitmap = Properties.Resources.ResourceManager.GetObject(iconKey, Properties.Resources.Culture);
+                var bc = new WpfBitmapConverter();
+                var icon = (ImageSource)bc.Convert(iconBitmap, typeof(ImageSource), null, CultureInfo.InvariantCulture);
+                IconsCache.Add(iconKey, icon);
+                return icon;
+            }
+
+            
+            
+        }
+        private static TreeViewItem CreateTreeViewItem(string text, object connectedObject, TreeItemType treeItemType, ImageSource icon)
+        {
+            var item = new TreeViewItem();
+
+            if (icon != null)
+            {
+                // create stack panel
+                var stack = new StackPanel { Orientation = Orientation.Horizontal };
+
+                // create Image
+                var image = new Image {Source = icon, Width = 16, Height = 16};
+                // Label
+                var lbl = new Label { Content = text };
+
+                // Add into stack
+                stack.Children.Add(image);
+                stack.Children.Add(lbl);
+
+                // assign stack to header
+                item.Header = stack;
+            }
+            else
+                item.Header = text;
+            item.Name = treeItemType.ToString();
+            item.Tag = connectedObject;
+            return item;
+        }
+        private static readonly Dictionary<string, ImageSource> IconsCache = new Dictionary<string, ImageSource>();
+        private TreeItem GetTreeSelectedItem(TreeView tree)
+        {
+            if (tree.SelectedItem == null)
+                return null;
+            var item = new TreeItem();
+            var found = false;
+            foreach (var type in (TreeItemType[])Enum.GetValues(typeof(TreeItemType)))
+            {
+                if (type.ToString() != ((TreeViewItem)tree.SelectedItem).Name)
+                    continue;
+                item.Type = type;
+                found = true;
+                break;
+            }
+            if (!found)
+                return null;
+            item.Object = ((TreeViewItem)tree.SelectedItem).Tag;
+            item.Name = GetTreeItemText(tree.SelectedItem as TreeViewItem);
+            if (item.Type != TreeItemType.Panel)
+            {
+                var parentItem = ((TreeViewItem)((TreeViewItem)tree.SelectedItem).Parent);
+                var parentText = GetTreeItemText(parentItem);
+                item.FullName = parentText + "." + item.Name;
+            }
+            else
+                item.FullName = item.Name;
+            return item;
+        }
+        private static string GetTreeItemText(TreeViewItem tvi)
+        {
+            if (tvi.Header is StackPanel)
+            {
+                if ((tvi.Header as StackPanel).Children.Count < 2)
+                    return null;
+                var item = ((StackPanel)tvi.Header).Children[1] as Label;
+                if (item == null)
+                    return null;
+                return (string)item.Content;
+            }
+            return (string)tvi.Header;
+
+        }
+        #endregion
+        #region CommonEditorsMethods
+
+        private bool IsNeedToChangeItemInEditor(TreeView tree, StackPanel panel, RoutedPropertyChangedEventArgs<object> e, TreeViewHelper treeHelper)
+        {
+            if (tree.SelectedItem == null)
+                return false;
+            var askUserToSaveVarBeforeSelectionChange = false;
+            if (panel.Children.Count != 0)
+                askUserToSaveVarBeforeSelectionChange = IsPanelDataChanged(panel);
+
+            return !treeHelper.SelectionChanging(tree, e, askUserToSaveVarBeforeSelectionChange);
+        }
 
         private void OnAnySaveButtonClicked(StackPanel panel, bool isVariableTree)
         {
@@ -1021,13 +1226,7 @@ namespace FlexRouter
             // Перерисовать дерево, развернуть необходимый узел и выделить переменную/дексриптор/панель. Нужно при переезде из одной панели в другую
             if (panel.Children.Count == 0)
                 return;
-            var errors = string.Empty;
-            foreach (var child in panel.Children)
-            {
-                var res = ((IEditor) child).IsCorrectData();
-                if (!res.IsDataFilledCorrectly)
-                    errors += res.ErrorsText;
-            }
+            var errors = panel.Children.Cast<object>().Select(child => ((IEditor) child).IsCorrectData()).Where(res => !res.IsDataFilledCorrectly).Aggregate(string.Empty, (current, res) => current + res.ErrorsText);
             if (!string.IsNullOrEmpty(errors))
             {
                 var message = LanguageManager.GetPhrase(Phrases.EditorMessageDataIsIncorrect) + errors;
@@ -1061,50 +1260,6 @@ namespace FlexRouter
             return isChanged;
         }
 
-        private TreeItem GetTreeSelectedItem(TreeView tree)
-        {
-            if (tree.SelectedItem == null)
-                return null;
-            var item = new TreeItem();
-            var found = false;
-            foreach (var type in (TreeItemType[]) Enum.GetValues(typeof (TreeItemType)))
-            {
-                if (type.ToString() != ((TreeViewItem) tree.SelectedItem).Name)
-                    continue;
-                item.Type = type;
-                found = true;
-                break;
-            }
-            if (!found)
-                return null;
-            item.Object = ((TreeViewItem) tree.SelectedItem).Tag;
-            item.Name = GetTreeItemText(tree.SelectedItem as TreeViewItem);
-            if (item.Type != TreeItemType.Panel)
-            {
-                var parentItem = ((TreeViewItem) ((TreeViewItem) tree.SelectedItem).Parent);
-                var parentText = GetTreeItemText(parentItem);
-                item.FullName = parentText + "." + item.Name;
-            }
-            else
-                item.FullName = item.Name;
-            return item;
-        }
-
-        private string GetTreeItemText(TreeViewItem tvi)
-        {
-            if (tvi.Header is StackPanel)
-            {
-                if ((tvi.Header as StackPanel).Children.Count < 2)
-                    return null;
-                var item = ((StackPanel) tvi.Header).Children[1] as Label;
-                if (item == null)
-                    return null;
-                return (string) item.Content;
-            }
-            return (string) tvi.Header;
-
-        }
-
         /// <summary>
         /// Получить из Combobox объект, который предстоит создать
         /// </summary>
@@ -1129,133 +1284,6 @@ namespace FlexRouter
             var item = combobox.SelectedItem as ComboBoxItem;
             return item == null ? null : ((ComboBoxItem) combobox.SelectedItem).Tag;
         }
-        private static void ShowTree(TreeView tree, TreeItemType tit)
-        {
-            var vtk = new TreeViewStateKeeper();
-            vtk.RememberState(ref tree);
-            var panels = Profile.PanelStorage.GetSortedPanelsList();
-            tree.Items.Clear();
-            var adAll = Profile.AccessDescriptor.GetSortedAccessDesciptorList();
-            foreach (var panel in panels)
-            {
-                var treeRootItem = new TreeViewItem
-                {
-                    Tag = panel,
-                    Name = TreeItemType.Panel.ToString(),
-                    Header = panel.GetPrivacyType() == ProfileItemPrivacyType.Private ? PrivacyMarker + panel.Name : panel.Name
-                };
-
-                var ad = Profile.AccessDescriptor.GetSortedAccessDesciptorListByPanelId(panel.Id);
-                foreach (var adesc in ad)
-                {
-                    if (adesc.IsDependent())
-                        continue;
-
-                    var icon = GetIcon(tit, adesc.GetId());
-                    var nodeName = (tit == TreeItemType.AccessDescriptor && adesc.GetPrivacyType() == ProfileItemPrivacyType.Private) ? PrivacyMarker + adesc.GetName() : adesc.GetName();
-                    var treeAdItem = CreateTreeViewItem(nodeName, adesc, tit, icon);
-                    treeAdItem.Tag = adesc;
-                    treeAdItem.Name = tit.ToString();
-
-                    treeRootItem.Items.Add(treeAdItem);
-                    if (tit == TreeItemType.ControlProcessor)
-                        continue;
-                    foreach (var a in adAll)
-                    {
-                        if (!a.IsDependent())
-                            continue;
-                        if (a.GetDependency().GetId() != adesc.GetId())
-                            continue;
-                        icon = GetIcon(tit, a.GetId());
-                        var depNodeName = Profile.PanelStorage.GetPanelById(a.GetAssignedPanelId()).Name + "." + a.GetName();
-                        if (adesc.GetPrivacyType() == ProfileItemPrivacyType.Private)
-                            depNodeName = PrivacyMarker + depNodeName;
-
-                        var treeDependentItem = CreateTreeViewItem(depNodeName, a, tit, icon);
-                        treeAdItem.Items.Add(treeDependentItem);
-                    }
-                }
-                tree.Items.Add(treeRootItem);
-            }
-            vtk.RestoreState(ref tree);
-        }
-
-        //private static void ShowTree(TreeView tree, TreeItemType tit)
-        //{
-        //    var vtk = new TreeViewStateKeeper();
-        //    vtk.RememberState(ref tree);
-        //    var panels = Profile.PanelStorage.GetSortedPanelsList();
-        //    tree.Items.Clear();
-        //    var adAll = Profile.GetSortedAccessDesciptorList();
-        //    foreach (var panel in panels)
-        //    {
-        //        var treeRootItem = new TreeViewItem
-        //        {
-        //            Tag = panel,
-        //            Name = TreeItemType.Panel.ToString(),
-        //            Header = panel.Name
-        //        };
-
-        //        var ad = Profile.GetSortedAccessDesciptorListByPanelId(panel.Id);
-        //        foreach (var adesc in ad)
-        //        {
-        //            if (adesc.IsDependent())
-        //                continue;
-
-        //            var icon = GetIcon(tit, adesc.GetId());
-        //            var treeAdItem = CreateTreeViewItem(adesc.GetName(), adesc, tit, icon);
-        //            treeAdItem.Tag = adesc;
-        //            treeAdItem.Name = tit.ToString();
-
-        //            treeRootItem.Items.Add(treeAdItem);
-        //            if (tit == TreeItemType.ControlProcessor)
-        //                continue;
-        //            foreach (var a in adAll)
-        //            {
-        //                if (!a.IsDependent())
-        //                    continue;
-        //                if (a.GetDependency().GetId() != adesc.GetId())
-        //                    continue;
-        //                icon = GetIcon(tit, a.GetId());
-        //                var treeDependentItem =
-        //                    CreateTreeViewItem(Profile.PanelStorage.GetPanelById(a.GetAssignedPanelId()).Name + "." + a.GetName(), a,
-        //                        tit, icon);
-        //                treeAdItem.Items.Add(treeDependentItem);
-        //            }
-        //        }
-        //        tree.Items.Add(treeRootItem);
-        //    }
-        //    vtk.RestoreState(ref tree);
-        //}
-
-        private static System.Drawing.Bitmap GetIcon(TreeItemType tit, Guid itemId)
-        {
-            if (tit == TreeItemType.ControlProcessor)
-            {
-                var cp = Profile.ControlProcessor.GetControlProcessor(itemId);
-                if (cp == null)
-                    return Properties.Resources.ConnectedNot;
-                var assignments = cp.GetAssignments();
-                bool foundUnassigned = false;
-                foreach (var assignment in assignments)
-                {
-                    if (string.IsNullOrEmpty(assignment.GetAssignedHardware()))
-                        foundUnassigned = true;
-                }
-                return foundUnassigned ? Properties.Resources.ConnectedPartially : Properties.Resources.Connected;
-            }
-            if (tit == TreeItemType.Variable)
-            {
-                var variable = Profile.VariableStorage.GetVariableById(itemId);
-                return ((ITreeItem) variable).GetIcon();
-            }
-            if (tit == TreeItemType.AccessDescriptor)
-            {
-                var descriptor = Profile.AccessDescriptor.GetAccessDesciptorById(itemId);
-                return descriptor.GetIcon();
-            }
-            return null;
-        }
 
         private void FillSelectLanguageCombobox()
         {
@@ -1263,10 +1291,7 @@ namespace FlexRouter
             var languageProfiles = LanguageManager.GetProfileList();
             foreach (var profile in languageProfiles)
                 _selectLanguage.Items.Add(profile);
-            if (!string.IsNullOrEmpty(ApplicationSettings.DefaultLanguage))
-                _selectLanguage.Text = ApplicationSettings.DefaultLanguage;
-            else
-                _selectLanguage.Text = string.Empty;
+            _selectLanguage.Text = string.IsNullOrEmpty(ApplicationSettings.DefaultLanguage) ? string.Empty : ApplicationSettings.DefaultLanguage;
         }
 
         private void SelectLanguageDropDownOpened(object sender, EventArgs e)
@@ -1563,8 +1588,6 @@ namespace FlexRouter
             if (_selectProfile.Text == null || _selectProfile.Text == Profile.GetLoadedProfileName())
                 return;
             LoadProfile(_selectProfile.Text);
-            ApplicationSettings.DefaultProfile = _selectProfile.Text;
-            Settings.Default.DefaultProfile = _selectProfile.Text;
         }
 
         /// <summary>
@@ -1578,6 +1601,10 @@ namespace FlexRouter
                 return false;
             PauseRouterOnChangeProfile();
             var loadResult = Profile.LoadProfileByName(profileName);
+            ApplicationSettings.DefaultProfile = profileName;
+            Settings.Default.DefaultProfile = profileName;
+            SetTitle(loadResult ? ApplicationSettings.DefaultProfile : null);
+            FillSelectProfileCombobox(ApplicationSettings.DefaultProfile);
             ResumeRouterOnChangeProfile();
             return loadResult;
         }
@@ -1656,7 +1683,12 @@ namespace FlexRouter
         {
             var treeSelectedItem = GetTreeSelectedItem(_variablesTree);
             if (treeSelectedItem == null)
+            {
+                var message = LanguageManager.GetPhrase(Phrases.EditorNoItemInTreeSelected);
+                var header = LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader);
+                MessageBox.Show(message, header, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
+            }
             if ((treeSelectedItem.Object as IVariable) != null)
             {
                 var newItem = ((VariableBase) treeSelectedItem.Object).GetCopy();
@@ -1676,7 +1708,13 @@ namespace FlexRouter
         {
             var treeSelectedItem = GetTreeSelectedItem(_accessDescriptorsTree);
             if (treeSelectedItem == null)
+            {
+                var message = LanguageManager.GetPhrase(Phrases.EditorNoItemInTreeSelected);
+                var header = LanguageManager.GetPhrase(Phrases.MessageBoxWarningHeader);
+                MessageBox.Show(message, header, MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
+            }
+                
             if ((treeSelectedItem.Object as IAccessDescriptor) != null)
             {
                 var newItem = ((DescriptorBase)treeSelectedItem.Object).GetCopy();
@@ -1712,5 +1750,18 @@ namespace FlexRouter
             Profile.Save(ApplicationSettings.DisablePersonalProfile);
             _routerCore.Start();
         }
+
+        private void _initializeVarNamesFromMapFile_Click(object sender, RoutedEventArgs e)
+        {
+            UpdateVarNamesFromMapFileUI mmu = new UpdateVarNamesFromMapFileUI();
+            mmu.Show();
+        }
+
+        private void _updateVarOffsetsFromMapFile_Click(object sender, RoutedEventArgs e)
+        {
+            UpdateVarOffsetsFromMapFileUI mmu = new UpdateVarOffsetsFromMapFileUI();
+            mmu.Show();
+        }
     }
 }
+

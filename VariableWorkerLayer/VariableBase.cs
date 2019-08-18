@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.Xml;
 using System.Xml.XPath;
 using FlexRouter.Helpers;
@@ -7,7 +6,7 @@ using FlexRouter.ProfileItems;
 
 namespace FlexRouter.VariableWorkerLayer
 {
-    public abstract class VariableBase : ProfileItemPrivacy, IVariable, ITreeItem, IITemWithId
+    public abstract class VariableBase : ProfileItemPrivacy, IVariable, IITemWithId
     {
         public Guid Id { get; set; }
         public Guid PanelId { get; set; }
@@ -47,20 +46,8 @@ namespace FlexRouter.VariableWorkerLayer
 
         public void LoadHeader(XPathNavigator reader)
         {
-            Guid id;
-            if (!Guid.TryParse(reader.GetAttribute("Id", reader.NamespaceURI), out id))
-            {
-                // ToDo: удалить
-                id = GlobalId.Register(ObjType.Variable, int.Parse(reader.GetAttribute("Id", reader.NamespaceURI)));
-            }
-            Id = id;
-
-            Guid panelId;
-            if (!Guid.TryParse(reader.GetAttribute("PanelId", reader.NamespaceURI), out panelId))
-            {
-                panelId = GlobalId.GetByOldId(ObjType.Panel, int.Parse(reader.GetAttribute("PanelId", reader.NamespaceURI)));
-            }
-            PanelId = panelId;
+            Id = Guid.Parse(reader.GetAttribute("Id", reader.NamespaceURI));
+            PanelId = Guid.Parse(reader.GetAttribute("PanelId", reader.NamespaceURI));
             Name = reader.GetAttribute("Name", reader.NamespaceURI);
             Description = reader.GetAttribute("Description", reader.NamespaceURI);
         }
@@ -75,7 +62,6 @@ namespace FlexRouter.VariableWorkerLayer
         }
 
         public abstract string GetName();
-        public abstract Bitmap GetIcon();
         public abstract bool IsEqualTo(object obj);
 
         public Guid GetId()

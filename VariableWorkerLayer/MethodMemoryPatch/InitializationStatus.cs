@@ -8,6 +8,7 @@
         Ok,
         AttemptToInitializeTooOften,
         ModuleToPatchWasNotFound,
-        Exception
+        Exception,
+        MultipleModulesFound
     }
 }

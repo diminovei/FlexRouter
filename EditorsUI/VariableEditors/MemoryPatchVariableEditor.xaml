@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="144" d:DesignWidth="301" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="Auto">
+             d:DesignHeight="174" d:DesignWidth="301" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="Auto">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="5*"/>
@@ -17,5 +17,7 @@
         <TextBox x:Name="_relativeOffset" Height="23" Margin="0,84,10,0" VerticalAlignment="Top" Width="Auto" Grid.Column="1"/>
         <Label x:Name="_variableModuleLabel" Content="Module" HorizontalAlignment="Left" Margin="10,109,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.184,-3"/>
         <ComboBox x:Name="_moduleName" Margin="0,112,10,0" VerticalAlignment="Top" Width="Auto" DropDownOpened="ModuleNameDropDownOpened" Grid.Column="1"/>
+        <Label x:Name="_nameInMapFileLabel" Content="Name in map file" HorizontalAlignment="Left" Margin="10,140,0,0" VerticalAlignment="Top" RenderTransformOrigin="-2.184,-3"/>
+        <TextBox x:Name="_nameInMapFile" Height="23" Margin="0,140,10,0" VerticalAlignment="Top" Width="Auto" Grid.Column="1" RenderTransformOrigin="0.426,3.348" IsReadOnly="True"/>
     </Grid>
 </UserControl>

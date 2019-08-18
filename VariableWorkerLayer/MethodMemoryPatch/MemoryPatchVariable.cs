@@ -13,11 +13,6 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
         {
             return LanguageManager.GetPhrase(Phrases.EditorHeaderMemoryPatch);
         }
-        public override Bitmap GetIcon()
-        {
-            return Properties.Resources.MemoryVariable;
-        }
-
         public override bool IsEqualTo(object obj)
         {
             if (!(obj is MemoryPatchVariable))
@@ -28,17 +23,20 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
 
         public uint Offset;
         public string ModuleName;
+        public string NameInMapFile;
         public override void SaveAdditionals(XmlTextWriter writer)
         {
             writer.WriteAttributeString("Offset", Offset.ToString("X"));
             writer.WriteAttributeString("Size", Size.ToString());
             writer.WriteAttributeString("ModuleName", ModuleName);
+            writer.WriteAttributeString("NameInMapFile", NameInMapFile);
         }
         public override void LoadAdditionals(XPathNavigator reader)
         {
             Offset = uint.Parse(reader.GetAttribute("Offset", reader.NamespaceURI), NumberStyles.HexNumber);
             Size = (MemoryVariableSize)Enum.Parse(typeof(MemoryVariableSize), reader.GetAttribute("Size", reader.NamespaceURI));
             ModuleName = reader.GetAttribute("ModuleName", reader.NamespaceURI);
+            NameInMapFile = reader.GetAttribute("NameInMapFile", reader.NamespaceURI);
         }
     }
 }

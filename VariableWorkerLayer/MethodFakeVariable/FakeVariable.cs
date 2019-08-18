@@ -13,11 +13,6 @@ namespace FlexRouter.VariableWorkerLayer.MethodFakeVariable
             return LanguageManager.GetPhrase(Phrases.EditorHeaderFakeVariable);
         }
 
-        public override Bitmap GetIcon()
-        {
-            return Properties.Resources.FakeVariable;
-        }
-
         public override bool IsEqualTo(object obj)
         {
             return false;

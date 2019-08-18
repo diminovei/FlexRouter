@@ -141,11 +141,7 @@ namespace FlexRouter.ControlProcessors.Helpers
         }
         public void LoadHeader(XPathNavigator reader)
         {
-            if (!Guid.TryParse(reader.GetAttribute("AssignedAccessDescriptorId", reader.NamespaceURI), out AssignedAccessDescriptorId))
-            {
-                // ToDo: удалить
-                AssignedAccessDescriptorId = GlobalId.GetByOldId(ObjType.AccessDescriptor, int.Parse(reader.GetAttribute("AssignedAccessDescriptorId", reader.NamespaceURI)));
-            }
+            AssignedAccessDescriptorId = Guid.Parse(reader.GetAttribute("AssignedAccessDescriptorId", reader.NamespaceURI));
         }
         public virtual void LoadAdditionals(XPathNavigator reader)
         {

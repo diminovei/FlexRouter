@@ -110,6 +110,16 @@
     <Compile Include="ControlProcessors\Helpers\CollectorBase.cs" />
     <Compile Include="EditorsUI\Helpers\SelectDataGridRow.cs" />
     <Compile Include="IITemWithId.cs" />
+    <Compile Include="ManageMapFiles\LinkerInfo.cs" />
+    <Compile Include="ManageMapFiles\MapFileManipulator.cs" />
+    <Compile Include="ManageMapFiles\UpdateVarOffsetsFromMapFileUI.xaml.cs">
+      <DependentUpon>UpdateVarOffsetsFromMapFileUI.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ManageMapFiles\UpdateVarNamesFromMapFileUI.xaml.cs">
+      <DependentUpon>UpdateVarNamesFromMapFileUI.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ManageMapFiles\VariableNameFromMapFile.cs" />
+    <Compile Include="ManageMapFiles\VariableOffsetFromMapFile.cs" />
     <Compile Include="ProfileItems\AccessDescriptorsStorage.cs" />
     <Compile Include="ProfileItems\ControlProcessorsStorage.cs" />
     <Compile Include="ControlProcessors\Helpers\ICollector.cs" />
@@ -243,7 +253,6 @@
     <Compile Include="Problems\ProblemHideOnFixOptions.cs" />
     <Compile Include="Problems\Problems.cs" />
     <Compile Include="Helpers\WpfBitmapConverter.cs" />
-    <Compile Include="ProfileItems\ITreeItem.cs" />
     <Compile Include="ProfileItems\Panel.cs" />
     <Compile Include="EditorsUI\AccessDescriptorsEditor\DescriptorFormulaEditor.xaml.cs">
       <DependentUpon>DescriptorFormulaEditor.xaml</DependentUpon>
@@ -286,7 +295,6 @@
     <Compile Include="EditorsUI\Helpers\TreeViewHelper.cs" />
     <Compile Include="EditorsUI\Helpers\TreeViewStateKeeper.cs" />
     <Compile Include="Helpers\Utils.cs" />
-    <Compile Include="ProfileItems\TreeCache.cs" />
     <Compile Include="RouterState.cs" />
     <Compile Include="TreeItem.cs" />
     <Compile Include="TreeItemType.cs" />
@@ -295,6 +303,8 @@
     <Compile Include="VariableWorkerLayer\MethodClick\ClickMacroProcessor.cs" />
     <Compile Include="VariableWorkerLayer\MethodClick\ClickMethodForFs2004.cs" />
     <Compile Include="VariableWorkerLayer\MethodClick\ClickVariable.cs" />
+    <Compile Include="VariableWorkerLayer\MethodClick\WindowChanges.cs" />
+    <Compile Include="VariableWorkerLayer\MethodClick\WindowInfo.cs" />
     <Compile Include="VariableWorkerLayer\MethodFakeVariable\FakeVariable.cs" />
     <Compile Include="VariableWorkerLayer\MethodFsuipc\fsuipc.cs" />
     <Compile Include="VariableWorkerLayer\MethodFsuipc\FsuipcMethod.cs" />
@@ -418,6 +428,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="EditorsUI\PanelEditors\PanelProperties.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ManageMapFiles\UpdateVarOffsetsFromMapFileUI.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="ManageMapFiles\UpdateVarNamesFromMapFileUI.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

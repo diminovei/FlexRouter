@@ -1,29 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
 
-namespace FlexRouter.VariableSynchronization
+namespace FlexRouter.VariableWorkerLayer.MethodClick
 {
-    /// <summary>
-    /// Какие изменения произошли с окном (Битовое поле)
-    /// </summary>
-    [FlagsAttribute]
-    public enum WindowChanges : byte
-    {
-        NoChanges = 0,
-        Append = 1,
-        Deleted = 2,
-        Hide = 4,
-        Unhide = 8,
-        Size = 16,
-        Locked = 32,
-        Unlocked = 64
-    };
-
     partial class FsWindow
     {
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -192,14 +173,4 @@ namespace FlexRouter.VariableSynchronization
         }
 
     }
-    public class WindowInfo
-    {
-        public int Id;
-        public string Name;
-        public WindowInfo Clone()
-        {
-            return (WindowInfo)MemberwiseClone();
-        }
-    }
-
 }

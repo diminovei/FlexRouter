@@ -86,7 +86,7 @@ namespace FlexRouter.ControlProcessors
         }
         protected override void OnNewControlEvent(ControlEventBase controlEvent)
         {
-            var ev = controlEvent as ButtonEvent;
+            var ev = (ButtonEvent)controlEvent;
 
             // AD при изменении состава State'ов нотифицирует об этом CP
             // Проверить, существует ли всё ещё такой ID контрола в AccessDescriptor

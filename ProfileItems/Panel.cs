@@ -61,13 +61,7 @@ namespace FlexRouter.ProfileItems
         }
         public static Panel Load(XPathNavigator reader)
         {
-            Guid id;
-            if (!Guid.TryParse(reader.GetAttribute("Id", reader.NamespaceURI), out id))
-            {
-
-                // ToDo: удалить
-                id = GlobalId.Register(ObjType.Panel, int.Parse(reader.GetAttribute("Id", reader.NamespaceURI)));
-            }
+            var id = Guid.Parse(reader.GetAttribute("Id", reader.NamespaceURI));
             var panel = new Panel(id) {Name = reader.GetAttribute("Name", reader.NamespaceURI)};
             var powerFormula = reader.GetAttribute("PowerFormula", reader.NamespaceURI);
             panel.SetPowerFormula(powerFormula);

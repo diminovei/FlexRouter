@@ -109,7 +109,7 @@ namespace FlexRouter.ControlProcessors
 
         public int CalculateRelativeAxisPosition(int minimum, int maximum, ControlEventBase controlEvent)
         {
-            var ev = controlEvent as AxisEvent;
+            var ev = (AxisEvent)controlEvent;
 
             double relativeEventPosition = ev.Position;
             if (ev.Position > ev.MaximumValue)

@@ -11,7 +11,7 @@ namespace FlexRouter.CalculatorRelated.Tokens
         Multiply,           // *
         Divide,             // /
         DivideModulo,       // % разделить и получить остаток
-        DivideInteger,      // разделить и получить целую часть
+        DivideInteger,      // : разделить и получить целую часть
     }
     public class CalcTokenMathOperation : CalcTokenBase
     {

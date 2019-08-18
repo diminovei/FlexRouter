@@ -19,11 +19,6 @@ namespace FlexRouter.AccessDescriptors
             return LanguageManager.GetPhrase(Phrases.EditorTypeMemoryMultistate);
         }
 
-        public override Bitmap GetIcon()
-        {
-            return Properties.Resources.Button;
-        }
-
         private int _defaultStateId = -1;
         /// <summary>
         /// Установить состояние по-умолчанию. -1 - нет установленного по-умолчанию состояния

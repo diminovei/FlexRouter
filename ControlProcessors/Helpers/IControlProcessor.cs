@@ -16,7 +16,6 @@ namespace FlexRouter.ControlProcessors.Helpers
         /// </summary>
         /// <returns></returns>
         bool HasInvertMode();
-//        Guid GetId();
         /// <summary>
         /// Вернуть текстовое имя ControlProcessor
         /// </summary>

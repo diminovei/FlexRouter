@@ -28,8 +28,6 @@ namespace FlexRouter.AccessDescriptors.Helpers
         /// <param name="formulaKeeper"></param>
         public void OverwriteFormulaKeeper(FormulaKeeper.FormulaKeeper formulaKeeper)
         {
-            //ToDo: если оставить здесь, то не будет сохраняться формула питания
-//            GlobalFormulaKeeper.Instance.RemoveFormulasByOwnerId(GetId());
             GlobalFormulaKeeper.Instance.Import(formulaKeeper);
         }
         public void OverwriteUsedVariables(List<Guid> variables)
@@ -66,28 +64,14 @@ namespace FlexRouter.AccessDescriptors.Helpers
             readerAdd = reader.Select("UsedVariables/Variable");
             while (readerAdd.MoveNext())
             {
-                Guid id;
-                if (!Guid.TryParse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI), out id))
-                {
-                    // ToDo: удалить
-                    id = GlobalId.GetByOldId(ObjType.Variable, int.Parse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI)));
-                    if(id == Guid.Empty)
-                        id = GlobalId.Register(ObjType.Variable, int.Parse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI)));
-                }
+                var id = Guid.Parse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI));
                 UsedVariables.Add(id);
             }
             readerAdd = reader.Select("FormulaList/Formula");
             while (readerAdd.MoveNext())
             {
                 var stateId = int.Parse(readerAdd.Current.GetAttribute("StateId", readerAdd.Current.NamespaceURI));
-                Guid variableId;
-                if (!Guid.TryParse(readerAdd.Current.GetAttribute("VariableId", readerAdd.Current.NamespaceURI), out variableId))
-                {
-                    // ToDo: удалить
-                    variableId = GlobalId.GetByOldId(ObjType.Variable, int.Parse(readerAdd.Current.GetAttribute("VariableId", readerAdd.Current.NamespaceURI)));
-                    if(variableId == Guid.Empty)
-                        variableId = GlobalId.Register(ObjType.Variable, int.Parse(readerAdd.Current.GetAttribute("VariableId", readerAdd.Current.NamespaceURI)));
-                }
+                var variableId = Guid.Parse(readerAdd.Current.GetAttribute("VariableId", readerAdd.Current.NamespaceURI));
                 var formula = readerAdd.Current.GetAttribute("Formula", readerAdd.Current.NamespaceURI);
                 SetFormula(stateId, variableId, formula);
             }

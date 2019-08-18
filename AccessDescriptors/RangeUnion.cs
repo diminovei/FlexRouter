@@ -96,11 +96,6 @@ namespace FlexRouter.AccessDescriptors
             return LanguageManager.GetPhrase(Phrases.EditorTypeRangeUnion);
         }
 
-        public override Bitmap GetIcon()
-        {
-            return Properties.Resources.RangeUnion;
-        }
-
         private readonly List<Guid> _loadedDependentDescriptors = new List<Guid>();
         public override void Initialize()
         {
@@ -132,14 +127,7 @@ namespace FlexRouter.AccessDescriptors
             var readerAdd = reader.Select("DependentAccessDescriptors/Descriptor");
             while (readerAdd.MoveNext())
             {
-                Guid id;
-                if (!Guid.TryParse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI), out id))
-                {
-                    // ToDo: удалить
-                    id = GlobalId.GetByOldId(ObjType.AccessDescriptor, int.Parse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI)));
-                    if(id == Guid.Empty)
-                        id = GlobalId.Register(ObjType.AccessDescriptor, int.Parse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI)));
-                }
+                var id = Guid.Parse(readerAdd.Current.GetAttribute("Id", readerAdd.Current.NamespaceURI));
                 _loadedDependentDescriptors.Add(id);
             }
         }

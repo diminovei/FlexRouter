@@ -72,7 +72,7 @@ namespace FlexRouter.ControlProcessors
         
         protected override void OnNewControlEvent(ControlEventBase controlEvent)
         {
-            var ev = controlEvent as ButtonEvent;
+            var ev = (ButtonEvent)controlEvent;
 
             var hw = controlEvent.Hardware.GetHardwareGuid();
 

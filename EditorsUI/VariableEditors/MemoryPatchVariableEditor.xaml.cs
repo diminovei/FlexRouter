@@ -35,6 +35,7 @@ namespace FlexRouter.EditorsUI.VariableEditors
                 _moduleName.Items.Add(_editableVariable.ModuleName);
             _moduleName.Text = _editableVariable.ModuleName;
             _relativeOffset.Text = _editableVariable.Offset.ToString("X");
+            _nameInMapFile.Text = _editableVariable.NameInMapFile;
         }
 
         public bool IsDataChanged()
@@ -69,6 +70,7 @@ namespace FlexRouter.EditorsUI.VariableEditors
             _convertOffset.Content = LanguageManager.GetPhrase(Phrases.EditorConvertAbsoluteOffsetToRelative);
             _variableModuleLabel.Content = LanguageManager.GetPhrase(Phrases.EditorVariableModule);
             _offsetLabel.Content = LanguageManager.GetPhrase(Phrases.EditorVariableRelativeOffset);
+            _nameInMapFileLabel.Content = LanguageManager.GetPhrase(Phrases.EditorVariableNameInMapFile);
         }
 
         private void ConvertOffsetClick(object sender, RoutedEventArgs e)
@@ -104,7 +106,7 @@ namespace FlexRouter.EditorsUI.VariableEditors
         private void FillModulesList()
         {
             var currentText = _moduleName.Text;
-            var modules = Profile.VariableStorage.GetModulesList().OrderBy(x => x);
+            var modules = Profile.VariableStorage.GetListOfModulesLoadedInManagedProcess().OrderBy(x => x);
             _moduleName.Items.Clear();
             foreach (var m in modules)
                 _moduleName.Items.Add(m);

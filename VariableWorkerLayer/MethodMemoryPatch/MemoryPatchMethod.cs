@@ -66,40 +66,51 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
                 {
                     _modules.Clear();
                     var runningProcesses = Process.GetProcesses();
-                    foreach (var process in runningProcesses)
+                    var processesWithCorrectName = runningProcesses.Where(x => x.ProcessName.ToLower() == mainModuleName.ToLower());
+                    if (processesWithCorrectName.Count() == 0)
                     {
-                        if (process.ProcessName != mainModuleName)
-                            continue;
-                        _mainModuleProcessId = process.Id;
-                        _processHandle = SafeProcessHandle.OpenProcess(ProcessAccessFlags.VmOperation | ProcessAccessFlags.QueryInformation | ProcessAccessFlags.VmRead | ProcessAccessFlags.VmWrite, false, _mainModuleProcessId);
-                        for (var i = 0; i < process.Modules.Count; i++)
-                        {
-                            var info = new ModuleInfo
-                            {
-                                BaseAddress = process.Modules[i].BaseAddress,
-                                Size = (uint)process.Modules[i].ModuleMemorySize,
-                                Name = process.Modules[i].ModuleName
-                            };
-                            if(!_modules.ContainsKey(info.Name))
-                                _modules.Add(info.Name, info);
-                        }
-                        process.Close();
-                        
                         _lastInitStatus = new InitializationState
                         {
                             System = systemName,
-                            ErrorCode = (int)InitializationStatus.Ok,
-                            ErrorMessage = "",
-                            IsOk = true
+                            ErrorCode = (int)InitializationStatus.ModuleToPatchWasNotFound,
+                            ErrorMessage = "Module '" + mainModuleName + "' was not found in process list",
+                            IsOk = false
                         };
                         return _lastInitStatus;
                     }
+                    if (processesWithCorrectName.Count() > 1)
+                    {
+                        _lastInitStatus = new InitializationState
+                        {
+                            System = systemName,
+                            ErrorCode = (int)InitializationStatus.MultipleModulesFound,
+                            ErrorMessage = "Multiple modules with name '" + mainModuleName + "' were found, don't know how to select correct one",
+                            IsOk = false
+                        };
+                        return _lastInitStatus;
+                    }
+                    var process = processesWithCorrectName.First();
+                    _mainModuleProcessId = process.Id;
+                    _processHandle = SafeProcessHandle.OpenProcess(ProcessAccessFlags.VmOperation | ProcessAccessFlags.QueryInformation | ProcessAccessFlags.VmRead | ProcessAccessFlags.VmWrite, false, _mainModuleProcessId);
+                    for (var i = 0; i < process.Modules.Count; i++)
+                    {
+                        var info = new ModuleInfo
+                        {
+                            BaseAddress = process.Modules[i].BaseAddress,
+                            Size = (uint)process.Modules[i].ModuleMemorySize,
+                            Name = process.Modules[i].ModuleName
+                        };
+                        if (!_modules.ContainsKey(info.Name))
+                            _modules.Add(info.Name, info);
+                    }
+                    process.Close();
+
                     _lastInitStatus = new InitializationState
                     {
                         System = systemName,
-                        ErrorCode = (int)InitializationStatus.ModuleToPatchWasNotFound,
-                        ErrorMessage = "Module '" + mainModuleName + "' was not found in process list",
-                        IsOk = false
+                        ErrorCode = (int)InitializationStatus.Ok,
+                        ErrorMessage = "",
+                        IsOk = true
                     };
                     return _lastInitStatus;
                 }
@@ -120,7 +131,7 @@ namespace FlexRouter.VariableWorkerLayer.MethodMemoryPatch
         /// Получить список найденных модулей
         /// </summary>
         /// <returns></returns>
-        public string[] GetModulesList()
+        public string[] GetListOfModulesLoadedInManagedProcess()
         {
             lock (_modules)
             {

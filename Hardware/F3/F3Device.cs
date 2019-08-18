@@ -228,6 +228,7 @@ namespace FlexRouter.Hardware.F3
                     switch (ev.Hardware.ModuleType)
                     {
                         case HardwareModuleType.Indicator:
+                        case HardwareModuleType.LedMatrixIndicator:
                         case HardwareModuleType.BinaryOutput:
                         {
                             var hEvent = ev as LampEvent;

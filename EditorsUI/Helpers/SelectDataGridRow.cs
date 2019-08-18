@@ -46,7 +46,6 @@ namespace FlexRouter.EditorsUI.Helpers
             }
             if(row != null)
                 row.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
-            //TODO: Retrieve and focus a DataGridCell object
         }
 
     }

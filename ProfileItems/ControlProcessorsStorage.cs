@@ -201,8 +201,6 @@ namespace FlexRouter.ProfileItems
         {
             if (!File.Exists(profilePath))
                 return;
-            // ToDo: удалить
-            //            GlobalId.Save();
 
             var xp = new XPathDocument(profilePath);
             var nav = xp.CreateNavigator();
@@ -212,12 +210,7 @@ namespace FlexRouter.ProfileItems
             {
                 var type = navPointer.Current.GetAttribute("Type", navPointer.Current.NamespaceURI);
 
-                Guid id;
-                if (!Guid.TryParse(navPointer.Current.GetAttribute("AssignedAccessDescriptorId", navPointer.Current.NamespaceURI), out id))
-                {
-                    // ToDo: удалить
-                    id = GlobalId.GetByOldId(ObjType.AccessDescriptor, int.Parse(navPointer.Current.GetAttribute("AssignedAccessDescriptorId", navPointer.Current.NamespaceURI)));
-                }
+                var id = Guid.Parse(navPointer.Current.GetAttribute("AssignedAccessDescriptorId", navPointer.Current.NamespaceURI));
                 var accessDescriptor = accessDescriptors.FirstOrDefault(x => x.GetId() == id);
                 if (accessDescriptor == null)
                 {
@@ -232,10 +225,6 @@ namespace FlexRouter.ProfileItems
                 {
                     cp.Load(navPointer.Current);
                     var cpId = AddControlProcessor(cp, id);
-                    //var ad = accessDescriptor as DescriptorMultistateBase;
-                    //if (ad == null) 
-                    //    continue;
-
                     var controlProcessor = GetControlProcessor(cpId);
                     if (controlProcessor != null)
                         controlProcessor.OnAssignmentsChanged();
